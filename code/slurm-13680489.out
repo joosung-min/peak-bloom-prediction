@@ -1,0 +1,1032 @@
+── Attaching packages ─────────────────────────────────────── tidyverse 1.3.2 ──
+✔ ggplot2 3.3.6      ✔ purrr   0.3.4 
+✔ tibble  3.1.8      ✔ dplyr   1.0.10
+✔ tidyr   1.2.1      ✔ stringr 1.4.1 
+✔ readr   2.1.2      ✔ forcats 0.5.2 
+── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+✖ dplyr::filter() masks stats::filter()
+✖ dplyr::lag()    masks stats::lag()
+Loading required package: foreach
+
+Attaching package: ‘foreach’
+
+The following objects are masked from ‘package:purrr’:
+
+    accumulate, when
+
+Loading required package: iterators
+Loading required package: parallel
+Loading required package: R6
+
+Attaching package: ‘lightgbm’
+
+The following object is masked from ‘package:dplyr’:
+
+    slice
+
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.392578 -> initscore=-0.436488
+[LightGBM] [Info] Start training from score -0.436488
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.417969 -> initscore=-0.331117
+[LightGBM] [Info] Start training from score -0.331117
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.407045 -> initscore=-0.376195
+[LightGBM] [Info] Start training from score -0.376195
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.412109 -> initscore=-0.355252
+[LightGBM] [Info] Start training from score -0.355252
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.409357 -> initscore=-0.366625
+[LightGBM] [Info] Start training from score -0.366625
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.421875 -> initscore=-0.315081
+[LightGBM] [Info] Start training from score -0.315081
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.401174 -> initscore=-0.400575
+[LightGBM] [Info] Start training from score -0.400575
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.385965 -> initscore=-0.464306
+[LightGBM] [Info] Start training from score -0.464306
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.421875 -> initscore=-0.315081
+[LightGBM] [Info] Start training from score -0.315081
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.408203 -> initscore=-0.371399
+[LightGBM] [Info] Start training from score -0.371399
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.410156 -> initscore=-0.363319
+[LightGBM] [Info] Start training from score -0.363319
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.421053 -> initscore=-0.318454
+[LightGBM] [Info] Start training from score -0.318454
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.402344 -> initscore=-0.395709
+[LightGBM] [Info] Start training from score -0.395709
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.389432 -> initscore=-0.449698
+[LightGBM] [Info] Start training from score -0.449698
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.416016 -> initscore=-0.339151
+[LightGBM] [Info] Start training from score -0.339151
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.406250 -> initscore=-0.379490
+[LightGBM] [Info] Start training from score -0.379490
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.403131 -> initscore=-0.392436
+[LightGBM] [Info] Start training from score -0.392436
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.404297 -> initscore=-0.387593
+[LightGBM] [Info] Start training from score -0.387593
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.413255 -> initscore=-0.350524
+[LightGBM] [Info] Start training from score -0.350524
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.412109 -> initscore=-0.355252
+[LightGBM] [Info] Start training from score -0.355252
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.392578 -> initscore=-0.436488
+[LightGBM] [Info] Start training from score -0.436488
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.411306 -> initscore=-0.358569
+[LightGBM] [Info] Start training from score -0.358569
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.412109 -> initscore=-0.355252
+[LightGBM] [Info] Start training from score -0.355252
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.409002 -> initscore=-0.368093
+[LightGBM] [Info] Start training from score -0.368093
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.414062 -> initscore=-0.347196
+[LightGBM] [Info] Start training from score -0.347196
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.416016 -> initscore=-0.339151
+[LightGBM] [Info] Start training from score -0.339151
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.401559 -> initscore=-0.398972
+[LightGBM] [Info] Start training from score -0.398972
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.391389 -> initscore=-0.441476
+[LightGBM] [Info] Start training from score -0.441476
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.412109 -> initscore=-0.355252
+[LightGBM] [Info] Start training from score -0.355252
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.417969 -> initscore=-0.331117
+[LightGBM] [Info] Start training from score -0.331117
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.417969 -> initscore=-0.331117
+[LightGBM] [Info] Start training from score -0.331117
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.419922 -> initscore=-0.323094
+[LightGBM] [Info] Start training from score -0.323094
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.414873 -> initscore=-0.343857
+[LightGBM] [Info] Start training from score -0.343857
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.392578 -> initscore=-0.436488
+[LightGBM] [Info] Start training from score -0.436488
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.393762 -> initscore=-0.431525
+[LightGBM] [Info] Start training from score -0.431525
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.402344 -> initscore=-0.395709
+[LightGBM] [Info] Start training from score -0.395709
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.415205 -> initscore=-0.342490
+[LightGBM] [Info] Start training from score -0.342490
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.400391 -> initscore=-0.403838
+[LightGBM] [Info] Start training from score -0.403838
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.396484 -> initscore=-0.420135
+[LightGBM] [Info] Start training from score -0.420135
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.424658 -> initscore=-0.303682
+[LightGBM] [Info] Start training from score -0.303682
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.425781 -> initscore=-0.299085
+[LightGBM] [Info] Start training from score -0.299085
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.402344 -> initscore=-0.395709
+[LightGBM] [Info] Start training from score -0.395709
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.406250 -> initscore=-0.379490
+[LightGBM] [Info] Start training from score -0.379490
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.404297 -> initscore=-0.387593
+[LightGBM] [Info] Start training from score -0.387593
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.400391 -> initscore=-0.403838
+[LightGBM] [Info] Start training from score -0.403838
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.403509 -> initscore=-0.390866
+[LightGBM] [Info] Start training from score -0.390866
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.406250 -> initscore=-0.379490
+[LightGBM] [Info] Start training from score -0.379490
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.402344 -> initscore=-0.395709
+[LightGBM] [Info] Start training from score -0.395709
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.396484 -> initscore=-0.420135
+[LightGBM] [Info] Start training from score -0.420135
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.430528 -> initscore=-0.279696
+[LightGBM] [Info] Start training from score -0.279696
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.407407 -> initscore=-0.374693
+[LightGBM] [Info] Start training from score -0.374693
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.402344 -> initscore=-0.395709
+[LightGBM] [Info] Start training from score -0.395709
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.402344 -> initscore=-0.395709
+[LightGBM] [Info] Start training from score -0.395709
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.408203 -> initscore=-0.371399
+[LightGBM] [Info] Start training from score -0.371399
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.418787 -> initscore=-0.327756
+[LightGBM] [Info] Start training from score -0.327756
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.423828 -> initscore=-0.307078
+[LightGBM] [Info] Start training from score -0.307078
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.410156 -> initscore=-0.363319
+[LightGBM] [Info] Start training from score -0.363319
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.400391 -> initscore=-0.403838
+[LightGBM] [Info] Start training from score -0.403838
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.404297 -> initscore=-0.387593
+[LightGBM] [Info] Start training from score -0.387593
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.400391 -> initscore=-0.403838
+[LightGBM] [Info] Start training from score -0.403838
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.404297 -> initscore=-0.387593
+[LightGBM] [Info] Start training from score -0.387593
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.399610 -> initscore=-0.407090
+[LightGBM] [Info] Start training from score -0.407090
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.408203 -> initscore=-0.371399
+[LightGBM] [Info] Start training from score -0.371399
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.405088 -> initscore=-0.384309
+[LightGBM] [Info] Start training from score -0.384309
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.421875 -> initscore=-0.315081
+[LightGBM] [Info] Start training from score -0.315081
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.394531 -> initscore=-0.428305
+[LightGBM] [Info] Start training from score -0.428305
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.399610 -> initscore=-0.407090
+[LightGBM] [Info] Start training from score -0.407090
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.412109 -> initscore=-0.355252
+[LightGBM] [Info] Start training from score -0.355252
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.407045 -> initscore=-0.376195
+[LightGBM] [Info] Start training from score -0.376195
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.425781 -> initscore=-0.299085
+[LightGBM] [Info] Start training from score -0.299085
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.397260 -> initscore=-0.416894
+[LightGBM] [Info] Start training from score -0.416894
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.415205 -> initscore=-0.342490
+[LightGBM] [Info] Start training from score -0.342490
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.392578 -> initscore=-0.436488
+[LightGBM] [Info] Start training from score -0.436488
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.421875 -> initscore=-0.315081
+[LightGBM] [Info] Start training from score -0.315081
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.412109 -> initscore=-0.355252
+[LightGBM] [Info] Start training from score -0.355252
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.416830 -> initscore=-0.335801
+[LightGBM] [Info] Start training from score -0.335801
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.417969 -> initscore=-0.331117
+[LightGBM] [Info] Start training from score -0.331117
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.382066 -> initscore=-0.480787
+[LightGBM] [Info] Start training from score -0.480787
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.394531 -> initscore=-0.428305
+[LightGBM] [Info] Start training from score -0.428305
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.427734 -> initscore=-0.291101
+[LightGBM] [Info] Start training from score -0.291101
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.396484 -> initscore=-0.420135
+[LightGBM] [Info] Start training from score -0.420135
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.407407 -> initscore=-0.374693
+[LightGBM] [Info] Start training from score -0.374693
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.402344 -> initscore=-0.395709
+[LightGBM] [Info] Start training from score -0.395709
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.416016 -> initscore=-0.339151
+[LightGBM] [Info] Start training from score -0.339151
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.416830 -> initscore=-0.335801
+[LightGBM] [Info] Start training from score -0.335801
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.406250 -> initscore=-0.379490
+[LightGBM] [Info] Start training from score -0.379490
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.410156 -> initscore=-0.363319
+[LightGBM] [Info] Start training from score -0.363319
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.404297 -> initscore=-0.387593
+[LightGBM] [Info] Start training from score -0.387593
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.412916 -> initscore=-0.351924
+[LightGBM] [Info] Start training from score -0.351924
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.405458 -> initscore=-0.382774
+[LightGBM] [Info] Start training from score -0.382774
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.401174 -> initscore=-0.400575
+[LightGBM] [Info] Start training from score -0.400575
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.421875 -> initscore=-0.315081
+[LightGBM] [Info] Start training from score -0.315081
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.410156 -> initscore=-0.363319
+[LightGBM] [Info] Start training from score -0.363319
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.413255 -> initscore=-0.350524
+[LightGBM] [Info] Start training from score -0.350524
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.392578 -> initscore=-0.436488
+[LightGBM] [Info] Start training from score -0.436488
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.416016 -> initscore=-0.339151
+[LightGBM] [Info] Start training from score -0.339151
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.414062 -> initscore=-0.347196
+[LightGBM] [Info] Start training from score -0.347196
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.395303 -> initscore=-0.425074
+[LightGBM] [Info] Start training from score -0.425074
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.411306 -> initscore=-0.358569
+[LightGBM] [Info] Start training from score -0.358569
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.402344 -> initscore=-0.395709
+[LightGBM] [Info] Start training from score -0.395709
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.392578 -> initscore=-0.436488
+[LightGBM] [Info] Start training from score -0.436488
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.414062 -> initscore=-0.347196
+[LightGBM] [Info] Start training from score -0.347196
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.410156 -> initscore=-0.363319
+[LightGBM] [Info] Start training from score -0.363319
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.410156 -> initscore=-0.363319
+[LightGBM] [Info] Start training from score -0.363319
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.412109 -> initscore=-0.355252
+[LightGBM] [Info] Start training from score -0.355252
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.402344 -> initscore=-0.395709
+[LightGBM] [Info] Start training from score -0.395709
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.404297 -> initscore=-0.387593
+[LightGBM] [Info] Start training from score -0.387593
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.388672 -> initscore=-0.452898
+[LightGBM] [Info] Start training from score -0.452898
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.425781 -> initscore=-0.299085
+[LightGBM] [Info] Start training from score -0.299085
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.417969 -> initscore=-0.331117
+[LightGBM] [Info] Start training from score -0.331117
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.416016 -> initscore=-0.339151
+[LightGBM] [Info] Start training from score -0.339151
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.400391 -> initscore=-0.403838
+[LightGBM] [Info] Start training from score -0.403838
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.421875 -> initscore=-0.315081
+[LightGBM] [Info] Start training from score -0.315081
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.389864 -> initscore=-0.447886
+[LightGBM] [Info] Start training from score -0.447886
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.410959 -> initscore=-0.360003
+[LightGBM] [Info] Start training from score -0.360003
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.418787 -> initscore=-0.327756
+[LightGBM] [Info] Start training from score -0.327756
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.412109 -> initscore=-0.355252
+[LightGBM] [Info] Start training from score -0.355252
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.407407 -> initscore=-0.374693
+[LightGBM] [Info] Start training from score -0.374693
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.394531 -> initscore=-0.428305
+[LightGBM] [Info] Start training from score -0.428305
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.406250 -> initscore=-0.379490
+[LightGBM] [Info] Start training from score -0.379490
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.420744 -> initscore=-0.319721
+[LightGBM] [Info] Start training from score -0.319721
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.407407 -> initscore=-0.374693
+[LightGBM] [Info] Start training from score -0.374693
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.400391 -> initscore=-0.403838
+[LightGBM] [Info] Start training from score -0.403838
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.406250 -> initscore=-0.379490
+[LightGBM] [Info] Start training from score -0.379490
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.404297 -> initscore=-0.387593
+[LightGBM] [Info] Start training from score -0.387593
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.412916 -> initscore=-0.351924
+[LightGBM] [Info] Start training from score -0.351924
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.408203 -> initscore=-0.371399
+[LightGBM] [Info] Start training from score -0.371399
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.396484 -> initscore=-0.420135
+[LightGBM] [Info] Start training from score -0.420135
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.401559 -> initscore=-0.398972
+[LightGBM] [Info] Start training from score -0.398972
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.419922 -> initscore=-0.323094
+[LightGBM] [Info] Start training from score -0.323094
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.412916 -> initscore=-0.351924
+[LightGBM] [Info] Start training from score -0.351924
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.397661 -> initscore=-0.415221
+[LightGBM] [Info] Start training from score -0.415221
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.406250 -> initscore=-0.379490
+[LightGBM] [Info] Start training from score -0.379490
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.404297 -> initscore=-0.387593
+[LightGBM] [Info] Start training from score -0.387593
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.417969 -> initscore=-0.331117
+[LightGBM] [Info] Start training from score -0.331117
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.414062 -> initscore=-0.347196
+[LightGBM] [Info] Start training from score -0.347196
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.419103 -> initscore=-0.326455
+[LightGBM] [Info] Start training from score -0.326455
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.416830 -> initscore=-0.335801
+[LightGBM] [Info] Start training from score -0.335801
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.396484 -> initscore=-0.420135
+[LightGBM] [Info] Start training from score -0.420135
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.392578 -> initscore=-0.436488
+[LightGBM] [Info] Start training from score -0.436488
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.408203 -> initscore=-0.371399
+[LightGBM] [Info] Start training from score -0.371399
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.407045 -> initscore=-0.376195
+[LightGBM] [Info] Start training from score -0.376195
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.419922 -> initscore=-0.323094
+[LightGBM] [Info] Start training from score -0.323094
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.396484 -> initscore=-0.420135
+[LightGBM] [Info] Start training from score -0.420135
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.407407 -> initscore=-0.374693
+[LightGBM] [Info] Start training from score -0.374693
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.398438 -> initscore=-0.411980
+[LightGBM] [Info] Start training from score -0.411980
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.394531 -> initscore=-0.428305
+[LightGBM] [Info] Start training from score -0.428305
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.416830 -> initscore=-0.335801
+[LightGBM] [Info] Start training from score -0.335801
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.413255 -> initscore=-0.350524
+[LightGBM] [Info] Start training from score -0.350524
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.416016 -> initscore=-0.339151
+[LightGBM] [Info] Start training from score -0.339151
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.409002 -> initscore=-0.368093
+[LightGBM] [Info] Start training from score -0.368093
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.416016 -> initscore=-0.339151
+[LightGBM] [Info] Start training from score -0.339151
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.393762 -> initscore=-0.431525
+[LightGBM] [Info] Start training from score -0.431525
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.394531 -> initscore=-0.428305
+[LightGBM] [Info] Start training from score -0.428305
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.425781 -> initscore=-0.299085
+[LightGBM] [Info] Start training from score -0.299085
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.414062 -> initscore=-0.347196
+[LightGBM] [Info] Start training from score -0.347196
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.416016 -> initscore=-0.339151
+[LightGBM] [Info] Start training from score -0.339151
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.406250 -> initscore=-0.379490
+[LightGBM] [Info] Start training from score -0.379490
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.405458 -> initscore=-0.382774
+[LightGBM] [Info] Start training from score -0.382774
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.397260 -> initscore=-0.416894
+[LightGBM] [Info] Start training from score -0.416894
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.406250 -> initscore=-0.379490
+[LightGBM] [Info] Start training from score -0.379490
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.414062 -> initscore=-0.347196
+[LightGBM] [Info] Start training from score -0.347196
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.400391 -> initscore=-0.403838
+[LightGBM] [Info] Start training from score -0.403838
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.406250 -> initscore=-0.379490
+[LightGBM] [Info] Start training from score -0.379490
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.412109 -> initscore=-0.355252
+[LightGBM] [Info] Start training from score -0.355252
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.398438 -> initscore=-0.411980
+[LightGBM] [Info] Start training from score -0.411980
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.396484 -> initscore=-0.420135
+[LightGBM] [Info] Start training from score -0.420135
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.398438 -> initscore=-0.411980
+[LightGBM] [Info] Start training from score -0.411980
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.419103 -> initscore=-0.326455
+[LightGBM] [Info] Start training from score -0.326455
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.426614 -> initscore=-0.295678
+[LightGBM] [Info] Start training from score -0.295678
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.417969 -> initscore=-0.331117
+[LightGBM] [Info] Start training from score -0.331117
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.398438 -> initscore=-0.411980
+[LightGBM] [Info] Start training from score -0.411980
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.393346 -> initscore=-0.433267
+[LightGBM] [Info] Start training from score -0.433267
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.402344 -> initscore=-0.395709
+[LightGBM] [Info] Start training from score -0.395709
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.426901 -> initscore=-0.294508
+[LightGBM] [Info] Start training from score -0.294508
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.406250 -> initscore=-0.379490
+[LightGBM] [Info] Start training from score -0.379490
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.404297 -> initscore=-0.387593
+[LightGBM] [Info] Start training from score -0.387593
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.398438 -> initscore=-0.411980
+[LightGBM] [Info] Start training from score -0.411980
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.416016 -> initscore=-0.339151
+[LightGBM] [Info] Start training from score -0.339151
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.414062 -> initscore=-0.347196
+[LightGBM] [Info] Start training from score -0.347196
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.402344 -> initscore=-0.395709
+[LightGBM] [Info] Start training from score -0.395709
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.409002 -> initscore=-0.368093
+[LightGBM] [Info] Start training from score -0.368093
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.404297 -> initscore=-0.387593
+[LightGBM] [Info] Start training from score -0.387593
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.404297 -> initscore=-0.387593
+[LightGBM] [Info] Start training from score -0.387593
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.419103 -> initscore=-0.326455
+[LightGBM] [Info] Start training from score -0.326455
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.394531 -> initscore=-0.428305
+[LightGBM] [Info] Start training from score -0.428305
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.404297 -> initscore=-0.387593
+[LightGBM] [Info] Start training from score -0.387593
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.400391 -> initscore=-0.403838
+[LightGBM] [Info] Start training from score -0.403838
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.414873 -> initscore=-0.343857
+[LightGBM] [Info] Start training from score -0.343857
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.424951 -> initscore=-0.302480
+[LightGBM] [Info] Start training from score -0.302480
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.412916 -> initscore=-0.351924
+[LightGBM] [Info] Start training from score -0.351924
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.390625 -> initscore=-0.444686
+[LightGBM] [Info] Start training from score -0.444686
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.401559 -> initscore=-0.398972
+[LightGBM] [Info] Start training from score -0.398972
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.437500 -> initscore=-0.251314
+[LightGBM] [Info] Start training from score -0.251314
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.396484 -> initscore=-0.420135
+[LightGBM] [Info] Start training from score -0.420135
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.424658 -> initscore=-0.303682
+[LightGBM] [Info] Start training from score -0.303682
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.394531 -> initscore=-0.428305
+[LightGBM] [Info] Start training from score -0.428305
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.410156 -> initscore=-0.363319
+[LightGBM] [Info] Start training from score -0.363319
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.410156 -> initscore=-0.363319
+[LightGBM] [Info] Start training from score -0.363319
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.399610 -> initscore=-0.407090
+[LightGBM] [Info] Start training from score -0.407090
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.407407 -> initscore=-0.374693
+[LightGBM] [Info] Start training from score -0.374693
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.414062 -> initscore=-0.347196
+[LightGBM] [Info] Start training from score -0.347196
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.424658 -> initscore=-0.303682
+[LightGBM] [Info] Start training from score -0.303682
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.394531 -> initscore=-0.428305
+[LightGBM] [Info] Start training from score -0.428305
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.398438 -> initscore=-0.411980
+[LightGBM] [Info] Start training from score -0.411980
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.404297 -> initscore=-0.387593
+[LightGBM] [Info] Start training from score -0.387593
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.411306 -> initscore=-0.358569
+[LightGBM] [Info] Start training from score -0.358569
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.412109 -> initscore=-0.355252
+[LightGBM] [Info] Start training from score -0.355252
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.404297 -> initscore=-0.387593
+[LightGBM] [Info] Start training from score -0.387593
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.407045 -> initscore=-0.376195
+[LightGBM] [Info] Start training from score -0.376195
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.407407 -> initscore=-0.374693
+[LightGBM] [Info] Start training from score -0.374693
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.404297 -> initscore=-0.387593
+[LightGBM] [Info] Start training from score -0.387593
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.404297 -> initscore=-0.387593
+[LightGBM] [Info] Start training from score -0.387593
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.418787 -> initscore=-0.327756
+[LightGBM] [Info] Start training from score -0.327756
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.404297 -> initscore=-0.387593
+[LightGBM] [Info] Start training from score -0.387593
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.421875 -> initscore=-0.315081
+[LightGBM] [Info] Start training from score -0.315081
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.399610 -> initscore=-0.407090
+[LightGBM] [Info] Start training from score -0.407090
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.408203 -> initscore=-0.371399
+[LightGBM] [Info] Start training from score -0.371399
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.391389 -> initscore=-0.441476
+[LightGBM] [Info] Start training from score -0.441476
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.417969 -> initscore=-0.331117
+[LightGBM] [Info] Start training from score -0.331117
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.412916 -> initscore=-0.351924
+[LightGBM] [Info] Start training from score -0.351924
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.423828 -> initscore=-0.307078
+[LightGBM] [Info] Start training from score -0.307078
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.386719 -> initscore=-0.461126
+[LightGBM] [Info] Start training from score -0.461126
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.410156 -> initscore=-0.363319
+[LightGBM] [Info] Start training from score -0.363319
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.405458 -> initscore=-0.382774
+[LightGBM] [Info] Start training from score -0.382774
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.414873 -> initscore=-0.343857
+[LightGBM] [Info] Start training from score -0.343857
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.406250 -> initscore=-0.379490
+[LightGBM] [Info] Start training from score -0.379490
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.396484 -> initscore=-0.420135
+[LightGBM] [Info] Start training from score -0.420135
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.409357 -> initscore=-0.366625
+[LightGBM] [Info] Start training from score -0.366625
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.412109 -> initscore=-0.355252
+[LightGBM] [Info] Start training from score -0.355252
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.417154 -> initscore=-0.334468
+[LightGBM] [Info] Start training from score -0.334468
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.410156 -> initscore=-0.363319
+[LightGBM] [Info] Start training from score -0.363319
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.409002 -> initscore=-0.368093
+[LightGBM] [Info] Start training from score -0.368093
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.414062 -> initscore=-0.347196
+[LightGBM] [Info] Start training from score -0.347196
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.388672 -> initscore=-0.452898
+[LightGBM] [Info] Start training from score -0.452898
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.414062 -> initscore=-0.347196
+[LightGBM] [Info] Start training from score -0.347196
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.410156 -> initscore=-0.363319
+[LightGBM] [Info] Start training from score -0.363319
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.404297 -> initscore=-0.387593
+[LightGBM] [Info] Start training from score -0.387593
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.404297 -> initscore=-0.387593
+[LightGBM] [Info] Start training from score -0.387593
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.406250 -> initscore=-0.379490
+[LightGBM] [Info] Start training from score -0.379490
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.417969 -> initscore=-0.331117
+[LightGBM] [Info] Start training from score -0.331117
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.409357 -> initscore=-0.366625
+[LightGBM] [Info] Start training from score -0.366625
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.406250 -> initscore=-0.379490
+[LightGBM] [Info] Start training from score -0.379490
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.409002 -> initscore=-0.368093
+[LightGBM] [Info] Start training from score -0.368093
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.396484 -> initscore=-0.420135
+[LightGBM] [Info] Start training from score -0.420135
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.414062 -> initscore=-0.347196
+[LightGBM] [Info] Start training from score -0.347196
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.393762 -> initscore=-0.431525
+[LightGBM] [Info] Start training from score -0.431525
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.418787 -> initscore=-0.327756
+[LightGBM] [Info] Start training from score -0.327756
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.414062 -> initscore=-0.347196
+[LightGBM] [Info] Start training from score -0.347196
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.398438 -> initscore=-0.411980
+[LightGBM] [Info] Start training from score -0.411980
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.408203 -> initscore=-0.371399
+[LightGBM] [Info] Start training from score -0.371399
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.390625 -> initscore=-0.444686
+[LightGBM] [Info] Start training from score -0.444686
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.416016 -> initscore=-0.339151
+[LightGBM] [Info] Start training from score -0.339151
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.408203 -> initscore=-0.371399
+[LightGBM] [Info] Start training from score -0.371399
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.416016 -> initscore=-0.339151
+[LightGBM] [Info] Start training from score -0.339151
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.410156 -> initscore=-0.363319
+[LightGBM] [Info] Start training from score -0.363319
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.402344 -> initscore=-0.395709
+[LightGBM] [Info] Start training from score -0.395709
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.412109 -> initscore=-0.355252
+[LightGBM] [Info] Start training from score -0.355252
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.396484 -> initscore=-0.420135
+[LightGBM] [Info] Start training from score -0.420135
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.417969 -> initscore=-0.331117
+[LightGBM] [Info] Start training from score -0.331117
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.419922 -> initscore=-0.323094
+[LightGBM] [Info] Start training from score -0.323094
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.410156 -> initscore=-0.363319
+[LightGBM] [Info] Start training from score -0.363319
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.408203 -> initscore=-0.371399
+[LightGBM] [Info] Start training from score -0.371399
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.396484 -> initscore=-0.420135
+[LightGBM] [Info] Start training from score -0.420135
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.404297 -> initscore=-0.387593
+[LightGBM] [Info] Start training from score -0.387593
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.395712 -> initscore=-0.423366
+[LightGBM] [Info] Start training from score -0.423366
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.408203 -> initscore=-0.371399
+[LightGBM] [Info] Start training from score -0.371399
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.414873 -> initscore=-0.343857
+[LightGBM] [Info] Start training from score -0.343857
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.402344 -> initscore=-0.395709
+[LightGBM] [Info] Start training from score -0.395709
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.417969 -> initscore=-0.331117
+[LightGBM] [Info] Start training from score -0.331117
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.417969 -> initscore=-0.331117
+[LightGBM] [Info] Start training from score -0.331117
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.410156 -> initscore=-0.363319
+[LightGBM] [Info] Start training from score -0.363319
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.402344 -> initscore=-0.395709
+[LightGBM] [Info] Start training from score -0.395709
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.403509 -> initscore=-0.390866
+[LightGBM] [Info] Start training from score -0.390866
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.405088 -> initscore=-0.384309
+[LightGBM] [Info] Start training from score -0.384309
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.406250 -> initscore=-0.379490
+[LightGBM] [Info] Start training from score -0.379490
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.407045 -> initscore=-0.376195
+[LightGBM] [Info] Start training from score -0.376195
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.425781 -> initscore=-0.299085
+[LightGBM] [Info] Start training from score -0.299085
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.406250 -> initscore=-0.379490
+[LightGBM] [Info] Start training from score -0.379490
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.393762 -> initscore=-0.431525
+[LightGBM] [Info] Start training from score -0.431525
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.416830 -> initscore=-0.335801
+[LightGBM] [Info] Start training from score -0.335801
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.396484 -> initscore=-0.420135
+[LightGBM] [Info] Start training from score -0.420135
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.403509 -> initscore=-0.390866
+[LightGBM] [Info] Start training from score -0.390866
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.412109 -> initscore=-0.355252
+[LightGBM] [Info] Start training from score -0.355252
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.410156 -> initscore=-0.363319
+[LightGBM] [Info] Start training from score -0.363319
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.398438 -> initscore=-0.411980
+[LightGBM] [Info] Start training from score -0.411980
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.409357 -> initscore=-0.366625
+[LightGBM] [Info] Start training from score -0.366625
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.408203 -> initscore=-0.371399
+[LightGBM] [Info] Start training from score -0.371399
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.425781 -> initscore=-0.299085
+[LightGBM] [Info] Start training from score -0.299085
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.397260 -> initscore=-0.416894
+[LightGBM] [Info] Start training from score -0.416894
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.408203 -> initscore=-0.371399
+[LightGBM] [Info] Start training from score -0.371399
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.427734 -> initscore=-0.291101
+[LightGBM] [Info] Start training from score -0.291101
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.409357 -> initscore=-0.366625
+[LightGBM] [Info] Start training from score -0.366625
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.408203 -> initscore=-0.371399
+[LightGBM] [Info] Start training from score -0.371399
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.385519 -> initscore=-0.466189
+[LightGBM] [Info] Start training from score -0.466189
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.400391 -> initscore=-0.403838
+[LightGBM] [Info] Start training from score -0.403838
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.419922 -> initscore=-0.323094
+[LightGBM] [Info] Start training from score -0.323094
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.412109 -> initscore=-0.355252
+[LightGBM] [Info] Start training from score -0.355252
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.402344 -> initscore=-0.395709
+[LightGBM] [Info] Start training from score -0.395709
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.404297 -> initscore=-0.387593
+[LightGBM] [Info] Start training from score -0.387593
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.412109 -> initscore=-0.355252
+[LightGBM] [Info] Start training from score -0.355252
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.404297 -> initscore=-0.387593
+[LightGBM] [Info] Start training from score -0.387593
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.410959 -> initscore=-0.360003
+[LightGBM] [Info] Start training from score -0.360003
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.399610 -> initscore=-0.407090
+[LightGBM] [Info] Start training from score -0.407090
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.412109 -> initscore=-0.355252
+[LightGBM] [Info] Start training from score -0.355252
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.404297 -> initscore=-0.387593
+[LightGBM] [Info] Start training from score -0.387593
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.410959 -> initscore=-0.360003
+[LightGBM] [Info] Start training from score -0.360003
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.421875 -> initscore=-0.315081
+[LightGBM] [Info] Start training from score -0.315081
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.395712 -> initscore=-0.423366
+[LightGBM] [Info] Start training from score -0.423366
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.406250 -> initscore=-0.379490
+[LightGBM] [Info] Start training from score -0.379490
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.410156 -> initscore=-0.363319
+[LightGBM] [Info] Start training from score -0.363319
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.409357 -> initscore=-0.366625
+[LightGBM] [Info] Start training from score -0.366625
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.410156 -> initscore=-0.363319
+[LightGBM] [Info] Start training from score -0.363319
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.412109 -> initscore=-0.355252
+[LightGBM] [Info] Start training from score -0.355252
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.397260 -> initscore=-0.416894
+[LightGBM] [Info] Start training from score -0.416894
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.398438 -> initscore=-0.411980
+[LightGBM] [Info] Start training from score -0.411980
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.410156 -> initscore=-0.363319
+[LightGBM] [Info] Start training from score -0.363319
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.415205 -> initscore=-0.342490
+[LightGBM] [Info] Start training from score -0.342490
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.409002 -> initscore=-0.368093
+[LightGBM] [Info] Start training from score -0.368093
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.406250 -> initscore=-0.379490
+[LightGBM] [Info] Start training from score -0.379490
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.407045 -> initscore=-0.376195
+[LightGBM] [Info] Start training from score -0.376195
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.400391 -> initscore=-0.403838
+[LightGBM] [Info] Start training from score -0.403838
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.427734 -> initscore=-0.291101
+[LightGBM] [Info] Start training from score -0.291101
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.395712 -> initscore=-0.423366
+[LightGBM] [Info] Start training from score -0.423366
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.408203 -> initscore=-0.371399
+[LightGBM] [Info] Start training from score -0.371399
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.406250 -> initscore=-0.379490
+[LightGBM] [Info] Start training from score -0.379490
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.405458 -> initscore=-0.382774
+[LightGBM] [Info] Start training from score -0.382774
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.392578 -> initscore=-0.436488
+[LightGBM] [Info] Start training from score -0.436488
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.428571 -> initscore=-0.287682
+[LightGBM] [Info] Start training from score -0.287682
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.406250 -> initscore=-0.379490
+[LightGBM] [Info] Start training from score -0.379490
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Warning] is_enable_sparse is set=TRUE, is_enable_sparse=TRUE will be ignored. Current value: is_enable_sparse=TRUE
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.416016 -> initscore=-0.339151
+[LightGBM] [Info] Start training from score -0.339151
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.411306 -> initscore=-0.358569
+[LightGBM] [Info] Start training from score -0.358569
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.424658 -> initscore=-0.303682
+[LightGBM] [Info] Start training from score -0.303682
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.417969 -> initscore=-0.331117
+[LightGBM] [Info] Start training from score -0.331117
+[LightGBM] [Info] [binary:BoostFromScore]: pavg=0.369141 -> initscore=-0.535905
+[LightGBM] [Info] Start training from score -0.535905
+slurmstepd: error: *** JOB 13680489 ON nc10322 CANCELLED AT 2023-02-10T17:52:20 ***
