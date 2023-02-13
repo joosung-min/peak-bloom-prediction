@@ -22,7 +22,7 @@ no_bloom_sample <- no_bloom_df[idx, ]
 
 new_bloom_df <- rbind(is_bloom_df, no_bloom_sample)
 shuffle_new <- new_bloom_df[sample(1:nrow(new_bloom_df), size = nrow(new_bloom_df), replace = FALSE), ] %>%
-    'rownames<-'(NULL) %>%
+    "rownames<-"(NULL) %>%
     dplyr::select(year, tmax, tmin, prcp, month, day, daily_Cd, daily_Ca, Cd_cumsum, Ca_cumsum, lat, long, alt, is_bloom)
 
 # head(shuffle_new)
@@ -30,9 +30,13 @@ dim(shuffle_new)
 table(shuffle_new$is_bloom)
 
 # split a test set
-test_set <- shuffle_new %>% filter(year %in% 2012:2023) %>% dplyr::select(-year) 
+test_set <- shuffle_new %>%
+    filter(year %in% 2012:2023) %>%
+    dplyr::select(-year)
 dim(test_set)
-train_val_set <- shuffle_new %>% filter(year < 2012) %>% dplyr::select(-year)
+train_val_set <- shuffle_new %>%
+    filter(year < 2012) %>%
+    dplyr::select(-year)
 dim(train_val_set)
 
 write.csv(train_val_set, "../outputs/B_outputs/B11_japan_train_val.csv", row.names = FALSE, quote = FALSE)
@@ -140,27 +144,28 @@ lgb_df <- train_val_set
 
 
 # param grid
-grid_search <- expand.grid(boostings = c("dart", "gbdt")
-                           , learning_rates = c(1, 0.1, 0.01) # 
-                           , max_bins = c(255, 25, 15, 20) 
-                           , num_leaves = c(10, 15, 20)
-                           , max_depth = c(-1, 10)
+grid_search <- expand.grid(
+    boostings = c("dart", "gbdt"),
+    learning_rates = c(1, 0.1, 0.01) #
+    , max_bins = c(255, 25, 15, 20),
+    num_leaves = c(10, 15, 20),
+    max_depth = c(-1, 10)
 ) %>%
     mutate(iteration = NA) %>%
     mutate(binary_logloss = NA) %>%
     mutate(auc = NA) %>%
     mutate(binary_error = NA)
-    
+
 
 best_auc_yet <- 0
 
-for (i in seq_len(nrow(grid_search))){
-    
+for (i in seq_len(nrow(grid_search))) {
+
     # i = 1
-    
+
     grid_r <- grid_search[i, ]
     print(grid_r)
-    
+
     boosting <- as.character(grid_r[["boostings"]])
     learning_rate <- as.numeric(grid_r[["learning_rates"]])
     max_bin <- as.numeric(grid_r[["max_bins"]])
@@ -170,50 +175,49 @@ for (i in seq_len(nrow(grid_search))){
     num_boosting_rounds <- 1000L
 
     dtrain <- lgb.Dataset(
-        data = data.matrix(lgb_df[, feature_names])
-        , label = lgb_df[[target_col]]
-        , params = list(
-            min_data_in_bin = 1L
-            , max_bin = max_bin
-            )
+        data = data.matrix(lgb_df[, feature_names]),
+        label = lgb_df[[target_col]],
+        params = list(
+            min_data_in_bin = 1L,
+            max_bin = max_bin
+        )
     )
 
 
     params <- list(
-            objective = "binary"
-            , metric = c("binary_logloss", "auc", "binary_error")
-            , is_enable_sparse = TRUE
-            , min_data_in_leaf = 2L
-            , learning_rate = learning_rate
-            , boosting = boosting
-            , num_leaves = num_leaves
-            , max_depth = max_depth
-            , is_enable_sparse = TRUE
-            
+        objective = "binary",
+        metric = c("binary_logloss", "auc", "binary_error"),
+        is_enable_sparse = TRUE,
+        min_data_in_leaf = 2L,
+        learning_rate = learning_rate,
+        boosting = boosting,
+        num_leaves = num_leaves,
+        max_depth = max_depth,
+        is_enable_sparse = TRUE
     )
 
     cv_bst <- lgb.cv(
-        data = dtrain
-        , nrounds = num_boosting_rounds
-        , nfold = 5
-        , params = params
-        , stratified = TRUE
-        , early_stopping_rounds = 5
-        , seed = 42
-        , verbose = -1
+        data = dtrain,
+        nrounds = num_boosting_rounds,
+        nfold = 5,
+        params = params,
+        stratified = TRUE,
+        early_stopping_rounds = 5,
+        seed = 42,
+        verbose = -1
     )
-    
+
     save(cv_bst, file = "../outputs/B_outputs/B11_cv_bst.RData")
-    
+
     # create metric table
     best_iter <- cv_bst[["best_iter"]]
 
     cv_metrics <- cv_bst[["record_evals"]][["valid"]]
     metricDF <- data.frame(
-        iteration = seq_len(length(cv_metrics$binary_logloss$eval))
-        , binary_logloss = round(unlist(cv_metrics[["binary_logloss"]][["eval"]]), 3)
-        , auc = round(unlist(cv_metrics[["auc"]][["eval"]]), 3)
-        , binary_error = round(unlist(cv_metrics[["binary_error"]][["eval"]]), 3)
+        iteration = seq_len(length(cv_metrics$binary_logloss$eval)),
+        binary_logloss = round(unlist(cv_metrics[["binary_logloss"]][["eval"]]), 3),
+        auc = round(unlist(cv_metrics[["auc"]][["eval"]]), 3),
+        binary_error = round(unlist(cv_metrics[["binary_error"]][["eval"]]), 3)
     )
 
     # obtain the average performance
@@ -227,14 +231,11 @@ for (i in seq_len(nrow(grid_search))){
     grid_search[i, 6:ncol(grid_search)] <- c(metricDF[best_idx, ])
 
     if (as.numeric(grid_search[i, "binary_logloss"]) > best_auc_yet) {
-        
         best_auc_yet <- as.numeric(grid_search[i, "binary_logloss"])
         best_param_set <- grid_search[i, ]
-
     }
-    
-    write.csv(grid_search, "../outputs/B_outputs/B11_lgb_grid_kyoto3.csv", row.names = FALSE)
 
+    write.csv(grid_search, "../outputs/B_outputs/B11_lgb_grid_kyoto3.csv", row.names = FALSE)
 }
 
 print(best_param_set)
@@ -265,7 +266,7 @@ print(best_param_set)
 #         mutate(auc = NA) %>%
 #         mutate(binary_error = NA
 #     )
-                            
+
 
 # best_auc_yet <- 0
 
@@ -323,9 +324,9 @@ print(best_param_set)
 #         , early_stopping_rounds = 5
 #         , verbose = -1
 #     )
-    
+
 #     save(cv_bst, file = "../outputs/B_outputs/B11_cv_bst.RData")
-    
+
 #     # create metric table
 #     best_iter <- cv_bst[["best_iter"]]
 
@@ -340,11 +341,11 @@ print(best_param_set)
 #     # insert the result on the grid table
 #     best_idx <- best_iter
 #     grid_search[i, 6:ncol(grid_search)] <- c(metricDF[best_idx, ])
-    
+
 #     out <- grid_search[i, ]
 
 #     return(out)
-    
+
 # }
 
 # stopCluster(myCluster)

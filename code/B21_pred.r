@@ -34,33 +34,31 @@ library(lightgbm)
 
 # num_boosting_rounds <- 2000L
 
-    dtrain <- lgb.Dataset(
-        data = data.matrix(train_val_set[, feature_names])
-        , label = train_val_set[[target_col]]
-        , params = list(
-            min_data_in_bin = 1L
-            , max_bin = max_bin
-            )
+dtrain <- lgb.Dataset(
+    data = data.matrix(train_val_set[, feature_names]),
+    label = train_val_set[[target_col]],
+    params = list(
+        min_data_in_bin = 1L,
+        max_bin = max_bin
     )
+)
 
-    dtest <- lgb.Dataset(
-        data = data.matrix(test_set[, feature_names])
-        , label = test_set[[target_col]]
-        
-    )
-    
+dtest <- lgb.Dataset(
+    data = data.matrix(test_set[, feature_names]),
+    label = test_set[[target_col]]
+)
+
 
 params <- list(
-            objective = "binary"
-            , metric = c("binary_logloss")
-            , is_enable_sparse = TRUE
-            , min_data_in_leaf = 2L
-            , learning_rate = learning_rate
-            , boosting = boosting
-            , num_leaves = num_leaves
-            , max_depth = max_depth
-            
-    )
+    objective = "binary",
+    metric = c("binary_logloss"),
+    is_enable_sparse = TRUE,
+    min_data_in_leaf = 2L,
+    learning_rate = learning_rate,
+    boosting = boosting,
+    num_leaves = num_leaves,
+    max_depth = max_depth
+)
 valids <- list(test = dtest)
 lgb_final <- lgb.train(params = params, data = dtrain, valids = valids, nrounds = 3000L, verbose = 1)
 
@@ -71,7 +69,7 @@ print(lgb_final$best_score)
 
 
 # Run below codes after running the above
-lgb_load <- readRDS.lgb.Booster('../outputs/B_outputs/B21_lgb_final.rds')
+lgb_load <- readRDS.lgb.Booster("../outputs/B_outputs/B21_lgb_final.rds")
 
 pred <- predict(lgb_load, as.matrix(test_set[, feature_names]))
 test_set$predicted <- ifelse(pred > 0.5, 1, 0)
@@ -82,8 +80,8 @@ confusionMatrix(factor(test_set$predicted), factor(test_set$is_bloom))
 library(ROCR)
 roc_pred <- prediction(pred, test_set$is_bloom)
 roc <- performance(roc_pred, "sens", "spec")
-plot(roc, main="ROC curve")
-abline(a=0, b=1)
+plot(roc, main = "ROC curve")
+abline(a = 0, b = 1)
 
 lgb_imp <- lgb.importance(lgb_load, percentage = TRUE)
 lgb.plot.importance(lgb_imp, top_n = 10L, measure = "Gain")
@@ -92,5 +90,3 @@ lgb.plot.importance(lgb_imp, top_n = 10L, measure = "Gain")
 # aa <- lgb.load(filename = "../B_outputs/B21_lgb_final2.rds")
 # pred2 <- predict(aa, as.matrix(test_set[, feature_names]))
 # pred2
-
-
