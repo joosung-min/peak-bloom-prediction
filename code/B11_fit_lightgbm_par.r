@@ -3,7 +3,7 @@ library(lightgbm)
 
 # load gdd data
 setwd("/home/joosungm/projects/def-lelliott/joosungm/projects/peak-bloom-prediction/code/")
-source("/home/joosungm/projects/def-lelliott/joosungm/projects/peak-bloom-prediction/code/A00_functions.r")
+source("/home/joosungm/projects/def-lelliott/joosungm/projects/peak-bloom-prediction/code/F01_functions.r")
 
 gdd_data <- read.csv("../outputs/A_outputs/A41_gdd_kyoto.csv")
 
@@ -55,9 +55,9 @@ lgb_df <- train_val_set
 
 # param grid
 grid_search <- expand.grid(boostings = c("dart", "gbdt")
-                           , learning_rates = c(0.1, 0.01) # 
-                           , max_bins = c(255, 25, 15, 125) 
-                           , num_leaves = c(10, 15, 20)
+                           , learning_rates = c(0.1, 0.01, 0.001) # 
+                           , max_bins = c(255, 25, 15, 125, 75, 250) 
+                           , num_leaves = c(10, 15, 20, 40)
                            , max_depth = c(-1, 10, 20)
 ) %>%
     mutate(iteration = NA) %>%
@@ -198,7 +198,7 @@ library(lightgbm)
         data = data.matrix(train_val_set[, feature_names])
         , label = train_val_set[[target_col]]
         , params = list(
-            min_data_in_bin = 1L
+            # min_data_in_bin = 1L
             , max_bin = max_bin
             )
     )
@@ -214,7 +214,7 @@ params <- list(
             objective = "binary"
             , metric = c("binary_logloss", "auc", "binary_error")
             , is_enable_sparse = TRUE
-            , min_data_in_leaf = 2L
+            # , min_data_in_leaf = 2L
             , boosting = boosting
             , learning_rate = learning_rate
             , num_leaves = num_leaves
@@ -222,7 +222,7 @@ params <- list(
             
     )
 valids <- list(test = dtest)
-lgb_final <- lgb.train(params = params, data = dtrain, valids = valids, nrounds = 100L, verbose = 100)
+lgb_final <- lgb.train(params = params, data = dtrain, valids = valids, nrounds = 100L, verbose = 1)
 
 saveRDS.lgb.Booster(lgb_final, file = "../outputs/B_outputs/B21_lgb_final.rds")
 

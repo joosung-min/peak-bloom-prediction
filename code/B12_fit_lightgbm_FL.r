@@ -103,9 +103,9 @@ grid_search_result <- foreach (
 
         # objective = "binary"
         # , metric = c("focal_loss", "auc", "binary_error")
-        objective = F01_focal_loss
-        , eval = F01_focal_evaluation
-        , is_enable_sparse = TRUE
+        # objective = F01_focal_loss
+        # , eval = F01_focal_evaluation
+        is_enable_sparse = TRUE
         , learning_rate = learning_rate
         , boosting = boosting
         , num_leaves = num_leaves
@@ -115,6 +115,8 @@ grid_search_result <- foreach (
     cv_bst <- lgb.cv(
         data = dtrain
         , nrounds = num_boosting_rounds
+        , obj = F01_focal_loss
+        , eval = F01_focal_evaluation
         , nfold = 5
         , params = params
         , stratified = TRUE
@@ -204,9 +206,10 @@ library(lightgbm)
     
 
 params <- list(
-            # objective = "binary"
-            # , metric = c("focal_loss", "auc", "binary_error")
             objective = F01_focal_loss
+            # , metric = c("focal_loss", "auc", "binary_error")
+            # objective = "binary"
+            # , metric = F01_focal_loss
             , eval = F01_focal_evaluation
             , is_enable_sparse = TRUE
             , boosting = boosting

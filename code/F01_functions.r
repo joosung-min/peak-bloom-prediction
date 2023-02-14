@@ -3,8 +3,8 @@
 # setwd("/home/joosungm/projects/def-lelliott/joosungm/projects/peak-blossom-prediction/code")
 library(tidyverse)
 library(rnoaa)
-# feature_names <- c("month", "day", "Cd_cumsum", "Ca_cumsum", "lat", "long", "alt", "daily_Ca", "daily_Cd", "tmax", "tmin", "prcp")
-feature_names <- c("Cd_cumsum", "Ca_cumsum", "lat", "long", "alt", "daily_Ca", "daily_Cd", "tmax", "tmin", "prcp")
+feature_names <- c("month", "day", "Cd_cumsum", "Ca_cumsum", "lat", "long", "alt", "daily_Ca", "daily_Cd", "tmax", "tmin", "prcp")
+# feature_names <- c("Cd_cumsum", "Ca_cumsum", "lat", "long", "alt", "daily_Ca", "daily_Cd", "tmax", "tmin", "prcp")
 target_col <- "is_bloom"
 
 F01_get_temperature <- function (stationid) {
@@ -138,73 +138,82 @@ F01_chill_days <- function(r, Tc = 7) {
 
 
 
-F01_focal_loss <- function(preds, dtrain, alpha = 0.25, gamma = 2) {
+F01_focal_loss <- function(preds, dtrain) {
 
     # This function follows steps from the following python implementations
     # https://maxhalford.github.io/blog/lightgbm-focal-loss/
     # https://towardsdatascience.com/lightgbm-with-the-focal-loss-for-imbalanced-datasets-9836a9ae00ca
 
-    y_true <- get_field(dtrain, "label")
-    y_pred <- as.numeric(preds)
-    inv_logit_y_pred <- exp(y_pred) / (1 + exp(y_pred))
+    alpha = 0.25
+    gamma = 2
+
+    y_true = get_field(dtrain, "label")
+    y_pred = as.numeric(preds)
+    inv_logit_y_pred = exp(y_pred) / (1 + exp(y_pred))
 
     f_at <- function(y_true) {
+        
         return(ifelse(y_true == 1, alpha, 1 - alpha))
     }
 
     f_pt <- function(y_true, y_pred) {
+
         return(ifelse(y_true == 1, y_pred, 1 - y_pred))
     }
 
     fl <- function(y_true, y_pred) { # y = y_true, p = y_pred
 
-        a_t <- f_at(y_true = y_true)
-        p_t <- f_pt(y_true = y_true, y_pred = y_pred)
-        loss <- -1 * a_t * (1 - p_t)^gamma * log(p_t)
+        a_t = f_at(y_true = y_true)
+        p_t = f_pt(y_true = y_true, y_pred = y_pred)
+        loss = -1 * a_t * (1 - p_t)^gamma * log(p_t)
 
         return(loss)
     }
 
     grad <- function(y_true, y_pred) {
-        y <- 2 * y_true - 1 # {0, 1} -> {-1, 1}
-        a_t <- f_at(y_true = y_true)
-        p_t <- f_pt(y_true = y_true, y_pred = y_pred)
+        y = 2 * y_true - 1 # {0, 1} -> {-1, 1}
+        a_t = f_at(y_true = y_true)
+        p_t = f_pt(y_true = y_true, y_pred = y_pred)
 
-        grad_out <- a_t * y * (1 - p_t)^gamma * (gamma * p_t * log(p_t) + p_t - 1)
+        grad_out = a_t * y * (1 - p_t)^gamma * (gamma * p_t * log(p_t) + p_t - 1)
 
         return(grad_out)
     }
 
     hess <- function(y_true, y_pred) {
-        y <- 2 * y_true - 1
-        a_t <- f_at(y_true = y_true)
-        p_t <- f_pt(y_true = y_true, y_pred = y_pred)
+        y = 2 * y_true - 1
+        a_t = f_at(y_true = y_true)
+        p_t = f_pt(y_true = y_true, y_pred = y_pred)
 
-        u <- a_t * y * (1 - p_t)^gamma
-        du <- -a_t * y * gamma * (1 - p_t)**(gamma - 1)
-        v <- gamma * p_t * log(p_t) + p_t - 1
-        dv <- gamma * log(p_t) + gamma + 1
+        u = a_t * y * (1 - p_t)^gamma
+        du = -1 * a_t * y * gamma * (1 - p_t)^(gamma - 1)
+        v = gamma * p_t * log(p_t) + p_t - 1
+        dv = gamma * log(p_t) + gamma + 1
 
-        hess_out <- (du * v + u * dv) * y * (p_t * (1 - p_t))
+        hess_out = (du * v + u * dv) * y * (p_t * (1 - p_t))
 
         return(hess_out)
     }
 
-    fl_out <- list(grad = grad(y_true, inv_logit_y_pred), hess = hess(y_true, inv_logit_y_pred))
+    fl_out = list(grad = grad(y_true, inv_logit_y_pred), hess = hess(y_true, inv_logit_y_pred))
 
     return(fl_out)
 }
 
 # Define the evaluation function for LightGBM
-F01_focal_evaluation <- function(preds, dtrain, alpha = 0.25, gamma = 2) {
-    y_true <- get_field(dtrain, "label")
-    y_pred <- preds
+F01_focal_evaluation <- function(preds, dtrain) {
+    
+    alpha = 0.25
+    gamma = 2
 
-    p <- 1 / (1 + exp(-y_pred))
+    y_true = get_field(dtrain, "label")
+    y_pred = preds
 
-    loss <- -(alpha * y_true + (1 - alpha) * (1 - y_true)) * ((1 - (y_true * p + (1 - y_true) * (1 - p)))^gamma) * (y_true * log(p) + (1 - y_true) * log(1 - p))
+    p = 1 / (1 + exp(-1 * y_pred))
 
-    fe_out <- list(name = "focal_loss", value = mean(loss), higher_better = FALSE)
+    loss = -1 * (alpha * y_true + (1 - alpha) * (1 - y_true)) * ((1 - (y_true * p + (1 - y_true) * (1 - p)))^gamma) * (y_true * log(p) + (1 - y_true) * log(1 - p))
+
+    fe_out = list(name = "focal_loss", value = mean(loss), higher_better = FALSE)
 
     return(fe_out)
 }
