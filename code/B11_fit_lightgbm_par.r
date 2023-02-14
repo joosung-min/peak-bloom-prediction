@@ -1,20 +1,64 @@
 library(tidyverse)
-# library(lightgbm)
+library(lightgbm)
+
+# load gdd data
 setwd("/home/joosungm/projects/def-lelliott/joosungm/projects/peak-bloom-prediction/code/")
+source("/home/joosungm/projects/def-lelliott/joosungm/projects/peak-bloom-prediction/code/A00_functions.r")
+
+gdd_data <- read.csv("../outputs/A_outputs/A41_gdd_kyoto.csv")
+
+head(gdd_data)
+dim(gdd_data)
+
+nrow(gdd_data[gdd_data$is_bloom == 1, ])
+
+# number of samples with is_bloom == 1
+# table(gdd_data$is_bloom)
+
+# The data is highly unbalanced. Therefore, we try to balance it by randomly sampling rows with is_bloom == 0 to match the size to the is_bloom == 1.
+is_bloom_df <- gdd_data[gdd_data$is_bloom == 1, ]
+no_bloom_df <- gdd_data[gdd_data$is_bloom == 0, ]
+
+set.seed(42)
+idx <- sample(1:nrow(no_bloom_df), size = ceiling(1.5 * nrow(is_bloom_df)), replace = FALSE)
+no_bloom_sample <- no_bloom_df[idx, ]
+
+new_bloom_df <- rbind(is_bloom_df, no_bloom_sample)
+shuffle_new <- new_bloom_df[sample(1:nrow(new_bloom_df), size = nrow(new_bloom_df), replace = FALSE), ] %>%
+    "rownames<-"(NULL) %>%
+    dplyr::select(year, tmax, tmin, prcp, month, day, daily_Cd, daily_Ca, Cd_cumsum, Ca_cumsum, lat, long, alt, is_bloom)
+
+# head(shuffle_new)
+dim(shuffle_new)
+table(shuffle_new$is_bloom)
+
+# split a test set
+test_set <- shuffle_new %>%
+    filter(year %in% 2012:2023) %>%
+    dplyr::select(-year)
+dim(test_set)
+train_val_set <- shuffle_new %>%
+    filter(year < 2012) %>%
+    dplyr::select(-year)
+dim(train_val_set)
+
+write.csv(train_val_set, "../outputs/B_outputs/B11_japan_train_val.csv", row.names = FALSE, quote = FALSE)
+write.csv(test_set, "../outputs/B_outputs/B11_japan_test.csv", row.names = FALSE, quote = FALSE)
 
 
+## Cross-validate
 train_val_set <- read.csv("../outputs/B_outputs/B11_japan_train_val.csv")
-feature_names <- c("tmax", "tmin", "prcp", "month", "day", "daily_Cd", "daily_Ca", "Cd_cumsum", "Ca_cumsum", "lat", "long", "alt", "diff_Ca_Cd", "diff_Ca_Cd_cumsum")
-target_col <- "is_bloom"
+# feature_names <- c("tmax", "tmin", "prcp", "month", "day", "daily_Ca", "daily_Cd", "Cd_cumsum", "Ca_cumsum", "lat", "long", "alt")
+# target_col <- "is_bloom"
 
 lgb_df <- train_val_set
 
 # param grid
 grid_search <- expand.grid(boostings = c("dart", "gbdt")
-                           , learning_rates = c(1, 0.1, 0.01) # 
-                           , max_bins = c(255, 25, 15, 20) 
+                           , learning_rates = c(0.1, 0.01) # 
+                           , max_bins = c(255, 25, 15, 125) 
                            , num_leaves = c(10, 15, 20)
-                           , max_depth = c(-1, 10)
+                           , max_depth = c(-1, 10, 20)
 ) %>%
     mutate(iteration = NA) %>%
     mutate(binary_logloss = NA) %>%
@@ -75,6 +119,7 @@ grid_search_result <- foreach (
         , params = params
         , stratified = TRUE
         , early_stopping_rounds = 5
+        , seed = 42
         , verbose = -1
     )
     
@@ -110,15 +155,18 @@ grid_search_out$boostings <- ifelse(grid_search_out$boostings == 1, "dart", "gbd
 write.csv(grid_search_out, "../outputs/B_outputs/B11_lgb_grid_kyoto_par.csv", row.names = FALSE)
 
 
-
 library(tidyverse)
 
-# Here we train our final model using the parameters from before.
-grid_search_result <- read.csv("../outputs/B_outputs/B11_lgb_grid_kyoto_par.csv")
+setwd("/home/joosungm/projects/def-lelliott/joosungm/projects/peak-bloom-prediction/code")
 
-best_logloss <- grid_search_result[which(grid_search_result$binary_logloss == min(grid_search_result$binary_logloss)), ]
-best_auc <- grid_search_result[which(grid_search_result$auc == max(grid_search_result$auc)), ]
-best_berror <- grid_search_result[which(grid_search_result$binary_error == min(grid_search_result$binary_error)), ]
+# Here we train our final model using the parameters from before.
+grid_search_out <- read.csv("../outputs/B_outputs/B11_lgb_grid_kyoto_par.csv")
+head(grid_search_out)
+
+
+best_logloss <- grid_search_out[which(grid_search_out$binary_logloss == min(grid_search_out$binary_logloss)), ]
+best_auc <- grid_search_out[which(grid_search_out$auc == max(grid_search_out$auc)), ]
+best_berror <- grid_search_out[which(grid_search_out$binary_error == min(grid_search_out$binary_error)), ]
 
 best_params <- rbind(best_logloss, best_auc, best_berror)
 best_params
@@ -128,7 +176,7 @@ write.csv(best_params, "../outputs/B_outputs/B11_lgb_grid_kyoto_best_params.csv"
 
 # Fit final model:
 # params
-param_idx <- 1
+param_idx <- 1 # best binary_logloss
 boosting <- as.character(best_params[param_idx, "boostings"])
 learning_rate <- as.numeric(best_params[param_idx, "learning_rate"])
 max_bin <- as.numeric(best_params[param_idx, "max_bins"])
@@ -140,9 +188,6 @@ seed <- 42
 # load data
 train_val_set <- read.csv("../outputs/B_outputs/B11_japan_train_val.csv")
 test_set <- read.csv("../outputs/B_outputs/B11_japan_test.csv")
-
-feature_names <- c("tmax", "tmin", "prcp", "month", "day", "daily_Cd", "daily_Ca", "Cd_cumsum", "Ca_cumsum", "lat", "long", "alt", "diff_Ca_Cd", "diff_Ca_Cd_cumsum")
-target_col <- "is_bloom"
 
 
 library(lightgbm)
@@ -167,17 +212,17 @@ library(lightgbm)
 
 params <- list(
             objective = "binary"
-            , metric = c("binary_logloss")
+            , metric = c("binary_logloss", "auc", "binary_error")
             , is_enable_sparse = TRUE
             , min_data_in_leaf = 2L
-            , learning_rate = learning_rate
             , boosting = boosting
+            , learning_rate = learning_rate
             , num_leaves = num_leaves
             , max_depth = max_depth
             
     )
 valids <- list(test = dtest)
-lgb_final <- lgb.train(params = params, data = dtrain, valids = valids, nrounds = 1000L, verbose = 1)
+lgb_final <- lgb.train(params = params, data = dtrain, valids = valids, nrounds = 100L, verbose = 100)
 
 saveRDS.lgb.Booster(lgb_final, file = "../outputs/B_outputs/B21_lgb_final.rds")
 

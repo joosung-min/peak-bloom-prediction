@@ -39,8 +39,8 @@ train_val_set <- shuffle_new %>%
     dplyr::select(-year)
 dim(train_val_set)
 
-write.csv(train_val_set, "../outputs/B_outputs/B11_japan_train_val.csv", row.names = FALSE, quote = FALSE)
-write.csv(test_set, "../outputs/B_outputs/B11_japan_test.csv", row.names = FALSE, quote = FALSE)
+# write.csv(train_val_set, "../outputs/B_outputs/B11_japan_train_val.csv", row.names = FALSE, quote = FALSE)
+# write.csv(test_set, "../outputs/B_outputs/B11_japan_test.csv", row.names = FALSE, quote = FALSE)
 
 # Fit lightgbm
 
@@ -49,87 +49,156 @@ write.csv(test_set, "../outputs/B_outputs/B11_japan_test.csv", row.names = FALSE
 # - We're using 5-fold cross-validation. Therefore, split the groups into 5.
 # - First, split the response variable data for a semi-stratified sampling.
 
-# library(tidyverse)
-# library(lightgbm)
+library(tidyverse)
+library(lightgbm)
+setwd("/home/joosungm/projects/def-lelliott/joosungm/projects/peak-bloom-prediction/code/")
+source("/home/joosungm/projects/def-lelliott/joosungm/projects/peak-bloom-prediction/code/A00_functions.r")
+train_val_set <- read.csv("../outputs/B_outputs/B11_japan_train_val.csv")
 
-# train_val_set <- read.csv("../outputs/B_outputs/B11_japan_train_val.csv")
+lgb_df <- train_val_set
 
-# lgb_df <- train_val_set
+set.seed(1)
+gdd_bloom <- lgb_df[lgb_df$is_bloom == 1, ]
+cv_group_bloom <- sample(1:5, size = nrow(gdd_bloom), replace = TRUE)
+gdd_bloom$cv_group <- cv_group_bloom
 
-# set.seed(1)
-# gdd_bloom <- lgb_df[lgb_df$is_bloom == 1, ]
-# cv_group_bloom <- sample(1:5, size = nrow(gdd_bloom), replace = TRUE)
-# gdd_bloom$cv_group <- cv_group_bloom
+gdd_nobloom <- lgb_df[lgb_df$is_bloom == 0, ]
+cv_group_nobloom <- sample(1:5, size = nrow(gdd_nobloom), replace = TRUE)
+gdd_nobloom$cv_group <- cv_group_nobloom
 
-# gdd_nobloom <- lgb_df[lgb_df$is_bloom == 0, ]
-# cv_group_nobloom <- sample(1:5, size = nrow(gdd_nobloom), replace = TRUE)
-# gdd_nobloom$cv_group <- cv_group_nobloom
+lgb_df2 <- rbind(gdd_bloom, gdd_nobloom)
 
-# lgb_df2 <- rbind(gdd_bloom, gdd_nobloom)
+# - train, test split
+gdd_train <- lgb_df2[lgb_df2$cv_group != 1, ] %>% dplyr::select(-cv_group)
+gdd_val <- lgb_df2[lgb_df2$cv_group == 1, ] %>% dplyr::select(-cv_group)
 
-# # - train, test split
-# gdd_train <- lgb_df2[lgb_df2$cv_group != 1, ] %>% dplyr::select(-cv_group)
-# gdd_val <- lgb_df2[lgb_df2$cv_group == 1, ] %>% dplyr::select(-cv_group)
+# - split X and y
+library(Matrix)
+# gdd_train_X <- gdd_train %>% dplyr::select(-is_bloom)
+gdd_train_X <- sparse.model.matrix(is_bloom ~ ., data = gdd_train)
+gdd_train_y <- gdd_train[, "is_bloom"]
 
-# # - split X and y
-# library(Matrix)
-# # gdd_train_X <- gdd_train %>% dplyr::select(-is_bloom)
-# gdd_train_X <- sparse.model.matrix(is_bloom ~., data = gdd_train)
-# gdd_train_y <- gdd_train[, "is_bloom"]
+# gdd_val_X <- gdd_val %>% dplyr::select(-is_bloom)
+gdd_val_X <- sparse.model.matrix(is_bloom ~ ., data = gdd_val)
+gdd_val_y <- gdd_val[, "is_bloom"]
 
-# # gdd_val_X <- gdd_val %>% dplyr::select(-is_bloom)
-# gdd_val_X <- sparse.model.matrix(is_bloom ~., data = gdd_val)
-# gdd_val_y <- gdd_val[, "is_bloom"]
+# 2. Create lgb.Dataset objects
+dtrain <- lgb.Dataset(data = as.matrix(gdd_train_X), label = gdd_train_y)
+dval <- lgb.Dataset(data = as.matrix(gdd_val_X), label = gdd_val_y)
 
-# # 2. Create lgb.Dataset objects
-# dtrain <- lgb.Dataset(data = as.matrix(gdd_train_X), label = gdd_train_y)
-# dval <- lgb.Dataset(data = as.matrix(gdd_val_X), label = gdd_val_y)
+# 3. Build model
+# https://lightgbm.readthedocs.io/en/latest/Parameters.html
+# Use focal loss? - https://towardsdatascience.com/lightgbm-with-the-focal-loss-for-imbalanced-datasets-9836a9ae00ca
+# Use doy as the reponse? - make it a regression problem.
+# Pull info from other Japanese cities with similar latitude, and then randomly sample 2*positive cases.
 
-# # 3. Build model
-# # https://lightgbm.readthedocs.io/en/latest/Parameters.html
-# # Use focal loss? - https://towardsdatascience.com/lightgbm-with-the-focal-loss-for-imbalanced-datasets-9836a9ae00ca
-# # Use doy as the reponse? - make it a regression problem.
-# # Pull info from other Japanese cities with similar latitude, and then randomly sample 2*positive cases.
+# Define the focal loss function
+# focal_loss <- function(y_true, y_pred, alpha = 0.25, gamma = 2) {
+
+data(agaricus.train, package = "lightgbm")
+t_train <- agaricus.train
+t_dtrain <- lgb.Dataset(t_train$data, label = t_train$label)
+get_field(t_dtrain, "label")
+
+focal_loss <- function(preds, dtrain, alpha = 0.25, gamma = 2) {
+
+    # This function follows steps from the following python implementations
+    # https://maxhalford.github.io/blog/lightgbm-focal-loss/
+    # https://towardsdatascience.com/lightgbm-with-the-focal-loss-for-imbalanced-datasets-9836a9ae00ca
+
+    y_true <- get_field(dtrain, "label")
+    y_pred <- as.numeric(preds)
+    inv_logit_y_pred <- exp(y_pred) / (1 + exp(y_pred))
+
+    f_at <- function(y_true) {
+        return(ifelse(y_true == 1, alpha, 1 - alpha))
+    }
+
+    f_pt <- function(y_true, y_pred) {
+        return(ifelse(y_true == 1, y_pred, 1 - y_pred))
+    }
+
+    fl <- function(y_true, y_pred) { # y = y_true, p = y_pred
+
+        a_t <- f_at(y_true = y_true)
+        p_t <- f_pt(y_true = y_true, y_pred = y_pred)
+        loss <- -1 * a_t * (1 - p_t)^gamma * log(p_t)
+
+        return(loss)
+    }
+
+    grad <- function(y_true, y_pred) {
+        y <- 2 * y_true - 1 # {0, 1} -> {-1, 1}
+        a_t <- f_at(y_true = y_true)
+        p_t <- f_pt(y_true = y_true, y_pred = y_pred)
+
+        grad_out <- a_t * y * (1 - p_t)^gamma * (gamma * p_t * log(p_t) + p_t - 1)
+
+        return(grad_out)
+    }
+
+    hess <- function(y_true, y_pred) {
+        y <- 2 * y_true - 1
+        a_t <- f_at(y_true = y_true)
+        p_t <- f_pt(y_true = y_true, y_pred = y_pred)
+
+        u <- a_t * y * (1 - p_t)^gamma
+        du <- -a_t * y * gamma * (1 - p_t)**(gamma - 1)
+        v <- gamma * p_t * log(p_t) + p_t - 1
+        dv <- gamma * log(p_t) + gamma + 1
+
+        hess_out <- (du * v + u * dv) * y * (p_t * (1 - p_t))
+
+        return(hess_out)
+    }
+
+    fl_out <- list(grad = grad(y_true, inv_logit_y_pred), hess = hess(y_true, inv_logit_y_pred))
+
+    return(fl_out)
+}
+
+# Define the evaluation function for LightGBM
+focal_evaluation <- function(preds, dtrain, alpha = 0.25, gamma = 2) {
+    y_true <- get_field(dtrain, "label")
+    y_pred <- preds
+
+    p <- 1 / (1 + exp(-y_pred))
+
+    loss <- -(alpha * y_true + (1 - alpha) * (1 - y_true)) * ((1 - (y_true * p + (1 - y_true) * (1 - p)))^gamma) * (y_true * log(p) + (1 - y_true) * log(1 - p))
+
+    fe_out <- list(name = "focal_loss", value = mean(loss), higher_better = FALSE)
+
+    return(fe_out)
+}
+
 # neg_pos_ratio <- sum(gdd_train$is_bloom == 0) / sum(gdd_train$is_bloom == 1)
 
-# params <- list(
-#     # metric = "binary_logloss",
-#     metric = "cross_entropy_lambda",
-#     # feature_pre_filter = FALSE, # only necessary when reducing min_data_in_leaf
-#     # min_data_in_leaf = 20, # default: 20
-#     # max_depth = -1,
-#     # scale_pos_weight = neg_pos_ratio,
-#     # data_sampling_strategy = "bagging", # options: "bagging", "goss"
-#     # pos_bagging_fraction = 0.5,
-#     # neg_bagging_fraction = 0.01,
-#     # monotone_constraints_method = "intermediate", # options: "basic", "intermediate", "advanced"
-#     # max_bin = 10, # default: 255
-#     is_enable_sparse = TRUE,
-#     # n_estimators = 1000,
-#     # num_leaves = 2000
-#     learning_rate = 0.001,
-#     objective = "binary"
-# )
+params <- list(
+    learning_rate = 0.001
+)
 
-# valids <- list(test = dval)
+valids <- list(test = dval)
 
-# print("fitting the model")
-# lgb_model <- lgb.train(params = params, data = dtrain, nrounds = 1000, valids, verbose = -1)
+print("fitting the model")
+lgb_model <- lgb.train(
+    params = params,
+    data = dtrain,
+    objective = focal_loss,
+    eval = focal_evaluation,
+    nrounds = 10, valids, verbose = 1
+)
 
 # # 4. Accuracy checking
-# print("accuracy checking")
-# library(caret)
-# p <- predict(lgb_model, gdd_val_X)
-# gdd_val <- gdd_val
-# gdd_val$predicted <- ifelse(p > 0.5, 1, 0)
-# dim(gdd_val_X)
-# confusionMatrix(factor(gdd_val$predicted), factor(gdd_val$is_bloom))
+print("accuracy checking")
+
+library(caret)
+p <- predict(lgb_model, gdd_val_X)
+gdd_val <- gdd_val
+gdd_val$predicted <- ifelse(p > 0.5, 1, 0)
+dim(gdd_val_X)
+confusionMatrix(factor(gdd_val$predicted), factor(gdd_val$is_bloom))
 
 
-# cross-validation using lgb.cv
-# https://github.com/microsoft/LightGBM/issues/5571
-# https://lightgbm.readthedocs.io/en/latest/Parameters.html
-# https://lightgbm.readthedocs.io/en/latest/Parameters-Tuning.html#for-better-accuracy
 library(tidyverse)
 library(lightgbm)
 
@@ -207,7 +276,7 @@ for (i in seq_len(nrow(grid_search))) {
         verbose = -1
     )
 
-    save(cv_bst, file = "../outputs/B_outputs/B11_cv_bst.RData")
+    # save(cv_bst, file = "../outputs/B_outputs/B11_cv_bst.RData")
 
     # create metric table
     best_iter <- cv_bst[["best_iter"]]
