@@ -56,9 +56,10 @@ lgb_df <- train_val_set
 # param grid
 grid_search <- expand.grid(boostings = c("dart", "gbdt")
                            , learning_rates = c(0.1, 0.01, 0.001) # 
-                           , max_bins = c(255, 25, 15, 125, 75, 250) 
-                           , num_leaves = c(10, 15, 20, 40)
-                           , max_depth = c(-1, 10, 20)
+                           , max_bins = c(255, 25, 15, 125, 75, 500) 
+                           , min_data_in_leaf = c(20, 40, 60)
+                           , num_leaves = c(31, 15, 60, 100)
+                           , max_depth = c(-1, 10, 20, 40)
 ) %>%
     mutate(iteration = NA) %>%
     mutate(binary_logloss = NA) %>%
@@ -81,6 +82,7 @@ grid_search_result <- foreach (
     boosting = grid_search$boostings
     , learning_rate = grid_search$learning_rates
     , max_bin = grid_search$max_bins
+    , min_data_in_leaf = grid_search$min_data_in_leaf
     , num_leaves = grid_search$num_leaves
     , max_depth = grid_search$max_depth
     , .packages = "lightgbm"
@@ -88,14 +90,13 @@ grid_search_result <- foreach (
 
 ) %do% {
 
-    num_boosting_rounds <- 1000L
+    num_boosting_rounds <- 2000L
 
     dtrain <- lgb.Dataset(
         data = data.matrix(lgb_df[, feature_names])
         , label = lgb_df[[target_col]]
         , params = list(
-            min_data_in_bin = 1L
-            , max_bin = max_bin
+            max_bin = max_bin
             )
     )
 
@@ -103,13 +104,13 @@ grid_search_result <- foreach (
     params <- list(
 
         objective = "binary"
-        , metric = c("binary_logloss", "auc", "binary_error")
+        , metric = c("auc", "binary_logloss", "binary_error")
         , is_enable_sparse = TRUE
-        , min_data_in_leaf = 2L
+        , min_data_in_leaf = min_data_in_leaf  # overfitting
         , learning_rate = learning_rate
         , boosting = boosting
-        , num_leaves = num_leaves
-        , max_depth = max_depth
+        , num_leaves = num_leaves              # control overfitting
+        , max_depth = max_depth                # control overfitting
     )
 
     cv_bst <- lgb.cv(
@@ -118,7 +119,7 @@ grid_search_result <- foreach (
         , nfold = 5
         , params = params
         , stratified = TRUE
-        , early_stopping_rounds = 5
+        , early_stopping_rounds = 10
         , seed = 42
         , verbose = -1
     )
@@ -171,12 +172,20 @@ best_berror <- grid_search_out[which(grid_search_out$binary_error == min(grid_se
 best_params <- rbind(best_logloss, best_auc, best_berror)
 best_params
 write.csv(best_params, "../outputs/B_outputs/B11_lgb_grid_kyoto_best_params.csv", row.names = FALSE)
+print("best params saved!")
 
 
 
+#######################################################################
 # Fit final model:
-# params
-param_idx <- 1 # best binary_logloss
+#######################################################################
+
+# Here we train our final model using the parameters from before.
+setwd("/home/joosungm/projects/def-lelliott/joosungm/projects/peak-bloom-prediction/code/")
+best_params <- read.csv("../outputs/B_outputs/B11_lgb_grid_kyoto_best_params.csv")
+best_params
+
+param_idx <- 2 # best auc
 boosting <- as.character(best_params[param_idx, "boostings"])
 learning_rate <- as.numeric(best_params[param_idx, "learning_rate"])
 max_bin <- as.numeric(best_params[param_idx, "max_bins"])
@@ -190,39 +199,39 @@ train_val_set <- read.csv("../outputs/B_outputs/B11_japan_train_val.csv")
 test_set <- read.csv("../outputs/B_outputs/B11_japan_test.csv")
 
 
+library(tidyverse)
 library(lightgbm)
 
 # num_boosting_rounds <- 2000L
+source("/home/joosungm/projects/def-lelliott/joosungm/projects/peak-bloom-prediction/code/F01_functions.r")
+dtrain <- lgb.Dataset(
+    data = data.matrix(train_val_set[, feature_names])
+    , label = train_val_set[[target_col]]
+    , params = list(
+        # min_data_in_bin = 1L
+        max_bin = max_bin
+        )
+)
 
-    dtrain <- lgb.Dataset(
-        data = data.matrix(train_val_set[, feature_names])
-        , label = train_val_set[[target_col]]
-        , params = list(
-            # min_data_in_bin = 1L
-            , max_bin = max_bin
-            )
-    )
-
-    dtest <- lgb.Dataset(
-        data = data.matrix(test_set[, feature_names])
-        , label = test_set[[target_col]]
-        
-    )
+dtest <- lgb.Dataset(
+    data = data.matrix(test_set[, feature_names])
+    , label = test_set[[target_col]]
     
-
+)
+    
 params <- list(
             objective = "binary"
-            , metric = c("binary_logloss", "auc", "binary_error")
+            , metric = c("auc")
             , is_enable_sparse = TRUE
             # , min_data_in_leaf = 2L
             , boosting = boosting
             , learning_rate = learning_rate
             , num_leaves = num_leaves
             , max_depth = max_depth
-            
+            , early_stopping_rounds = 10L
     )
 valids <- list(test = dtest)
-lgb_final <- lgb.train(params = params, data = dtrain, valids = valids, nrounds = 100L, verbose = 1)
+lgb_final <- lgb.train(params = params, data = dtrain, valids = valids, nrounds = 1000L, verbose = 1)
 
 saveRDS.lgb.Booster(lgb_final, file = "../outputs/B_outputs/B21_lgb_final.rds")
 

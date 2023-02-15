@@ -3,14 +3,16 @@
 # setwd("/home/joosungm/projects/def-lelliott/joosungm/projects/peak-blossom-prediction/code")
 library(tidyverse)
 library(rnoaa)
-feature_names <- c("month", "day", "Cd_cumsum", "Ca_cumsum", "lat", "long", "alt", "daily_Ca", "daily_Cd", "tmax", "tmin", "prcp")
+library(lightgbm)
+
+feature_names <- c("month", "day", "Cd_cumsum", "Ca_cumsum", "lat", "long", "alt", "daily_Ca", "daily_Cd", "tmax", "tmin")
 # feature_names <- c("Cd_cumsum", "Ca_cumsum", "lat", "long", "alt", "daily_Ca", "daily_Cd", "tmax", "tmin", "prcp")
 target_col <- "is_bloom"
 
 F01_get_temperature <- function (stationid) {
 
     dat <- ghcnd_search(stationid = stationid, var = c("TMAX", "TMIN", "PRCP"), 
-               date_min = "1950-01-01", date_max = "2023-01-31") %>%
+               date_min = "1950-01-01", date_max = "2023-04-30") %>%
                purrr::reduce(left_join, by = "date") %>%
                select(id.x, date, tmax, tmin, prcp) %>%
                rename_with(~ "id", id.x) %>%
@@ -147,57 +149,20 @@ F01_focal_loss <- function(preds, dtrain) {
     alpha = 0.25
     gamma = 2
 
-    y_true = get_field(dtrain, "label")
-    y_pred = as.numeric(preds)
-    inv_logit_y_pred = exp(y_pred) / (1 + exp(y_pred))
+    y_pred <- 1 / (1 + exp(-preds))
+    y_true <- get_field(dtrain, "label")
+    
+    # Compute the gradient and hessian of focal loss
+    pt <- pmax(1e-15, pmin(1 - 1e-15, y_pred))
+    alpha_factor <- ifelse(y_true == 1, alpha, 1 - alpha)
+    focal_weight <- alpha_factor * (1 - pt)^gamma
+    loss <- -y_true * log(pt) - (1 - y_true) * log(1 - pt)
+    
+    gradient <- (y_pred - y_true) * focal_weight * (-1 / pt + 1 / (1 - pt))
+    hessian <- (y_pred * (1 - y_pred) * focal_weight * ((gamma - 1) * pt - gamma * y_pred)) / (pt * (1 - pt))
+    
+    return(list(grad = gradient, hess = hessian))
 
-    f_at <- function(y_true) {
-        
-        return(ifelse(y_true == 1, alpha, 1 - alpha))
-    }
-
-    f_pt <- function(y_true, y_pred) {
-
-        return(ifelse(y_true == 1, y_pred, 1 - y_pred))
-    }
-
-    fl <- function(y_true, y_pred) { # y = y_true, p = y_pred
-
-        a_t = f_at(y_true = y_true)
-        p_t = f_pt(y_true = y_true, y_pred = y_pred)
-        loss = -1 * a_t * (1 - p_t)^gamma * log(p_t)
-
-        return(loss)
-    }
-
-    grad <- function(y_true, y_pred) {
-        y = 2 * y_true - 1 # {0, 1} -> {-1, 1}
-        a_t = f_at(y_true = y_true)
-        p_t = f_pt(y_true = y_true, y_pred = y_pred)
-
-        grad_out = a_t * y * (1 - p_t)^gamma * (gamma * p_t * log(p_t) + p_t - 1)
-
-        return(grad_out)
-    }
-
-    hess <- function(y_true, y_pred) {
-        y = 2 * y_true - 1
-        a_t = f_at(y_true = y_true)
-        p_t = f_pt(y_true = y_true, y_pred = y_pred)
-
-        u = a_t * y * (1 - p_t)^gamma
-        du = -1 * a_t * y * gamma * (1 - p_t)^(gamma - 1)
-        v = gamma * p_t * log(p_t) + p_t - 1
-        dv = gamma * log(p_t) + gamma + 1
-
-        hess_out = (du * v + u * dv) * y * (p_t * (1 - p_t))
-
-        return(hess_out)
-    }
-
-    fl_out = list(grad = grad(y_true, inv_logit_y_pred), hess = hess(y_true, inv_logit_y_pred))
-
-    return(fl_out)
 }
 
 # Define the evaluation function for LightGBM
@@ -206,14 +171,13 @@ F01_focal_evaluation <- function(preds, dtrain) {
     alpha = 0.25
     gamma = 2
 
-    y_true = get_field(dtrain, "label")
-    y_pred = preds
+    y_true <- get_field(dtrain, "label")
+    y_pred <- 1 / (1 + exp(-preds))
+    
+    y_true = y_true * (1 - y_pred) ^ gamma
+    alpha_y_true = alpha * y_true
+    loss <- y_true * log(y_pred) + (1 - y_true) * log(1 - y_pred)
+    loss_out <- -1 * (alpha_y_true * loss + (1 - alpha_y_true) * log(1 - y_pred))
 
-    p = 1 / (1 + exp(-1 * y_pred))
-
-    loss = -1 * (alpha * y_true + (1 - alpha) * (1 - y_true)) * ((1 - (y_true * p + (1 - y_true) * (1 - p)))^gamma) * (y_true * log(p) + (1 - y_true) * log(1 - p))
-
-    fe_out = list(name = "focal_loss", value = mean(loss), higher_better = FALSE)
-
-    return(fe_out)
+    return(list(name = "focal_loss", value = mean(loss_out), higher_better = FALSE))
 }
