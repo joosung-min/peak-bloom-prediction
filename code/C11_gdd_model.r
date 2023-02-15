@@ -16,7 +16,7 @@ years <- 1953:2011
 gdd_grid <- expand.grid(
     Tcs = c(5, 6, 7, 8, 9)
     , Rc_thresholds = seq(from = -80, to = -150, by = -5) # 
-    , Rh_thresholds = seq(from = 90, to = 240, by = 5) 
+    , Rh_thresholds = seq(from = 110, to = 240, by = 5) 
     , first_Tc_reach_days = c(0, 1)
     ) %>%
         mutate(MAE = NA)
@@ -37,7 +37,7 @@ gdd_result <- foreach (
     , Tc_fixed = gdd_grid$first_Tc_reach_days
     , .combine = rbind
 
-) %do% {
+) %dopar% {
     
     yearly_mae <- matrix(nrow = length(years), ncol = 1)
     
@@ -67,7 +67,7 @@ gdd_result <- foreach (
         Rc_thresh_loc <- which(test_df$Cd_cumsum < Rc_thresh)[1]
         Rc_thresh_day <- test_df[Rc_thresh_loc, "date"] 
 
-        print(paste0("reaches the Rc threshold on ", Rc_thresh_day)) # 저온요구도 달성일 i.e., 내생휴면 해제일. 
+        # print(paste0("reaches the Rc threshold on ", Rc_thresh_day)) # 저온요구도 달성일 i.e., 내생휴면 해제일. 
 
         test_df_afterRc <- test_df[Rc_thresh_loc:nrow(test_df), ]
         first_Tc_reach_loc <- which(test_df_afterRc$tmax > Tc)[1]
@@ -88,11 +88,11 @@ gdd_result <- foreach (
 
         Rc_thresh_loc2 <- which(test_df$Ca_cumsum > - Rc_thresh)[1]
         Rc_thresh_day2 <- test_df[Rc_thresh_loc2, "date"] # Buds activate on this day.
-        print(paste0("reaches the Rc threshold for buds on ", Rc_thresh_day2))
+        # print(paste0("reaches the Rc threshold for buds on ", Rc_thresh_day2))
 
         Rh_thresh_loc <- which(test_df$Ca_cumsum > Rh_thresh)[1]
         Rh_thresh_day <- test_df[Rh_thresh_loc, "date"]   # Blossom day.
-        print(paste0("Actual date: ", actual_date, " vs. ", "predicted cherry blossom date: ", Rh_thresh_day))
+        # print(paste0("Actual date: ", actual_date, " vs. ", "predicted cherry blossom date: ", Rh_thresh_day))
 
         diff <- abs(as.numeric(as.Date(Rh_thresh_day)) - as.numeric(as.Date(actual_date)))
 
@@ -111,10 +111,10 @@ print("grid search completed")
 
 gdd_result_out <- data.frame(gdd_result) %>%
     'colnames<-'(colnames(gdd_grid))
-write.table(gdd_result_out, "../outputs/C_outputs/C11_gdd_grid.csv")
+write.table(gdd_result_out, "../outputs/C_outputs/C11_gdd_grid2.csv")
 print("table1 saved")
 
 best_gdd_idx <- which(gdd_result_out$MAE == min(gdd_result_out$MAE))
 best_gdd <- gdd_result_out[best_gdd_idx, ]
-write.table(best_gdd, "../outputs/C_outputs/C11_gdd_grid_best.csv")
+write.table(best_gdd, "../outputs/C_outputs/C11_gdd_grid_best2.csv")
 print("table2 saved")

@@ -42,12 +42,12 @@ train_val_set <- shuffle_new %>%
     dplyr::select(-year)
 dim(train_val_set)
 
-write.csv(train_val_set, "../outputs/B_outputs/B11_japan_train_val.csv", row.names = FALSE, quote = FALSE)
-write.csv(test_set, "../outputs/B_outputs/B11_japan_test.csv", row.names = FALSE, quote = FALSE)
+write.csv(train_val_set, "../outputs/B_outputs/B11_japan_train_val2.csv", row.names = FALSE, quote = FALSE)
+write.csv(test_set, "../outputs/B_outputs/B11_japan_test2.csv", row.names = FALSE, quote = FALSE)
 
 
 ## Cross-validate
-train_val_set <- read.csv("../outputs/B_outputs/B11_japan_train_val.csv")
+train_val_set <- read.csv("../outputs/B_outputs/B11_japan_train_val2.csv")
 # feature_names <- c("tmax", "tmin", "prcp", "month", "day", "daily_Ca", "daily_Cd", "Cd_cumsum", "Ca_cumsum", "lat", "long", "alt")
 # target_col <- "is_bloom"
 
@@ -55,11 +55,11 @@ lgb_df <- train_val_set
 
 # param grid
 grid_search <- expand.grid(boostings = c("dart", "gbdt")
-                           , learning_rates = c(0.1, 0.01, 0.001) # 
-                           , max_bins = c(255, 25, 15, 125, 75, 500) 
-                           , min_data_in_leaf = c(20, 40, 60)
-                           , num_leaves = c(31, 15, 60, 100)
-                           , max_depth = c(-1, 10, 20, 40)
+                           , learning_rates = c(0.1, 0.01) # 
+                           , max_bins = c(255, 25, 500, 125) 
+                           , min_data_in_leaf = c(20, 40, 10)
+                           , num_leaves = c(31, 60, 100)
+                           , max_depth = c(-1, 10, 30)
 ) %>%
     mutate(iteration = NA) %>%
     mutate(binary_logloss = NA) %>%
@@ -153,7 +153,7 @@ grid_search_out <- data.frame(grid_search_result)
 colnames(grid_search_out) <- colnames(grid_search)
 grid_search_out$boostings <- ifelse(grid_search_out$boostings == 1, "dart", "gbdt")
 # head(grid_search_out)
-write.csv(grid_search_out, "../outputs/B_outputs/B11_lgb_grid_kyoto_par.csv", row.names = FALSE)
+write.csv(grid_search_out, "../outputs/B_outputs/B11_lgb_grid_kyoto_par2.csv", row.names = FALSE)
 
 
 library(tidyverse)
@@ -161,7 +161,7 @@ library(tidyverse)
 setwd("/home/joosungm/projects/def-lelliott/joosungm/projects/peak-bloom-prediction/code")
 
 # Here we train our final model using the parameters from before.
-grid_search_out <- read.csv("../outputs/B_outputs/B11_lgb_grid_kyoto_par.csv")
+grid_search_out <- read.csv("../outputs/B_outputs/B11_lgb_grid_kyoto_par2.csv")
 head(grid_search_out)
 
 
@@ -171,7 +171,7 @@ best_berror <- grid_search_out[which(grid_search_out$binary_error == min(grid_se
 
 best_params <- rbind(best_logloss, best_auc, best_berror)
 best_params
-write.csv(best_params, "../outputs/B_outputs/B11_lgb_grid_kyoto_best_params.csv", row.names = FALSE)
+write.csv(best_params, "../outputs/B_outputs/B11_lgb_grid_kyoto_best_params2.csv", row.names = FALSE)
 print("best params saved!")
 
 
@@ -233,6 +233,6 @@ params <- list(
 valids <- list(test = dtest)
 lgb_final <- lgb.train(params = params, data = dtrain, valids = valids, nrounds = 1000L, verbose = 1)
 
-saveRDS.lgb.Booster(lgb_final, file = "../outputs/B_outputs/B21_lgb_final.rds")
+saveRDS.lgb.Booster(lgb_final, file = "../outputs/B_outputs/B21_lgb_final2.rds")
 
 print("done")
