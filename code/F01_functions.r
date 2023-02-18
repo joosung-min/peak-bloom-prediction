@@ -5,11 +5,9 @@ library(tidyverse)
 library(rnoaa)
 library(lightgbm)
 
-feature_names <- c("month", "day", "Cd_cumsum", "Ca_cumsum", "lat", "long", "alt", "daily_Ca", "daily_Cd", "tmax", "tmin")
-# feature_names <- c("Cd_cumsum", "Ca_cumsum", "lat", "long", "alt", "daily_Ca", "daily_Cd", "tmax", "tmin", "prcp")
-target_col <- "is_bloom"
 
-F01_get_temperature <- function (stationid) {
+
+F01_get_temperature <- function (stationid, date_min = "1950-01-01", date_max = "2023-04-30") {
 
     dat <- ghcnd_search(stationid = stationid, var = c("TMAX", "TMIN", "PRCP"), 
                date_min = "1950-01-01", date_max = "2023-04-30") %>%
@@ -21,26 +19,36 @@ F01_get_temperature <- function (stationid) {
                mutate(prcp = prcp/10) %>%      # in mm
                mutate(year = format(date, "%Y")) %>%
                mutate(month = as.integer(strftime(date, '%m'))) %>%
-               mutate(day = as.integer(strftime(date, '%d'))) %>%
-               mutate(row_num = rownames(.)) %>%
-               mutate(id_rownum = paste0(id, "-", row_num))
+               mutate(day = as.integer(strftime(date, '%d')))
     
     return(dat)
 }
 
 
-F01_get_imp_temperature <- function(station_ids, imp_method = "pmm") {
+F01_get_imp_temperature <- function(city_station_pair, target_country, date_min = "1950-01-01", date_max = "2023-04-30", imp_method = "pmm") {
 
+    station_ids <- city_station_pair$station
+    cherry_cities <- city_station_pair$city
+    
+    if (length(station_ids) > 1){
+        
+        cherry_sub <- read.csv("../outputs/A_outputs/A11_cherry_sub.csv") %>%
+        filter(country == target_country) %>%
+        filter(toupper(city) %in% toupper(cherry_cities))
+
+        cities <- unique(cherry_sub$city)
+    }
+    
     city_temp_list <- list()
     imp_ids <- list()
 
     for (c in seq_len(length(station_ids))) {
 
-        print(cities[c])
+        # print(cities[c])
 
         skip_to_next <- 0
         
-        temp_df <- tryCatch(F01_get_temperature(station_ids[c]), error = function(x) skip_to_next <<-1 )
+        temp_df <- tryCatch(F01_get_temperature(station_ids[c], date_min = date_min, date_max = date_max), error = function(x) skip_to_next <<-1 )
         
         if (skip_to_next == 1 ){
             next
@@ -136,6 +144,109 @@ F01_chill_days <- function(r, Tc = 7) {
     }
 
     return(c(Cd, Ca))
+}
+
+
+
+F01_compute_gdd <- function(weather_df, noaa_station_ids, Rc_thresh, Tc) {
+    
+    # Computes daily_Ca, daily_Cd, Ca_cumsum, Cd_cumsum.
+    # weather_df should have at least: tmax, tmin
+    
+    # Rc_thresh and Tc are learnt from gdd_model
+    # Rc_thresh accumulated Cd threshold to start accumulating GDD.
+    # Tc: Threshold temperature for computing Ca and Cd.
+    
+    # weather_df = swiss_temp
+    # noaa_station_ids =  city_station_pair$station
+    # Rc_thresh = -150
+    # Tc = 8
+
+    ## Compute daily_Ca, daily_Cd
+    Ca_Cd_list <- list()
+
+    for (st in noaa_station_ids) {
+        
+        temp_df <- weather_df[weather_df$id == st, ]
+        temp_df$daily_Cd <- apply(temp_df, MARGIN = 1, FUN = F01_chill_days, Tc = Tc)[1, ]
+        temp_df$daily_Ca <- apply(temp_df, MARGIN = 1, FUN = F01_chill_days, Tc = Tc)[2, ]
+        Ca_Cd_list[[st]] <- temp_df
+    }
+           
+    if (length(noaa_station_ids) == 1){
+        Ca_Cd_df <- Ca_Cd_list[[1]]
+    } else {
+        Ca_Cd_df <- Ca_Cd_list %>% bind_rows()
+    }
+    
+    ## Compute Ca_cumsum (a.k.a AGDD) and Cd_cumsum
+    output_list <- list()
+    years <- unique(Ca_Cd_df$year)
+
+    for (st in noaa_station_ids){
+        # print(st)
+        for (yr in years) {
+            # Compute Cd_cumsum from Oct 1, yr-1 
+            
+            # print(yr)
+            
+            # st = "GME00120934"
+            # yr = 1986
+            
+            Rc_start <- paste0(as.character(as.numeric(yr)-1), "-09-30")
+            
+            sub_df <- Ca_Cd_df[Rc_start < Ca_Cd_df$date & Ca_Cd_df$date < paste0(as.character(yr), "-05-01"), ] %>%
+                filter(id == !!(st))
+            
+            list_id <- paste0(st, "-", yr)
+            if (length(unique(sub_df$month)) != 7) {
+                # print("next")
+                next
+            }
+            
+            sub_df$Cd_cumsum <- cumsum(sub_df$daily_Cd)
+            if ("prcp" %in% colnames(sub_df)){
+                sub_df$prcp_cumsum <- cumsum(sub_df$prcp)
+            }
+            sub_df$Ca_cumsum <- 0
+
+            Rc_thresh_loc <- which(sub_df$Cd_cumsum < Rc_thresh)[1]
+            
+            if (is.na(Rc_thresh_loc)) {
+                Rc_thresh_loc <- which(round(sub_df$Cd_cumsum) < Rc_thresh)[1]
+                
+                if (is.na(Rc_thresh_loc)) {
+                    next
+                }
+            }
+            Rc_thresh_day <- sub_df[Rc_thresh_loc, "date"] 
+            # print(paste0("reaches the Rc threshold on ", Rc_thresh_day)) # 저온요구도 달성일 i.e., 내생휴면 해제일. 
+
+            sub_df_afterRc <- sub_df[Rc_thresh_loc:nrow(sub_df), ]
+            first_Tc_reach_loc <- which(sub_df_afterRc$tmax > Tc)[1]
+            first_Tc_reach_day <- sub_df_afterRc[first_Tc_reach_loc, "date"] 
+            if (is.na(first_Tc_reach_day)){
+                next
+            }
+            first_Tc_reach_loc2 <- which(sub_df$date == first_Tc_reach_day) # Ca accumulates starting this day.
+            sub_df$Ca_cumsum[first_Tc_reach_loc2:nrow(sub_df)] <- cumsum(sub_df$daily_Ca[first_Tc_reach_loc2:nrow(sub_df)])
+            
+            sub_df$diff_Ca_Cd <- abs(sub_df$daily_Ca) - abs(sub_df$daily_Cd)
+            sub_df$diff_Ca_Cd_cumsum <- cumsum(sub_df$diff_Ca_Cd)
+            
+            output_list[[list_id]] <- sub_df
+        }
+    }
+
+    # print("done")
+    if (length(noaa_station_ids) > 1){
+        out_df <- output_list %>% bind_rows() %>%
+        filter(!is.na(Ca_cumsum))
+    } else {
+        out_df <- output_list[[1]]
+    }
+    
+    return(out_df)
 }
 
 
