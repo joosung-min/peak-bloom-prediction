@@ -1,4 +1,9 @@
-## Data processing for Vancouver
+#!/bin/R
+# Cherry blossom prediction for Washington D.C.
+
+##############################################################
+# Data processing 
+##############################################################
 
 library(tidyverse)
 
@@ -23,9 +28,6 @@ npn_stat$doy <- as.numeric(as.Date(npn_stat$Observation_Date, format = "%m/%d/%Y
 dim(npn_stat)
 table(npn_stat$Phenophase_Status)
 
-feature_names <- c("lat", "long", "alt", "tmax", "tmin", "Ca_cumsum", "month", "day", "species", "Accum_Prcp")
-target_col <- "is_bloom"
-
 npn_out <- npn_stat %>%
     rename_with(~"lat", Latitude) %>%
     rename_with(~"long", Longitude) %>%
@@ -39,8 +41,12 @@ npn_out <- npn_stat %>%
     arrange(year, month, day)
 write.csv(npn_out, "./outputs/A12_wdc_temperature.csv", row.names = FALSE)
 
+##############################################################
 # Fit lightgbm
-# - Try fitting lightgbm using the current data
+##############################################################
+
+# Train-test split
+# - We use the last two years data as our test set.
 cherry_lgb_df <- npn_out %>% filter(month %in% c(3, 4, 5))
 
 cherry_train_val <- cherry_lgb_df %>%filter(year < 2020)
@@ -48,3 +54,42 @@ write.csv(cherry_train_val, "./outputs/A13_wdc_train_val.csv", row.names =FALSE)
 
 cherry_test <- cherry_lgb_df %>%filter(2020 <= year)
 write.csv(cherry_test, "./outputs/A14_wdc_test.csv", row.names = FALSE)
+
+# Find best lightgbm parameters using cross-validation
+# ** CAUTION: running the below code requires a high computational power. HPC recommended. **
+# source("./M2_lgb_cv_wdc.r)
+
+# Fit the final model
+# source("./M3_lgb_final_wdc.r")
+
+feature_names <- c("lat", "long", "alt", "tmax", "tmin", "Ca_cumsum", "month", "day", "species")
+target_col <- "is_bloom"
+
+
+# Model assessments
+lgb_final <- readRDS.lgb.Booster('./outputs/M31_lgb_final_wdc.rds')
+pred <- predict(lgb_final, as.matrix(cherry_test[, feature_names]))
+cherry_test$predicted <- ifelse(pred > 0.5, 1, 0)
+
+# - Confusion matrix
+library(caret)
+confusionMatrix(factor(cherry_test$predicted), factor(cherry_test$is_bloom))
+
+# - ROC curve
+library(ROCR)
+roc_pred <- prediction(pred, cherry_test$is_bloom)
+roc <- performance(roc_pred, "sens", "spec")
+plot(roc, main="ROC curve")
+abline(a=0, b=1)
+
+# - Feature importance
+lgb_imp <- lgb.importance(lgb_final)
+lgb.plot.importance(lgb_imp, top_n = 10L, measure = "Gain")
+
+# - Predictions on the test set
+# Plots here
+
+
+##############################################################
+# Make prediction for 2023
+##############################################################
