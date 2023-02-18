@@ -1,9 +1,9 @@
 #!/bin/R
 # Cherry blossom prediction for Washington D.C.
 
-##############################################################
+#########################################################
 # Data processing 
-##############################################################
+#########################################################
 
 library(tidyverse)
 
@@ -41,9 +41,9 @@ npn_out <- npn_stat %>%
     arrange(year, month, day)
 write.csv(npn_out, "./outputs/A12_wdc_temperature.csv", row.names = FALSE)
 
-##############################################################
+#########################################################
 # Fit lightgbm
-##############################################################
+#########################################################
 
 # Train-test split
 # - We use the last two years data as our test set.
@@ -65,6 +65,7 @@ write.csv(cherry_test, "./outputs/A14_wdc_test.csv", row.names = FALSE)
 feature_names <- c("lat", "long", "alt", "tmax", "tmin", "Ca_cumsum", "month", "day", "species")
 target_col <- "is_bloom"
 
+cherry_test <- read.csv("./outputs/A14_wdc_test.csv")
 
 # Model assessments
 lgb_final <- readRDS.lgb.Booster('./outputs/M31_lgb_final_wdc.rds')
@@ -90,6 +91,6 @@ lgb.plot.importance(lgb_imp, top_n = 10L, measure = "Gain")
 # Plots here
 
 
-##############################################################
+#########################################################
 # Make prediction for 2023
-##############################################################
+#########################################################

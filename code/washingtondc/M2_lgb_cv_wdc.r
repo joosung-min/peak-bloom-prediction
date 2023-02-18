@@ -17,24 +17,25 @@ grid_result_filename <- "./outputs/M22_lgb_grid_wdc.csv"
 grid_best_filename <- "./outputs/M23_lgb_best_params_wdc.csv"
 
 # param grid
-# grid_search <- expand.grid(boostings = c("dart", "gbdt")
-#                            , learning_rates = c(0.1, 0.01) # 
-#                            , max_bins = c(255, 1800, 500, 125) 
-#                            , min_data_in_leaf = c(20, 40, 10)
-#                            , num_leaves = c(31, 60, 100)
-#                            , max_depth = c(-1, 10, 30)
-# ) %>%
-#     mutate(iteration = NA) %>%
-#     mutate(binary_logloss = NA) %>%
-#     mutate(auc = NA) %>%
-#     mutate(binary_error = NA)
-
 grid_search <- expand.grid(boostings = c("dart", "gbdt")
-                           , learning_rates = c(0.1, 0.01) # 
-                           , max_bins = c(128, 64, 32)
-                           , min_data_in_leaf = c(48, 24)
-                           , num_leaves = c(16, 32, 64)
-                           , max_depth = c(40, 20, 10)
+    , learning_rates = c(0.1, 0.01) # 
+    , max_bins = c(255, 1800, 500, 125) 
+    , min_data_in_leaf = c(20, 40, 10)
+    , num_leaves = c(31, 60, 100)
+    , max_depth = c(-1, 10, 30)
+) %>%
+    mutate(iteration = NA) %>%
+    mutate(binary_logloss = NA) %>%
+    mutate(auc = NA) %>%
+    mutate(binary_error = NA)
+
+grid_search <- expand.grid(
+    boostings = c("dart", "gbdt")
+    , learning_rates = c(0.1, 0.01) # 
+    , max_bins = c(64, 32, 16)
+    , min_data_in_leaf = c(60, 48)
+    , num_leaves = c(32, 64, 128)
+    , max_depth = c(40, 20, 10)
 ) %>%
     mutate(iteration = NA) %>%
     mutate(binary_logloss = NA) %>%
