@@ -138,9 +138,9 @@ F01_compute_gdd <- function(weather_df, noaa_station_ids, Rc_thresh, Tc) {
     # Rc_thresh accumulated Cd threshold to start accumulating GDD.
     # Tc: Threshold temperature for computing Ca and Cd.
     
-    # weather_df = swiss_temp
-    # noaa_station_ids =  city_station_pair$station
-    # Rc_thresh = -150
+    # weather_df = read.csv("./code/vancouver/outputs/A14_vancities_weather_df.csv")
+    # noaa_station_ids =  unique(weather_df$id)
+    # Rc_thresh = -111
     # Tc = 8
 
     ## Compute daily_Ca, daily_Cd
