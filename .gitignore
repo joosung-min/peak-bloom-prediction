@@ -7,3 +7,4 @@
 *.devcontainer
 test-project
 *.npmignore
+*.sh
