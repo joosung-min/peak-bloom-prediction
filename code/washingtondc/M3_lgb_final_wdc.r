@@ -30,7 +30,8 @@ lgb_final_name2 <- "./outputs/M31_lgb_final_wdc2.rds"
 
 param_idx1 <- 1
 
-boosting1 <- as.character(best_params[param_idx1, "boostings"])
+# boosting1 <- as.character(best_params[param_idx1, "boostings"])
+boosting1 <- "gbdt"
 learning_rate1 <- as.numeric(best_params[param_idx1, "learning_rate"])
 max_bin1 <- as.numeric(best_params[param_idx1, "max_bins"])
 min_data_in_leaf1 <- as.numeric(best_params[param_idx1, "min_data_in_leaf"])
@@ -89,7 +90,8 @@ print("done")
 
 param_idx2 <- 2
 
-boosting2 <- as.character(best_params[param_idx2, "boostings"])
+# boosting2 <- as.character(best_params[param_idx2, "boostings"])
+boosting2 <- "gbdt"
 learning_rate2 <- as.numeric(best_params[param_idx2, "learning_rate"])
 max_bin2 <- as.numeric(best_params[param_idx2, "max_bins"])
 min_data_in_leaf2 <- as.numeric(best_params[param_idx2, "min_data_in_leaf"])

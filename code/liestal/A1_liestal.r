@@ -50,7 +50,7 @@ liestal_dist <- data.frame(as.matrix(dist(pca_out))) %>%
 head(liestal_dist, 11)
 
 # - Get city names
-liestal_cities <- rownames(liestal_dist)[1:40]
+liestal_cities <- rownames(liestal_dist)[1:30]
 liestal_cities
 # -- Must check if the weather data has those city's info.
 
@@ -87,7 +87,7 @@ while (length(redo_cities) > 1) {
         # c = 1
         ct <- redo_cities[c]
         # ct
-        ct_converted <- str_replace(str_replace(str_replace(redo_cities[c], "-", "."), " ", "."), ",", ".")
+        ct_converted <- str_replace(str_replace(str_replace(str_replace(redo_cities[c], "-", "."), " ", "."), ",", "."), "'",".")
 
         temp_merged <- rbind(temp_df %>% filter(city == ct), temp_station) %>%
             select(city, lat, long)
@@ -148,7 +148,7 @@ cherry_targets <- cherry_sub %>%
 cherry_gdd <- gdd_city %>%
     merge(y = cherry_targets, by.x = c("city", "date"), by.y = c("city", "bloom_date"), all.x = TRUE) %>%
     mutate(is_bloom = ifelse(!is.na(bloom_doy), 1, 0)) %>%
-    filter(year > 1986) %>%
+    # filter(year > 1986) %>%
     filter(month %in% c(3, 4)) %>%
     mutate(doy = as.numeric(as.Date(date) - as.Date(paste0(year, "-01-01")) + 1)) %>%
     filter(doy > 74)
@@ -156,26 +156,69 @@ cherry_gdd <- gdd_city %>%
 head(cherry_gdd)
 dim(cherry_gdd)
 table(cherry_gdd$is_bloom)
+write.csv(cherry_gdd, "./outputs/A13_Liestal_gdd.csv")
+
+
+liestal_df <- F01_train_val_test_split(gdd_df = cherry_gdd, val_year = c(2019, 2020), train_year = c(2021, 2022))
+
+liestal_train <- liestal_df[["train"]]
+liestal_val <- liestal_df[["val"]]
+liestal_test <- liestal_df[["test"]]
+
+write.csv(liestal_train, "./outputs/A14_Liestal_train.csv", row.names = FALSE)
+write.csv(liestal_val, "./outputs/A14_Liestal_val.csv", row.names = FALSE)
+write.csv(liestal_test, "./outputs/A14_Liestal_test.csv", row.names = FALSE)
+
+
+
+
+# Under sampling to balance is_bloom == 1 and 0
+yes_bloom <- cherry_gdd[cherry_gdd$is_bloom == 1, ]
+no_bloom <- cherry_gdd[cherry_gdd$is_bloom == 0, ]
+set.seed(42)
+under_sample_idx <- sample(seq_len(nrow(no_bloom)), size = nrow(yes_bloom) * 1.5, replace = FALSE)
+under_sample_no_bloom <- no_bloom[under_sample_idx, ]
+cherry_gdd_new <- rbind(under_sample_no_bloom, yes_bloom)
+cherry_gdd_shuffled <- cherry_gdd_new[sample(seq_len(nrow(cherry_gdd_new)), size = nrow(cherry_gdd_new), replace = FALSE), ]
+dim(cherry_gdd_shuffled)
+table(cherry_gdd_shuffled$is_bloom)
+
+
+# split train and test sets
+length(sort(unique(cherry_gdd_shuffled$year)))
+cherry_train_val <- cherry_gdd_shuffled %>% filter(year < 2015)
+cherry_test <- cherry_gdd_shuffled %>% filter(year >= 2015)
+
+write.csv(cherry_train_val, "./outputs/A14_Liestal_train_val.csv", row.names = FALSE)
+write.csv(cherry_test, "./outputs/A14_Liestal_test.csv", row.names = FALSE)
+
 
 # Train lightgbm
+# source("./M2_lgb_cv_liestal.r")
+# source("./M3_lgb_final_liestal.r")
+
 feature_names <- c("tmax", "tmin", "month", "day", "daily_Cd", "daily_Ca", "Cd_cumsum", "Ca_cumsum", "lat", "long", "alt")
 target_col <- "is_bloom"
 
-library(lightgbm)
 
-cherry_train_val <- cherry_gdd %>% filter(year < 2013) %>% select(all_of(c(feature_names, target_col)))
-write.csv(cherry_train_val, "./outputs/A13_Liestal_train_val.csv", row.names = FALSE)
+cherry_test <- read.csv("./outputs/A14_Liestal_test.csv")
 
-cherry_test <- cherry_gdd %>%filter(year >= 2013) %>% select(all_of(c(feature_names, target_col)))
-write.csv(cherry_test, "./outputs/A14_Liestal_test.csv", row.names = FALSE)
+# Model assessments
+lgb_final <- readRDS.lgb.Booster('./outputs/M31_lgb_final_Liestal.rds')
+pred <- predict(lgb_final, as.matrix(cherry_test[, feature_names]))
+cherry_test$predicted <- ifelse(pred > 0.5, 1, 0)
 
-dtrain <- lgb.Dataset(
-    data = data.matrix(cherry_train_val[, feature_names])
-    , label = cherry_train_val[[target_col]],
-    , params = list(
-        max_bin = max_bin
-    ))
+# - Confusion matrix
+library(caret)
+confusionMatrix(factor(cherry_test$predicted), factor(cherry_test$is_bloom))
 
-params <- list(
-    objective = "binary"
-)
+# - ROC curve
+library(ROCR)
+roc_pred <- prediction(pred, cherry_test$is_bloom)
+roc <- performance(roc_pred, "sens", "spec")
+plot(roc, main="ROC curve")
+abline(a=0, b=1)
+
+# - Feature importance
+lgb_imp <- lgb.importance(lgb_final)
+lgb.plot.importance(lgb_imp, top_n = 10L, measure = "Gain")

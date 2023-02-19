@@ -9,7 +9,7 @@ feature_names <- c("month", "day", "Cd_cumsum", "Ca_cumsum", "lat", "long", "alt
 target_col <- "is_bloom"
 
 
-cherry_train_val <- read.csv("./outputs/A13_Liestal_train_val.csv")
+cherry_train_val <- read.csv("./outputs/A14_Liestal_train_val.csv")
 cherry_test <- read.csv("./outputs/A14_Liestal_test.csv")
 
 Rdata_name <- "./outputs/M21_lgb_RDada_Liestal.RData"
@@ -18,17 +18,31 @@ grid_best_filename <- "./outputs/M23_lgb_best_params_Liestal.csv"
 lgb_final_name <- "./outputs/M24_lgb_final_Liestal.rds"
 
 ## Cross-validate
-grid_search <- expand.grid(boostings = c("dart", "gbdt")
-                           , learning_rates = c(0.1, 0.01) # 
-                           , max_bins = c(255, 1800, 500, 125) 
-                           , min_data_in_leaf = c(20, 40, 10)
-                           , num_leaves = c(31, 60, 100)
-                           , max_depth = c(-1, 10, 30)
+grid_search <- expand.grid(
+    boostings = c("gbdt")
+    , learning_rates = c(0.1, 0.01) # 
+    , max_bins = c(255, 500, 125) 
+    , min_data_in_leaf = c(24, 48, 60)
+    , num_leaves = c(31, 64, 128)
+    , max_depth = c(-1, 10, 20)
 ) %>%
     mutate(iteration = NA) %>%
     mutate(binary_logloss = NA) %>%
     mutate(auc = NA) %>%
     mutate(binary_error = NA)
+
+
+# grid_search <- expand.grid(boostings = c("gbdt")
+#                            , learning_rates = c(0.1, 0.01) 
+#                            , max_bins = c(255, 1800, 500, 125) 
+#                            , min_data_in_leaf = c(20, 40, 10)
+#                            , num_leaves = c(31, 60, 100)
+#                            , max_depth = c(-1, 10, 30)
+# ) %>%
+#     mutate(iteration = NA) %>%
+#     mutate(binary_logloss = NA) %>%
+#     mutate(auc = NA) %>%
+#     mutate(binary_error = NA)
     
 loss_functions <- c("binary_logloss", "auc", "binary_error")                            
 
@@ -78,7 +92,7 @@ grid_search_result <- foreach(
         objective = "binary"
         , metric = loss_functions
         , is_enable_sparse = TRUE
-        , is_unbalance = TRUE
+        # , is_unbalance = TRUE
         # , scale_pos_weight = 70  # cannot be used with is_unbalance = TRUE.
         , min_data_in_leaf = min_data_in_leaf  # overfitting
         , learning_rate = learning_rate
@@ -93,7 +107,7 @@ grid_search_result <- foreach(
         , nfold = 8
         , params = params
         , stratified = TRUE
-        , early_stopping_rounds = 10
+        , early_stopping_rounds = 20L
         , seed = 42
         , verbose = -1
     )
@@ -122,11 +136,13 @@ stopCluster(myCluster)
 
 save(grid_search_result, file = Rdata_name)
 print(paste0(Rdata_name, " saved."))
+load(Rdata_name)
+
 
 grid_search_out <- as.data.frame(grid_search_result) %>%
     "colnames<-"(colnames(grid_search))
 
-grid_search_out$boostings <- ifelse(grid_search_out$boostings == 1, "dart", "gbdt")
+grid_search_out$boostings <- ifelse(grid_search_out$boostings == 1, "gbdt", 0)
 # head(grid_search_out)
 write.csv(grid_search_out, grid_result_filename, row.names = FALSE)
 
@@ -148,7 +164,8 @@ print("best params saved!")
 # Here we train our final model using the parameters from before.
 param_idx <- 1 # 1: best binary_logloss, 2: best auc
 
-boosting <- as.character(best_params[param_idx, "boostings"])
+# boosting <- as.character(best_params[param_idx, "boostings"])
+boosting <- "gbdt"
 learning_rate <- as.numeric(best_params[param_idx, "learning_rate"])
 max_bin <- as.numeric(best_params[param_idx, "max_bins"])
 min_data_in_leaf <- as.numeric(best_params[param_idx, "min_data_in_leaf"])
@@ -156,8 +173,6 @@ num_leaves <- as.numeric(best_params[param_idx, "num_leaves"])
 max_depth <- as.numeric(best_params[param_idx, "max_depth"])
 
 seed <- 42
-
-cherry_test <- read.csv("./outputs/A14_Liestal_test.csv")
 
 dtrain <- lgb.Dataset(
     data = data.matrix(cherry_train_val[, feature_names])
@@ -178,13 +193,13 @@ params <- list(
             objective = "binary"
             , metric = c("binary_logloss")
             , is_enable_sparse = TRUE
-            , is_unbalance = TRUE
+            # , is_unbalance = TRUE
             , boosting = boosting
             , learning_rate = learning_rate
             , min_data_in_leaf = min_data_in_leaf
             , num_leaves = num_leaves
             , max_depth = max_depth
-            , early_stopping_rounds = 10L
+            , early_stopping_rounds = 20L
     )
 
 valids <- list(test = dtest)

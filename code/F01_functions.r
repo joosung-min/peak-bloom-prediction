@@ -10,7 +10,7 @@ library(lightgbm)
 F01_get_temperature <- function (stationid, date_min = "1950-01-01", date_max = "2023-04-30") {
 
     dat <- ghcnd_search(stationid = stationid, var = c("TMAX", "TMIN", "PRCP"), 
-               date_min = "1950-01-01", date_max = "2023-04-30") %>%
+               date_min = date_min, date_max = date_max) %>%
                purrr::reduce(left_join, by = "date") %>%
                select(id.x, date, tmax, tmin, prcp) %>%
                rename_with(~ "id", id.x) %>%
@@ -28,13 +28,14 @@ F01_get_temperature <- function (stationid, date_min = "1950-01-01", date_max = 
 F01_get_imp_temperature <- function(city_station_pair, target_country, date_min = "1950-01-01", date_max = "2023-04-30", imp_method = "pmm") {
 
     station_ids <- city_station_pair$station
-    cherry_cities <- city_station_pair$city
+    cities <- city_station_pair$city
+    # target_country = c("Japan", "South Korea")
     
     if (length(station_ids) > 1){
         
         cherry_sub <- read.csv("../outputs/A_outputs/A11_cherry_sub.csv") %>%
-        filter(country == target_country) %>%
-        filter(toupper(city) %in% toupper(cherry_cities))
+            filter(country %in% target_country) %>%
+            filter(toupper(city) %in% toupper(cities))
 
         cities <- unique(cherry_sub$city)
     }
@@ -61,23 +62,7 @@ F01_get_imp_temperature <- function(city_station_pair, target_country, date_min 
         if (nrow(md.pattern(temp_df)) > 1) {
             
             tempData <- mice(temp_df, m = 5, method = imp_method)
-            # summary(tempData)
-            
-            imp_tmin <- tempData$imp$tmin[5] %>%
-                mutate(row_num = rownames(.))
-            imp_tmax <- tempData$imp$tmax[5] %>%
-                mutate(row_num = rownames(.))
-            imp_prcp <- tempData$imp$prcp[5] %>%
-                mutate(row_num = rownames(.))
-            
-            imps_df <- rbind(imp_tmin, imp_tmax, imp_prcp) %>%
-                'rownames<-'(NULL) %>%
-                distinct(row_num) %>%
-                mutate(id = station_ids[c]) %>%
-                mutate(id_rownum = paste0(id, "-", row_num))
 
-            imp_ids[[c]] <- imps_df
-            
             # complete set
             imputed_temp <- complete(tempData, 5)
         
@@ -87,10 +72,6 @@ F01_get_imp_temperature <- function(city_station_pair, target_country, date_min 
 
         }
 
-        
-        # imputed_file_name <- paste0("/home/joosungm/projects/def-lelliott/joosungm/projects/peak-bloom-prediction/A_outputs/A21_", cities[c], "_temperature.csv")
-        # print(imputed_file_name)
-        # write.csv(imputed_temp, imputed_file_name)
 
         city_temp_list[[c]] <- imputed_temp
     }
@@ -248,6 +229,61 @@ F01_compute_gdd <- function(weather_df, noaa_station_ids, Rc_thresh, Tc) {
     
     return(out_df)
 }
+
+
+
+F01_train_val_test_split <- function(gdd_df, val_year, test_year, n_fold, seed = 42) {
+
+    # Split samples using undersampling    
+    set.seed(seed)
+
+    # gdd_df <- cherry_gdd
+    # val_year <- c(2019, 2020)
+    # test_year <- c(2021, 2022)
+    # n_fold <- 8
+    
+    train <- gdd_df %>% filter(year < val_year[1])
+    train_bloom <- train %>%filter(is_bloom == 1)
+    train_bloom_shf <- train_bloom[sample(seq_len(nrow(train_bloom)), size = nrow(train_bloom), replace = FALSE), ]
+    train_bloom_shf$fold <- rep(1:n_fold, length = nrow(train_bloom_shf))
+    
+    train_nobloom <- train %>%filter(is_bloom == 0)
+    train_nobloom_shf <- train_nobloom[sample(seq_len(nrow(train_nobloom)), size = nrow(train_bloom)*1.5, replace = FALSE), ]
+    train_nobloom_shf$fold <- rep(1:n_fold, length = nrow(train_nobloom_shf))
+    
+    train_out <- rbind(train_nobloom_shf, train_bloom_shf) %>% 'rownames<-'(NULL)
+
+
+    val <- gdd_df %>% filter(year %in% val_year)
+    val_bloom <- val %>%filter(is_bloom == 1)
+    val_bloom_shf <- val_bloom[sample(seq_len(nrow(val_bloom)), size = nrow(val_bloom), replace = FALSE), ]
+    val_bloom_shf$fold <- rep(1:n_fold, length = nrow(val_bloom))
+
+    val_nobloom <- val %>%filter(is_bloom == 0)
+    val_nobloom_shf <- val_nobloom[sample(seq_len(nrow(val_nobloom)), size = nrow(val_bloom)*1.5, replace = FALSE), ]
+    val_nobloom_shf$fold <- rep(1:n_fold, length = nrow(val_nobloom_shf))
+
+    val_out <- rbind(val_nobloom_shf, val_bloom_shf) %>% 'rownames<-'(NULL)
+
+
+    test <- gdd_df %>% filter(year %in% test_year)
+    test_bloom <- test %>%filter(is_bloom == 1)
+    test_bloom_shf <- test_bloom[sample(seq_len(nrow(test_bloom)), size = nrow(test_bloom), replace = FALSE), ]
+    test_bloom_shf$fold <- rep(1:n_fold, length = nrow(test_bloom_shf))
+
+    test_nobloom <- test %>%filter(is_bloom == 0)
+    test_nobloom_shf <- test_nobloom[sample(seq_len(nrow(test_nobloom)), size = nrow(test_bloom)*1.5, replace = FALSE), ]
+    test_nobloom_shf$fold <- rep(1:n_fold, length = nrow(test_nobloom_shf))
+
+    test_out <- rbind(test_nobloom_shf, test_bloom_shf) %>% 'rownames<-'(NULL)
+
+    out <- list(train = train_out, val = val_out, test = test_out)
+    
+    return(out)
+}
+
+
+
 
 
 

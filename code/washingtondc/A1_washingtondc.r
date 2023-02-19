@@ -68,7 +68,7 @@ target_col <- "is_bloom"
 cherry_test <- read.csv("./outputs/A14_wdc_test.csv")
 
 # Model assessments
-lgb_final <- readRDS.lgb.Booster('./outputs/M31_lgb_final_wdc.rds')
+lgb_final <- readRDS.lgb.Booster('./outputs/M31_lgb_final_wdc1.rds')
 pred <- predict(lgb_final, as.matrix(cherry_test[, feature_names]))
 cherry_test$predicted <- ifelse(pred > 0.5, 1, 0)
 

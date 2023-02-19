@@ -8,7 +8,7 @@ feature_names <- c("month", "day", "Cd_cumsum", "Ca_cumsum", "lat", "long", "alt
 
 target_col <- "is_bloom"
 
-cherry_train_val <- read.csv("./outputs/A13_Liestal_train_val.csv")
+cherry_train_val <- read.csv("./outputs/A14_Liestal_train_val.csv")
 cherry_test <- read.csv("./outputs/A14_Liestal_test.csv")
 
 grid_best_filename <- "./outputs/M23_lgb_best_params_Liestal.csv"
@@ -25,7 +25,8 @@ best_params
 # Here we train our final model using the parameters from before.
 param_idx <- 2 # 1: best binary_logloss, 2: best auc
 
-boosting <- as.character(best_params[param_idx, "boostings"])
+# boosting <- as.character(best_params[param_idx, "boostings"])
+boosting <- "gbdt"
 learning_rate <- as.numeric(best_params[param_idx, "learning_rate"])
 max_bin <- as.numeric(best_params[param_idx, "max_bins"])
 min_data_in_leaf <- as.numeric(best_params[param_idx, "min_data_in_leaf"])
@@ -33,8 +34,6 @@ num_leaves <- as.numeric(best_params[param_idx, "num_leaves"])
 max_depth <- as.numeric(best_params[param_idx, "max_depth"])
 
 seed <- 42
-
-cherry_test <- read.csv("./outputs/A14_Liestal_test.csv")
 
 dtrain <- lgb.Dataset(
     data = data.matrix(cherry_train_val[, feature_names])
@@ -55,7 +54,7 @@ params <- list(
             objective = "binary"
             , metric = c("binary_logloss")
             , is_enable_sparse = TRUE
-            , is_unbalance = TRUE
+            # , is_unbalance = TRUE
             , boosting = boosting
             , learning_rate = learning_rate
             , min_data_in_leaf = min_data_in_leaf
