@@ -3,7 +3,8 @@ library(lightgbm)
 
 
 # load gdd data
-setwd("/home/joosungm/projects/def-lelliott/joosungm/projects/peak-bloom-prediction/code/liestal/")
+# setwd("/home/joosungm/projects/def-lelliott/joosungm/projects/peak-bloom-prediction/code/liestal/")
+setwd("./code/liestal")
 source("../F01_functions.r")
 cherry_gdd <- read.csv("./outputs/A13_Liestal_gdd.csv")
 
@@ -31,16 +32,16 @@ grid_search <- expand.grid(
     mutate(val_auc = NA) %>%
     mutate(test_auc = NA)
 
-grid_search <- expand.grid(
-    boostings = c("gbdt")
-    , learning_rates = c(0.1) # 
-    , max_bins = c(255) 
-    , min_data_in_leaf = c(20)
-    , num_leaves = c(31)
-    , max_depth = c(-1)
-) %>%
-    mutate(val_auc = NA) %>%
-    mutate(test_auc = NA)
+# grid_search <- expand.grid(
+#     boostings = c("gbdt")
+#     , learning_rates = c(0.1) # 
+#     , max_bins = c(255) 
+#     , min_data_in_leaf = c(20)
+#     , num_leaves = c(31)
+#     , max_depth = c(-1)
+# ) %>%
+#     mutate(val_auc = NA) %>%
+#     mutate(test_auc = NA)
 
 # grid_cols <- colnames(grid_search)
 # cv_result <- data.frame(matrix(nrow = nrow(grid_search), ncol = length(grid_cols), dimnames = list(NULL, grid_cols)))
@@ -136,7 +137,7 @@ grid_search_result <- foreach(
             
         )
 
-        valids2 <- list(test = dvtest)
+        valids2 <- list(test = dtest)
         
         lgb_test <- lgb.train(params = params
             , data = dtrain_val, valids = valids2
@@ -152,7 +153,6 @@ grid_search_result <- foreach(
     # cv_result[1, ] <- out
     return(out)
 }
-
 stopCluster(myCluster)
 
 save(grid_search_result, file = Rdata_name)
