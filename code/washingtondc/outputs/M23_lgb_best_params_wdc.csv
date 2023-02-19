@@ -1,0 +1,4 @@
+"boostings","learning_rates","max_bins","min_data_in_leaf","num_leaves","max_depth","iteration","binary_logloss","auc","binary_error"
+"dart",0.1,32,60,128,20,118,0.324,0.932,0.118
+"dart",0.1,32,60,128,20,118,0.324,0.932,0.118
+"dart",0.1,32,60,128,20,118,0.324,0.932,0.118
