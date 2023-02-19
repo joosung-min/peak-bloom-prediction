@@ -62,7 +62,7 @@ grid_search_result <- foreach(
     , max_depth = grid_search$max_depth
     , .packages = "lightgbm"
     , .combine = rbind
-    # , .errorhandling = "remove"
+    , .errorhandling = "remove"
 
 ) %dopar% {
 
@@ -157,7 +157,7 @@ stopCluster(myCluster)
 
 save(grid_search_result, file = Rdata_name)
 print(paste0(Rdata_name, " saved."))
-load(Rdata_name)
+# load(Rdata_name)
 
 
 
