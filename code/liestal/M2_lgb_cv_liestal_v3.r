@@ -21,27 +21,27 @@ grid_best_filename <- "./outputs/M23_lgb_best_params_Liestal3.csv"
 lgb_final_name <- "./outputs/M24_lgb_final_Liestal3.rds"
 
 
-grid_search <- expand.grid(
-    boostings = c("gbdt")
-    , learning_rates = c(0.1, 0.01) # 
-    , max_bins = c(255, 500, 125) 
-    , min_data_in_leaf = c(24, 48, 60)
-    , num_leaves = c(31, 64, 128)
-    , max_depth = c(-1, 10, 20)
-) %>%
-    mutate(val_auc = NA) %>%
-    mutate(test_auc = NA)
-
 # grid_search <- expand.grid(
 #     boostings = c("gbdt")
-#     , learning_rates = c(0.1) # 
-#     , max_bins = c(255) 
-#     , min_data_in_leaf = c(20)
-#     , num_leaves = c(31)
-#     , max_depth = c(-1)
+#     , learning_rates = c(0.1, 0.01) # 
+#     , max_bins = c(255, 500, 125) 
+#     , min_data_in_leaf = c(24, 48, 60)
+#     , num_leaves = c(31, 64, 128)
+#     , max_depth = c(-1, 10, 20)
 # ) %>%
 #     mutate(val_auc = NA) %>%
 #     mutate(test_auc = NA)
+
+grid_search <- expand.grid(
+    boostings = c("gbdt")
+    , learning_rates = c(0.1, 0.01) # 
+    , max_bins = c(255) 
+    , min_data_in_leaf = c(20)
+    , num_leaves = c(31)
+    , max_depth = c(-1)
+) %>%
+    mutate(val_auc = NA) %>%
+    mutate(test_auc = NA)
 
 # grid_cols <- colnames(grid_search)
 # cv_result <- data.frame(matrix(nrow = nrow(grid_search), ncol = length(grid_cols), dimnames = list(NULL, grid_cols)))
