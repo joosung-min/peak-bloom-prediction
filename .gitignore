@@ -3,6 +3,7 @@
 .RData
 .Ruserdata
 *.Rproj
+*.out
 *.devcontainer
 test-project
 *.npmignore
