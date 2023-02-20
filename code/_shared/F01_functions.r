@@ -5,8 +5,6 @@ library(tidyverse)
 library(rnoaa)
 library(lightgbm)
 
-
-
 F01_get_temperature <- function (stationid, date_min = "1950-01-01", date_max = "2023-04-30") {
 
     dat <- ghcnd_search(stationid = stationid, var = c("TMAX", "TMIN", "PRCP"), 
@@ -25,7 +23,7 @@ F01_get_temperature <- function (stationid, date_min = "1950-01-01", date_max = 
 }
 
 
-F01_get_imp_temperature <- function(city_station_pair, target_country, date_min = "1950-01-01", date_max = "2023-04-30", imp_method = "pmm") {
+F01_get_imp_temperature <- function(city_station_pair, target_country, cherry_sub, date_min = "1950-01-01", date_max = "2023-04-30", imp_method = "pmm") {
 
     station_ids <- city_station_pair$station
     cities <- city_station_pair$city
@@ -33,11 +31,11 @@ F01_get_imp_temperature <- function(city_station_pair, target_country, date_min 
     
     if (length(station_ids) > 1){
         
-        cherry_sub <- read.csv("../outputs/A_outputs/A11_cherry_sub.csv") %>%
+        cherry_sub2 <- cherry_sub %>%
             filter(country %in% target_country) %>%
             filter(toupper(city) %in% toupper(cities))
 
-        cities <- unique(cherry_sub$city)
+        cities <- unique(cherry_sub2$city)
     }
     
     city_temp_list <- list()
@@ -137,7 +135,13 @@ F01_compute_gdd <- function(weather_df, noaa_station_ids, Rc_thresh, Tc) {
     # Rc_thresh and Tc are learnt from gdd_model
     # Rc_thresh accumulated Cd threshold to start accumulating GDD.
     # Tc: Threshold temperature for computing Ca and Cd.
+    # - Optimal sets (Rc_thresh, Tc)
+    #  * kyoto = 
+    #  * liestal = 
+    #  * washington = 
+    #  * vancouver = (-111, 8)
     
+
     # weather_df = read.csv("./code/vancouver/outputs/A14_vancities_weather_df.csv")
     # noaa_station_ids =  unique(weather_df$id)
     # Rc_thresh = -111
