@@ -5,7 +5,7 @@ library(lightgbm)
 # - Very small data size, even smaller is_bloom == 1
 
 # load gdd data
-setwd("/home/joosungm/projects/def-lelliott/joosungm/projects/peak-bloom-prediction/")
+# setwd("/home/joosungm/projects/def-lelliott/joosungm/projects/peak-bloom-prediction/")
 # setwd("./code/liestal")
 source("./code/_shared/F01_functions.r")
 cherry_gdd <- read.csv("./code/kyoto/outputs/A14_kyoto_temp_gdd.csv") %>%
@@ -60,6 +60,73 @@ grid_search <- expand.grid(
 ) %>%
     mutate(val_score = NA) %>%
     mutate(test_score = NA)
+
+
+train_cv <- cherry_df[["train"]]
+val_cv <- cherry_df[["val"]]
+
+
+dtrain = lgb.Dataset(
+    data = data.matrix(train_cv[, feature_names])
+    , label = train_cv[[target_col]]
+)
+
+dval = lgb.Dataset(
+    data = data.matrix(val_cv[, feature_names])
+    , label = val_cv[[target_col]]
+)
+
+valids <- list(val = dval)
+
+params <- list(
+    learning_rate = 0.01L
+    , is_unbalance = TRUE
+)
+
+lgb_temp <- lgb.train(
+    data = dtrain
+    , valids = valids
+    , params = params
+    # , obj = F01_focal_loss
+    # , eval = F01_focal_evaluation
+    , obj = "binary"
+    , eval = "binary_logloss"
+    , nrounds = 1000
+    , eval_freq  = 10
+    , early_stopping_rounds = 5L
+    , verbose = 1
+)
+
+test_set <- cherry_df[["test"]]
+
+pred <- predict(lgb_temp, as.matrix(test_set[, feature_names]))
+hist(pred, breaks = 30)
+tail(sort(pred))
+test_set$predicted <- ifelse(pred > 0.155, 1, 0)
+
+# Confusion matrix
+library(caret)
+confusionMatrix(factor(test_set$predicted), factor(test_set$is_bloom))
+
+# ROC curve
+library(ROCR)
+roc_pred <- prediction(pred, test_set$is_bloom)
+roc <- performance(roc_pred, "sens", "spec")
+plot(roc, main="ROC curve")
+abline(a=0, b=1)
+
+# Feature importance
+lgb_imp <- lgb.importance(lgb_final)
+lgb_imp
+lgb.plot.importance(lgb_imp, top_n = 10L, measure = "Gain")
+
+
+
+
+
+
+
+
 
 # cross-validation params
 # grid_search <- expand.grid(

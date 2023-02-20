@@ -300,19 +300,17 @@ F01_focal_loss <- function(preds, dtrain) {
     alpha = 0.25
     gamma = 2
 
-    y_pred <- 1 / (1 + exp(-preds))
-    y_true <- get_field(dtrain, "label")
-    
     # Compute the gradient and hessian of focal loss
-    pt <- pmax(1e-15, pmin(1 - 1e-15, y_pred))
-    alpha_factor <- ifelse(y_true == 1, alpha, 1 - alpha)
-    focal_weight <- alpha_factor * (1 - pt)^gamma
-    loss <- -y_true * log(pt) - (1 - y_true) * log(1 - pt)
+    labels <- get_field(dtrain, "label")
+    eps <- 1e-10
+    preds <- pmax(pmin(preds, 1 - eps), eps)
+    preds <- 1.0 / (1.0 + exp(-preds))
+    alpha_t <- labels * alpha + (1 - labels) * (1 - alpha)
+    focal_weight <- alpha_t * ((1 - preds) ** gamma)
+    grad <- gamma * (labels - preds) * ((1 - preds) ** (gamma - 1)) * focal_weight
+    hess <- gamma * preds * ((1 - preds) ** (gamma - 1)) * ((gamma - 1) * (1 - preds) - gamma * preds * log(pmax(preds, eps))) * focal_weight
     
-    gradient <- (y_pred - y_true) * focal_weight * (-1 / pt + 1 / (1 - pt))
-    hessian <- (y_pred * (1 - y_pred) * focal_weight * ((gamma - 1) * pt - gamma * y_pred)) / (pt * (1 - pt))
-    
-    return(list(grad = gradient, hess = hessian))
+    return(list(grad = grad, hess = hess))
 
 }
 
@@ -322,13 +320,12 @@ F01_focal_evaluation <- function(preds, dtrain) {
     alpha = 0.25
     gamma = 2
 
-    y_true <- get_field(dtrain, "label")
-    y_pred <- 1 / (1 + exp(-preds))
+    labels <- get_field(dtrain, "label")
+    eps <- 1e-10
+    preds <- pmax(pmin(preds, 1 - eps), eps)
+    preds <- 1.0 / (1.0 + exp(-preds))
+    alpha_t <- labels * alpha + (1 - labels) * (1 - alpha)
+    loss <- -alpha_t * ((1 - preds) ** gamma) * log(pmax(preds, eps)) - (1 - alpha_t) * (preds ** gamma) * log(pmax(1 - preds, eps))
     
-    y_true = y_true * (1 - y_pred) ^ gamma
-    alpha_y_true = alpha * y_true
-    loss <- y_true * log(y_pred) + (1 - y_true) * log(1 - y_pred)
-    loss_out <- -1 * (alpha_y_true * loss + (1 - alpha_y_true) * log(1 - y_pred))
-
-    return(list(name = "focal_loss", value = mean(loss_out), higher_better = FALSE))
+    return(list(name = "focal_loss", value = mean(loss), higher_better = FALSE))
 }
