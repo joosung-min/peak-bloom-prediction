@@ -1,0 +1,2 @@
+"boostings","learning_rates","max_bins","min_data_in_leaf","num_leaves","max_depth","val_auc","test_auc"
+1,0.1,255,20,31,-1,0.806089099267571,0.787692218153026

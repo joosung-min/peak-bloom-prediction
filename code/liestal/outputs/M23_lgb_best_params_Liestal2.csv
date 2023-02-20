@@ -1,0 +1,2 @@
+"boostings","learning_rates","max_bins","min_data_in_leaf","num_leaves","max_depth","val_score","test_score"
+2,0.01,32,20,8,-1,0.60167827051028,0.637542955792365
