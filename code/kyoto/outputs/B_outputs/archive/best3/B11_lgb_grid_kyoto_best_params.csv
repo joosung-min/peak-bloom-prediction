@@ -1,0 +1,4 @@
+"boostings","learning_rates","max_bins","num_leaves","max_depth","iteration","binary_logloss","auc","binary_error"
+"gbdt",0.1,25,15,-1,36,0.298,0.934,0.119
+"gbdt",0.1,25,40,-1,18,0.323,0.937,0.13
+"gbdt",0.1,25,15,-1,36,0.298,0.934,0.119

@@ -1,6 +1,7 @@
 library(tidyverse)
 
 # Here we try to obtain the best Tc, Rc_thresh, Rh_thresh
+setwd("/home/joosungm/projects/def-lelliott/joosungm/projects/peak-bloom-prediction")
 source("./code/_shared/F01_functions.r")
 
 
@@ -17,6 +18,13 @@ cherry_city_temp <- read.csv("./code/kyoto/outputs/A12_kyoto_temperature.csv") %
 # bloom_date date
 cherry_sub <- read.csv("./code/_shared/outputs/A11_cherry_sub.csv") %>%
     filter(city == cherry_city)
+# For kyoto, the data for 2022 is not inserted yet. We insert it manually.
+#nrow(cherry_sub) #69
+cherry_sub[70, ] <- cherry_sub[69, ]
+cherry_sub[70, "bloom_date"] <- "2022-04-01"
+cherry_sub[70, "year"] <- "2022"
+cherry_sub[70, "bloom_doy"] <- as.numeric(as.Date("2022-04-01")) - as.numeric(as.Date("2022-01-01")) + 1
+tail(cherry_sub)
 # dim(cherry_sub)
 
 # filenames for the outputs
