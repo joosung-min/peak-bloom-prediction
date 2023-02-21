@@ -48,13 +48,13 @@ lgb_final_name <- "./code/kyoto/outputs/M24_lgb_final_kyoto3.rds"
 grid_search <- expand.grid(
     boostings = c("gbdt", "dart")
     , learning_rates = c(0.1, 0.01) # 
-    , max_bins = c(255, 512, 1024, 2048) 
+    , max_bins = c(255, 1024, 2048) 
     , min_data_in_leaf = c(20, 12, 40)
     , max_depth = c(-1, 10, 20)
     , feature_fractions = c(0.6, 0.8, 1)
     , bagging_fractions = c(0.6, 0.8, 1)
     , bagging_freqs = c(1, 5, 10)
-    , lambda_l2s = c(0, 0.1, 0.5, 1)
+    , lambda_l2s = c(0.1, 0.5, 1)
 ) %>%
     mutate(val_score = NA) %>%
     mutate(test_score = NA)
@@ -196,9 +196,9 @@ print(best_score)
 write.csv(best_score, grid_best_filename, row.names = FALSE)
 
 
-# #######################################################################
-# # Fit final model:
-# #######################################################################
+################################################
+# Fit final model:
+################################################
 
 # Here we train our final model using the parameters from before.
 param_idx <- 1 # 1: best binary_logloss, 2: best score
