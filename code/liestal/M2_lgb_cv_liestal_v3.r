@@ -44,7 +44,7 @@ lgb_final_name <- "./code/liestal/outputs/M24_lgb_final_Liestal3.rds"
 grid_search <- expand.grid(
     boostings = c("gbdt", "dart")
     , learning_rates = c(0.1, 0.01) # 
-    , max_bins = c(255, 1024, 2048) 
+    , max_bins = c(255) 
     , min_data_in_leaf = c(20, 12, 40)
     , max_depth = c(-1, 10, 20)
     , feature_fractions = c(0.6, 0.8, 1)
@@ -131,7 +131,7 @@ grid_search_result <- foreach(
         
         lgb_val <- lgb.train(params = params
             , data = dtrain, valids = valids
-            , nrounds = 2500L, verbose = -1)
+            , nrounds = 1000L, verbose = -1)
 
 
         train_val_cv <- rbind(train_cv, val_cv)
@@ -154,7 +154,7 @@ grid_search_result <- foreach(
         
         lgb_test <- lgb.train(params = params
             , data = dtrain_val, valids = valids2
-            , nrounds = 2500L, verbose = -1)
+            , nrounds = 1000L, verbose = -1)
 
         cv_table[f, ] <- c(f, lgb_val$best_score, lgb_test$best_score)
 
@@ -202,6 +202,8 @@ param_idx <- 1 # 1: best binary_logloss, 2: best score
 # boosting <- as.character(best_score[param_idx, "boostings"])
 grid_search_result <- read.csv(grid_result_filename)
 best_score <- grid_search_result[which(grid_search_result$test_score == min(grid_search_result$test_score)),]
+
+# best_score <- grid_search
 
 best_boosting <- "gbdt"
 best_learning_rate <- as.numeric(best_score[param_idx, "learning_rates"])
