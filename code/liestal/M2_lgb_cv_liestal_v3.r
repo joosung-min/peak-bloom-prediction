@@ -42,15 +42,15 @@ lgb_final_name <- "./code/liestal/outputs/M24_lgb_final_Liestal3.rds"
 #     mutate(test_score = NA)
 
 grid_search <- expand.grid(
-    boostings = c("gbdt", "dart")
+    boostings = c("gbdt")
     , learning_rates = c(0.1, 0.01) # 
     , max_bins = c(255) 
     , min_data_in_leaf = c(20, 12, 40)
     , max_depth = c(-1, 10, 20)
-    , feature_fractions = c(0.6, 0.8, 1)
-    , bagging_fractions = c(0.6, 0.8, 1)
+    , feature_fractions = c(0.8, 0.9, 1)
+    , bagging_fractions = c(0.8, 0.9, 1)
     , bagging_freqs = c(1, 5, 10)
-    , lambda_l2s = c(0.1, 0.5, 1)
+    , lambda_l2s = c(0, 0.1, 0.5)
 ) %>%
     mutate(val_score = NA) %>%
     mutate(test_score = NA)
@@ -80,23 +80,26 @@ grid_search_result <- foreach(
 ) %do% {
 
 # # for (g in seq_len(nrow(grid_search))) {
-    # param_grid <- grid_search[g, ]
+    # param_grid <- grid_search[1, ]
     # boosting <- as.character(param_grid[["boostings"]])
     # learning_rate <- as.numeric(param_grid[["learning_rates"]])
-    # max_bin <- as.numeric(param_grid[["max_bins"]])
+    # max_bin <- 255
     # min_data_in_leaf <- as.numeric(param_grid[["min_data_in_leaf"]])
-    # num_leaves <- as.numeric(param_grid[["num_leaves"]])
     # max_depth <- as.numeric(param_grid[["max_depth"]])
+    # feature_fraction <- as.numeric(param_grid[["feature_fractions"]])
+    # bagging_fraction <- as.numeric(param_grid[["bagging_fractions"]])
+    # bagging_freq <- as.numeric(param_grid[["bagging_freqs"]])
+    # lambda_l2 <- as.numeric(param_grid[["lambda_l2s"]])
 
     cv_table <- matrix(nrow = n_fold, ncol = 3
         , dimnames = list(NULL, c("fold", "val_score", "test_score")))
 
     for (f in 1:(n_fold)-1) {
-        # g = 1
+        
         # f = 1
         train_cv <- total_df %>% filter(fold != f)
         val_cv <- total_df %>% filter(fold == f)
-
+        
         dtrain <- lgb.Dataset(
             data = data.matrix(train_cv[, feature_names])
             , label = train_cv[[target_col]]
@@ -236,10 +239,10 @@ dtest <- lgb.Dataset(
     
 params <- list(
             objective = "binary"
-            , metric = c("auc")
+            , metric = c("binary_logloss")
             , is_enable_sparse = TRUE
             # , is_unbalance = TRUE
-            , boosting = "dart"
+            , boosting = "gbdt"
             , learning_rate = best_learning_rate
             , min_data_in_leaf = best_min_data_in_leaf
             , max_depth = best_max_depth
