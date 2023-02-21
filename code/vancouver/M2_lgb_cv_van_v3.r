@@ -17,7 +17,6 @@ cherry_df <- F01_train_val_test_split(
 )
 
 total_df <- rbind(cherry_df$train, cherry_df$test, cherry_df$val)
-test_cv <- total_df %>% filter(fold == n_fold)
 
 
 feature_names <- c("month", "day", "Cd_cumsum", "Ca_cumsum", "lat", "long", "alt", "daily_Ca", "daily_Cd", "tmax", "tmin")
@@ -31,15 +30,15 @@ lgb_final_name <- "./code/vancouver/outputs/M24_lgb_final_van3.rds"
 
 
 grid_search <- expand.grid(
-    boostings = c("gbdt", "dart")
+    boostings = c("gbdt")
     , learning_rates = c(0.1, 0.01) # 
-    , max_bins = c(255, 1024, 2048) 
+    , max_bins = c(255) 
     , min_data_in_leaf = c(20, 12, 40)
     , max_depth = c(-1, 10, 20)
-    , feature_fractions = c(0.6, 0.8, 1)
-    , bagging_fractions = c(0.6, 0.8, 1)
+    , feature_fractions = c(0.8, 0.9, 1)
+    , bagging_fractions = c(0.8, 0.9, 1)
     , bagging_freqs = c(1, 5, 10)
-    , lambda_l2s = c(0.1, 0.5, 1)
+    , lambda_l2s = c(0, 0.1, 0.5)
 ) %>%
     mutate(val_score = NA) %>%
     mutate(test_score = NA)
@@ -58,42 +57,49 @@ grid_search <- expand.grid(
 # grid_cols <- colnames(grid_search)
 # cv_result <- data.frame(matrix(nrow = nrow(grid_search), ncol = length(grid_cols), dimnames = list(NULL, grid_cols)))
 
-library(doParallel)
-n_clusters <- detectCores() - 1
-# n_clusters <- 5
-myCluster <- makeCluster(n_clusters, type = "FORK")
-registerDoParallel(myCluster)
+# library(doParallel)
+# n_clusters <- detectCores() - 1
+# # n_clusters <- 5
+# myCluster <- makeCluster(n_clusters, type = "FORK")
+# registerDoParallel(myCluster)
 
-grid_search_result <- foreach(
+# grid_search_result <- foreach(
     
-    boosting = grid_search$boostings
-    , learning_rate = grid_search$learning_rates
-    , max_bin = grid_search$max_bins
-    , min_data_in_leaf = grid_search$min_data_in_leaf
-    , max_depth = grid_search$max_depth
-    , feature_fraction = grid_search$feature_fractions
-    , bagging_fraction = grid_search$bagging_fractions
-    , bagging_freq = grid_search$bagging_freqs
-    , lambda_l2 = grid_search$lambda_l2s
-    , .packages = "lightgbm"
-    , .combine = rbind
-    , .errorhandling = "remove"
+#     boosting = grid_search$boostings
+#     , learning_rate = grid_search$learning_rates
+#     , max_bin = grid_search$max_bins
+#     , min_data_in_leaf = grid_search$min_data_in_leaf
+#     , max_depth = grid_search$max_depth
+#     , feature_fraction = grid_search$feature_fractions
+#     , bagging_fraction = grid_search$bagging_fractions
+#     , bagging_freq = grid_search$bagging_freqs
+#     , lambda_l2 = grid_search$lambda_l2s
+#     , .packages = "lightgbm"
+#     , .combine = rbind
+#     , .errorhandling = "remove"
 
-) %dopar% {
+# ) %dopar% {
 
-# # for (g in seq_len(nrow(grid_search))) {
-    # param_grid <- grid_search[g, ]
-    # boosting <- as.character(param_grid[["boostings"]])
-    # learning_rate <- as.numeric(param_grid[["learning_rates"]])
-    # max_bin <- as.numeric(param_grid[["max_bins"]])
-    # min_data_in_leaf <- as.numeric(param_grid[["min_data_in_leaf"]])
-    # num_leaves <- as.numeric(param_grid[["num_leaves"]])
-    # max_depth <- as.numeric(param_grid[["max_depth"]])
+best_score_so_far <- 1
+
+for (g in seq_len(nrow(grid_search))) {
+    # g = 2
+    param_grid <- grid_search[g, ]
+    print(param_grid)
+    boosting <- as.character(param_grid[["boostings"]])
+    learning_rate <- as.numeric(param_grid[["learning_rates"]])
+    max_bin <- as.numeric(param_grid[["max_bins"]])
+    min_data_in_leaf <- as.numeric(param_grid[["min_data_in_leaf"]])
+    max_depth <- as.numeric(param_grid[["max_depth"]])
+    feature_fraction <- as.numeric(param_grid[["feature_fractions"]])
+    bagging_fraction <- as.numeric(param_grid[["bagging_fractions"]])
+    bagging_freq <- as.numeric(param_grid[["bagging_freqs"]])
+    lambda_l2 <- as.numeric(param_grid[["lambda_l2s"]])
 
     cv_table <- matrix(nrow = n_fold, ncol = 3
         , dimnames = list(NULL, c("fold", "val_score", "test_score")))
 
-    for (f in 1:(n_fold-1)) {
+    for (f in 2:(n_fold-1)) {
         # g = 1
         # f = 1
 
@@ -140,8 +146,9 @@ grid_search_result <- foreach(
             , nrounds = 2500L, verbose = -1)
 
 
-        train_val_cv <- rbind(train_cv, val_cv)
-
+        train_val_cv <- total_df %>% filter(fold != n_fold)
+        test_cv <- total_df %>% filter(fold == n_fold)
+        
         dtrain_val <- lgb.Dataset(
             data = data.matrix(train_val_cv[, feature_names])
             , label = train_val_cv[[target_col]]
@@ -168,99 +175,120 @@ grid_search_result <- foreach(
 
     avg_valscore <- mean(cv_table[, 2], na.rm = TRUE)
     avg_testscore <- mean(cv_table[, 3], na.rm = TRUE)
-
-    out <- c(boosting
-    , learning_rate
-    , max_bin
-    , min_data_in_leaf
-    , max_depth
-    , feature_fraction
-    , bagging_fraction
-    , bagging_freq
-    , lambda_l2
-    , avg_valscore, avg_testscore)
     
-    return(out)
-}
-stopCluster(myCluster)
+    # out <- c(boosting
+    # , learning_rate
+    # , max_bin
+    # , min_data_in_leaf
+    # , max_depth
+    # , feature_fraction
+    # , bagging_fraction
+    # , bagging_freq
+    # , lambda_l2
+    # , avg_valscore, avg_testscore)
+    
+    # return(out)
 
-save(grid_search_result, file = Rdata_name)
-print(paste0(Rdata_name, " saved."))
+    grid_search[g, "val_score"] <- avg_valscore
+    grid_search[g, "test_score"] <- avg_testscore
+    # head(grid_search)
+    write.csv(grid_search, grid_result_filename, row.names = FALSE)
+
+    if (avg_testscore < best_score_so_far) {
+        print(paste0("best score updated: ", best_score_so_far, " -> ", avg_testscore))
+        best_score <- grid_search[g, ]
+        write.csv(best_score, grid_best_filename, row.names = FALSE)
+        best_score_so_far <- avg_testscore
+
+        saveRDS.lgb.Booster(lgb_test, file = lgb_final_name)
+    }
+}
+# stopCluster(myCluster)
+
+# save(grid_search_result, file = Rdata_name)
+# print(paste0(Rdata_name, " saved."))
 # load(Rdata_name)
 
-grid_search_out <- as.data.frame(grid_search_result) %>%
-    "colnames<-"(colnames(grid_search))
-write.csv(grid_search_out, grid_result_filename, row.names = FALSE)
+# grid_search_out <- as.data.frame(grid_search_result) %>%
+#     "colnames<-"(colnames(grid_search))
+# write.csv(grid_search_out, grid_result_filename, row.names = FALSE)
+# best_score <- grid_search_out[which(grid_search_out$test_score == min(grid_search_out$test_score)), ]
 
-best_score <- grid_search_out[which(grid_search_out$test_score == min(grid_search_out$test_score)), ]
 
-print(best_score)
-write.csv(best_score, grid_best_filename, row.names = FALSE)
-#################################################
-# # Fit final model:
-#################################################
+save(grid_search, file = Rdata_name)
+print(paste0(Rdata_name, " saved."))
+write.csv(grid_search, grid_result_filename, row.names = FALSE)
 
-# Here we train our final model using the parameters from before.
-param_idx <- 1 # 1: best binary_logloss, 2: best score
+# best_score <- grid_search[which(grid_search$test_score == min(grid_search$test_score)), ]
+# print(best_score)
+# write.csv(best_score, grid_best_filename, row.names = FALSE)
 
-# boosting <- as.character(best_score[param_idx, "boostings"])
-grid_search_result <- read.csv(grid_result_filename)
-best_score <- grid_search_result[which(grid_search_result$test_score == min(grid_search_result$test_score)),]
 
-best_boosting <- "gbdt"
-best_learning_rate <- as.numeric(best_score[param_idx, "learning_rates"])
-best_max_bin <- as.numeric(best_score[param_idx, "max_bins"])
-best_min_data_in_leaf <- as.numeric(best_score[param_idx, "min_data_in_leaf"])
-best_max_depth <- as.numeric(best_score[param_idx, "max_depth"])
-best_feature_fraction <- as.numeric(best_score[param_idx, "feature_fractions"])
-best_bagging_fraction <- as.numeric(best_score[param_idx, "bagging_fractions"])
-best_bagging_freq <- as.numeric(best_score[param_idx, "bagging_freqs"])
-best_lambda_l2 <- as.numeric(best_score[param_idx, "lambda_l2s"])
+# #################################################
+# # # Fit final model:
+# #################################################
 
-seed <- 42
+# # Here we train our final model using the parameters from before.
+# param_idx <- 1 # 1: best binary_logloss, 2: best score
 
-train_final <- total_df %>% filter(fold != n_fold)
-test_final <- total_df %>% filter(fold == n_fold)
+# # boosting <- as.character(best_score[param_idx, "boostings"])
+# grid_search_result <- read.csv(grid_result_filename)
+# best_score <- grid_search_result[which(grid_search_result$test_score == min(grid_search_result$test_score)),]
 
-dtrain <- lgb.Dataset(
-    data = data.matrix(train_final[, feature_names])
-    , label = train_final[[target_col]]
-    , params = list(
-        # min_data_in_bin = 1L
-        max_bin = best_max_bin
-        )
-)
+# best_boosting <- "gbdt"
+# best_learning_rate <- as.numeric(best_score[param_idx, "learning_rates"])
+# best_max_bin <- as.numeric(best_score[param_idx, "max_bins"])
+# best_min_data_in_leaf <- as.numeric(best_score[param_idx, "min_data_in_leaf"])
+# best_max_depth <- as.numeric(best_score[param_idx, "max_depth"])
+# best_feature_fraction <- as.numeric(best_score[param_idx, "feature_fractions"])
+# best_bagging_fraction <- as.numeric(best_score[param_idx, "bagging_fractions"])
+# best_bagging_freq <- as.numeric(best_score[param_idx, "bagging_freqs"])
+# best_lambda_l2 <- as.numeric(best_score[param_idx, "lambda_l2s"])
 
-dtest <- lgb.Dataset(
-    data = data.matrix(test_final[, feature_names])
-    , label = test_final[[target_col]]    
-)
+# seed <- 42
+
+# train_final <- total_df %>% filter(fold != n_fold)
+# test_final <- total_df %>% filter(fold == n_fold)
+
+# dtrain <- lgb.Dataset(
+#     data = data.matrix(train_final[, feature_names])
+#     , label = train_final[[target_col]]
+#     , params = list(
+#         # min_data_in_bin = 1L
+#         max_bin = best_max_bin
+#         )
+# )
+
+# dtest <- lgb.Dataset(
+#     data = data.matrix(test_final[, feature_names])
+#     , label = test_final[[target_col]]    
+# )
     
-params <- list(
-            objective = "binary"
-            , metric = c("auc")
-            , is_enable_sparse = TRUE
-            # , is_unbalance = TRUE
-            , boosting = "dart"
-            , min_data_in_leaf = best_min_data_in_leaf
-            , learning_rate = best_learning_rate
-            , max_depth = best_max_depth
-            , feature_fraction = best_feature_fraction
-            , bagging_fraction = best_bagging_fraction
-            , bagging_freq = best_bagging_freq
-            , lambda_l2 = best_lambda_l2
-            , early_stopping_rounds = 100L
-    )
+# params <- list(
+#             objective = "binary"
+#             , metric = c("auc")
+#             , is_enable_sparse = TRUE
+#             # , is_unbalance = TRUE
+#             , boosting = "dart"
+#             , min_data_in_leaf = best_min_data_in_leaf
+#             , learning_rate = best_learning_rate
+#             , max_depth = best_max_depth
+#             , feature_fraction = best_feature_fraction
+#             , bagging_fraction = best_bagging_fraction
+#             , bagging_freq = best_bagging_freq
+#             , lambda_l2 = best_lambda_l2
+#             , early_stopping_rounds = 100L
+#     )
 
-valids <- list(test = dtest)
-lgb_final <- lgb.train(params = params
-    , data = dtrain
-    , valids = valids
-    , nrounds = 1000L
-    , eval_freq = 100
-    , verbose = 1)
-print(lgb_final$best_score)
+# valids <- list(test = dtest)
+# lgb_final <- lgb.train(params = params
+#     , data = dtrain
+#     , valids = valids
+#     , nrounds = 1000L
+#     , eval_freq = 100
+#     , verbose = 1)
+# print(lgb_final$best_score)
 
-saveRDS.lgb.Booster(lgb_final, file = lgb_final_name)
+# saveRDS.lgb.Booster(lgb_final, file = lgb_final_name)
 
-print("done")
+# print("done")
