@@ -17,10 +17,10 @@ cherry_df <- F01_train_val_test_split(
     , seed = 42
 )
 
-feature_names <- c("month", "day", "Cd_cumsum", "Ca_cumsum", "lat", "long", "alt", "daily_Ca", "daily_Cd", "tmax", "tmin")
-# head(cherry_df[["train"]])
-# train_cv <- cherry_df[["train"]]
-# head(train_cv[, feature_names])
+feature_names <- c("lat", "long", "alt", "tmax", "tmin", "Ca_cumsum", "month", "day", "species")
+head(cherry_df[["train"]])
+train_cv <- cherry_df[["train"]]
+head(train_cv[, feature_names])
 
 target_col <- "is_bloom"
 
@@ -117,17 +117,18 @@ grid_search_result <- foreach(
             , params = list(
                 max_bin = max_bin
             )
+            , categorical_feature = c("species")
         )
 
         dval <- lgb.Dataset(
             data = data.matrix(val_cv[, feature_names])
             , label = val_cv[[target_col]]
-            
+            , categorical_feature = c("species")
         )
             
         params <- list(
             objective = "binary"
-            , metric = c("auc")
+            , metric = c("binary_logloss")
             , is_enable_sparse = TRUE
             # , is_unbalance = TRUE
             , boosting = boosting
@@ -142,6 +143,7 @@ grid_search_result <- foreach(
         
         lgb_val <- lgb.train(params = params
             , data = dtrain, valids = valids
+            , categorical_feature = c("species")
             , nrounds = 2500L, verbose = -1)
 
 
@@ -155,18 +157,20 @@ grid_search_result <- foreach(
             , params = list(
                 max_bin = max_bin
             )
+            , categorical_feature = c("species")
         )
 
         dtest <- lgb.Dataset(
             data = data.matrix(test_cv[, feature_names])
             , label = test_cv[[target_col]]
-            
+            , categorical_feature = c("species")
         )
 
         valids2 <- list(test = dtest)
         
         lgb_test <- lgb.train(params = params
             , data = dtrain_val, valids = valids2
+            , categorical_feature = c("species")
             , nrounds = 2500L, verbose = -1)
 
         cv_table[f, ] <- c(f, lgb_val$best_score, lgb_test$best_score)
@@ -189,7 +193,8 @@ grid_search_out <- as.data.frame(grid_search_result) %>%
     "colnames<-"(colnames(grid_search))
 write.csv(grid_search_out, grid_result_filename, row.names = FALSE)
 
-best_score <- grid_search_out[which(grid_search_out$test_score == max(grid_search_out$test_score)), ]
+# best_score <- grid_search_out[which(grid_search_out$test_score == max(grid_search_out$test_score)), ]
+best_score <- grid_search_out[which(grid_search_out$test_score == min(grid_search_out$test_score)), ]
 
 print(best_score)
 write.csv(best_score, grid_best_filename, row.names = FALSE)
