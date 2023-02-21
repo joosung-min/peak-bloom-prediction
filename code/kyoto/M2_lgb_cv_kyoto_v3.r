@@ -26,10 +26,10 @@ feature_names <- c("month", "day", "Cd_cumsum", "Ca_cumsum", "lat", "long", "alt
 
 target_col <- "is_bloom"
 
-Rdata_name <- "./outputs/M21_lgb_RDada_kyoto3.RData"
-grid_result_filename <- "./outputs/M22_lgb_grid_kyoto3.csv"
-grid_best_filename <- "./outputs/M23_lgb_best_params_kyoto3.csv"
-lgb_final_name <- "./outputs/M24_lgb_final_kyoto3.rds"
+Rdata_name <- "./code/kyoto/outputs/M21_lgb_RDada_kyoto3.RData"
+grid_result_filename <- "./code/kyoto/outputs/M22_lgb_grid_kyoto3.csv"
+grid_best_filename <- "./code/kyoto/outputs/M23_lgb_best_params_kyoto3.csv"
+lgb_final_name <- "./code/kyoto/outputs/M24_lgb_final_kyoto3.rds"
 
 
 # grid_search <- expand.grid(
