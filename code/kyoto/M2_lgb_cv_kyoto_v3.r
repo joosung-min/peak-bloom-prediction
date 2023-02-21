@@ -106,8 +106,11 @@ grid_search_result <- foreach(
         # g = 1
         # f = 1
 
-        train_cv <- cherry_df[[1]] %>% filter(fold != f)
-        val_cv <- cherry_df[[2]] %>% filter(fold != f)
+        # train_cv <- cherry_df[[1]] %>% filter(fold != f)
+        # val_cv <- cherry_df[[2]] %>% filter(fold != f)
+
+        train_cv <- rbind(cherry_df[[1]], cherry_df[[2]]) %>% filter(fold != f)
+        val_cv <- rbind(cherry_df[[1]], cherry_df[[2]]) %>% filter(fold == f)
 
         dtrain <- lgb.Dataset(
             data = data.matrix(train_cv[, feature_names])
