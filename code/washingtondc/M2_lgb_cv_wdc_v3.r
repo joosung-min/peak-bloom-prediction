@@ -5,7 +5,7 @@ library(lightgbm)
 # load gdd data
 setwd("/home/joosungm/projects/def-lelliott/joosungm/projects/peak-bloom-prediction/")
 source("./code/_shared/F01_functions.r")
-cherry_gdd <- read.csv("./code/washingtondc/outputs/A13_wdc_temperature.csv")
+cherry_gdd <- read.csv("./code/washingtondc/outputs/A12_wdc_temperature.csv")
 
 n_fold <- 8
 
