@@ -65,7 +65,6 @@ grid_search <- expand.grid(
 
 
 
-
 # grid_cols <- colnames(grid_search)
 # cv_result <- data.frame(matrix(nrow = nrow(grid_search), ncol = length(grid_cols), dimnames = list(NULL, grid_cols)))
 
