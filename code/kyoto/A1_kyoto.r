@@ -50,27 +50,27 @@ kyoto_group <- rownames(kyoto_dist)[1:11]
 
 # # Pull weather stations ids for those cities.
 library(rnoaa)
-# weather_stations <- ghcnd_stations() %>%
-#     filter(last_year %in% 2021:2023) %>%
-#     distinct(id, .keep_all = TRUE) %>%
-#     filter(str_sub(id, 1, 2) %in% c("JA")) %>%
-#     filter(name %in% toupper(kyoto_group))
-# write.csv(weather_stations, "./code/kyoto/outputs/A11_weather_stations_kyoto.csv", row.names = FALSE)
+weather_stations <- ghcnd_stations() %>%
+    filter(last_year %in% 2021:2023) %>%
+    distinct(id, .keep_all = TRUE) %>%
+    filter(str_sub(id, 1, 2) %in% c("JA")) %>%
+    filter(name %in% toupper(kyoto_group))
+write.csv(weather_stations, "./code/kyoto/outputs/A11_weather_stations_kyoto.csv", row.names = FALSE)
 weather_stations <- read.csv("./code/kyoto/outputs/A11_weather_stations_kyoto.csv")
 
 city_station_pair <- weather_stations %>% 
     rename_with(~"station", id) %>%
     mutate(city = str_to_title(name)) %>%
     select(-name)
-# write.csv(city_station_pair, "./code/kyoto/outputs/A11_city_station_pairs.csv", row.names = FALSE)
+write.csv(city_station_pair, "./code/kyoto/outputs/A11_city_station_pairs.csv", row.names = FALSE)
 
 # Get weather info using the station ids
-# kyoto_weather <- F01_get_imp_temperature(
-#     city_station_pair = city_station_pair
-#     , target_country = c("Japan")
-#     , cherry_sub = cherry_sub
-#     )
-# write.csv(kyoto_weather, "./code/kyoto/outputs/A12_kyoto_temperature.csv", row.names = FALSE)
+kyoto_weather <- F01_get_imp_temperature(
+    city_station_pair = city_station_pair
+    , target_country = c("Japan")
+    , cherry_sub = cherry_sub
+    )
+write.csv(kyoto_weather, "./code/kyoto/outputs/A12_kyoto_temperature.csv", row.names = FALSE)
 kyoto_weather <- read.csv("./code/kyoto/outputs/A12_kyoto_temperature.csv")
 
 
@@ -114,10 +114,7 @@ write.csv(kyoto_gdd2, "./code/kyoto/outputs/A14_kyoto_temp_gdd.csv", row.names =
 # source(./code/kyoto/M2_lgb_cv_kyoto.r)
 
 # - Best params
-lgb_grid <- read.csv("./code/kyoto/outputs/M22_lgb_grid_kyoto3.csv")
 
-best_lgb_params <- lgb_grid[which(lgb_grid$test_score == min(lgb_grid$test_score)), ]
-best_lgb_params
 
 # - Train the final model using the best param set
 # source(./code/kyoto/M3_lgb_final_kyoto.r)
@@ -129,14 +126,24 @@ best_lgb_params
 library(lightgbm)
 
 lgb_final <- readRDS.lgb.Booster("./code/kyoto/outputs/M24_lgb_final_kyoto3.rds")
-test_set <- read.csv("./code/kyoto/outputs/B_outputs/archive/best4/B11_japan_test1.csv")
+cherry_gdd <- read.csv("./code/kyoto/outputs/A14_kyoto_temp_gdd.csv") %>%
+    filter(month %in% c(3, 4))
 
-feature_names <- c("tmax", "tmin", "prcp", "month", "day", "daily_Ca", "daily_Cd", "Cd_cumsum", "Ca_cumsum", "lat", "long", "alt")
+# Make prediction on the last 4 years
+feature_names <- c("tmax", "tmin", "month", "day", "daily_Ca", "daily_Cd", "Cd_cumsum", "Ca_cumsum", "lat", "long", "alt")
+
 target_col <- "is_bloom"
 
-pred <- predict(lgb_final, as.matrix(test_set[, feature_names]))
-test_set$predicted <- ifelse(pred > 0.3, 1, 0)
+test_set <- cherry_gdd %>%
+    filter(city == "Kyoto") %>%
+    filter(year %in% c(2019:2022)) %>%
+    mutate(month = as.factor(month), day = as.factor(day)) %>%
+    select(all_of(feature_names), all_of(target_col))
 
+pred <- predict(lgb_final, as.matrix(test_set[, feature_names]))
+test_set$predicted <- ifelse(pred > 0.5, 1, 0)
+hist(pred, breaks =100)
+tail(sort(pred))
 # Confusion matrix
 library(caret)
 confusionMatrix(factor(test_set$predicted), factor(test_set$is_bloom))
@@ -171,42 +178,54 @@ lgb.plot.importance(lgb_imp, top_n = 10L, measure = "Gain")
 
 # # write.csv("../outputs/B_outputs/B21_kyoto_gdd_test.csv", row.names = FALSE)
 
-# kyoto_gdd <- gdd_data
-# kyoto_years <- unique(kyoto_gdd$year)
-# error_cols <- c("year", "date", "pred_date", "diff")
-# error_table <- data.frame(matrix(nrow = length(kyoto_years), ncol = length(error_cols), dimnames = list(NULL, error_cols)))
 
-# p_thresh <- 0.70
+F01_compute_MAE <- function(city, cherry_gdd, lgb_final, target_years, p_thresh){
 
-# for (y in seq_len(length(kyoto_years))) {
+    city_gdd <- cherry_gdd %>%
+        filter(city == city) %>%
+        filter(year %in% target_years)
+    city_years <- unique(city_gdd$year)
     
-#     yr <- kyoto_years[y]
-    
-#     temp_data <- kyoto_gdd[kyoto_gdd$year == yr, ]
-#     pred <- predict(lgb_load, as.matrix(temp_data[, feature_names]))
-#     temp_data$pred_prob <- pred
-#     temp_data$pred_bin <- ifelse(pred > p_thresh, 1, 0)
+    error_cols <- c("year", "date", "pred_date", "diff")
+    error_table <- data.frame(
+        matrix(nrow = length(city_years)
+            , ncol = length(error_cols)
+            , dimnames = list(NULL, error_cols)))
 
-#     actual_bloom_idx <- which(temp_data$is_bloom == 1)
-#     actual_bloom_date <- temp_data[actual_bloom_idx, "date"]
-#     if (yr == 2022) {
-#         actual_bloom_date <- "2022-04-01"
-#     }
-    
-#     pred_blooms <- which(temp_data$pred_bin == 1)
-#     # pred_bloom_start_idx <- pred_blooms[1]
-#     pred_bloom_start_idx <- which(temp_data$pred_prob == max(temp_data$pred_prob))[1] -2# take the highest probability day as the blooming date.
-#     pred_bloom_start_date <- temp_data[pred_bloom_start_idx, "date"]
-    
-#     if (is.na(pred_bloom_start_date)) {
-#         pred_bloom_start_date <- temp_data[which(temp_data$pred_prob == max(temp_data$pred_prob))[1], "date"]
-#     }
+    for (y in seq_len(length(city_years))) {
+        # y = 1
+        yr <- city_years[y]
+        
+        temp_data <- city_gdd[city_gdd$year == yr, ]
+        pred <- predict(lgb_final, as.matrix(temp_data[, feature_names]))
+        temp_data$pred_prob <- pred
+        temp_data$pred_bin <- ifelse(pred > p_thresh, 1, 0)
 
-#     temp_diff <- as.numeric(as.Date(pred_bloom_start_date)) - as.numeric(as.Date(actual_bloom_date))
-#     error_table[y, ] <- c(yr, actual_bloom_date, pred_bloom_start_date, temp_diff)
-# }
-# error_table
-# mean(abs(as.numeric(error_table$diff)), na.rm = TRUE)
+        actual_bloom_idx <- which(temp_data$is_bloom == 1)
+        actual_bloom_date <- temp_data[actual_bloom_idx, "date"]
+        if (yr == 2022) {
+            actual_bloom_date <- "2022-04-01"
+        }
+        
+        pred_blooms <- which(temp_data$pred_bin == 1)
+        pred_bloom_start_idx <- pred_blooms[1]
+
+        # peak_date = take the highest probability day as the blooming date.
+        pred_bloom_peak_idx <- which(temp_data$pred_prob == max(temp_data$pred_prob))[1] 
+        pred_bloom_peak_date <- temp_data[pred_bloom_peak_idx, "date"]
+        
+        if (is.na(pred_bloom_start_date)) {
+            pred_bloom_start_date <- temp_data[which(temp_data$pred_prob == max(temp_data$pred_prob))[1], "date"]
+        }
+
+        temp_diff <- as.numeric(as.Date(pred_bloom_peak_date)) - as.numeric(as.Date(actual_bloom_date))
+        error_table[y, ] <- c(yr, actual_bloom_date, pred_bloom_peak_date, temp_diff)
+        }
+    
+    MAE <- mean(abs(as.numeric(error_table$diff)), na.rm = TRUE)
+    
+    return(list(MAE_table = error_table, MAE = MAE))
+}
 
 
 #######################################
