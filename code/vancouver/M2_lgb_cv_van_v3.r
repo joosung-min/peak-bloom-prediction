@@ -85,7 +85,7 @@ best_score_so_far <- 1
 for (g in seq_len(nrow(grid_search))) {
     # g = 2
     param_grid <- grid_search[g, ]
-    print(param_grid)
+    # print(param_grid)
     boosting <- as.character(param_grid[["boostings"]])
     learning_rate <- as.numeric(param_grid[["learning_rates"]])
     max_bin <- as.numeric(param_grid[["max_bins"]])
