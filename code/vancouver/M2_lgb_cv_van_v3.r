@@ -6,10 +6,9 @@ library(lightgbm)
 setwd("/home/joosungm/projects/def-lelliott/joosungm/projects/peak-bloom-prediction/")
 # setwd("./code/liestal")
 source(".code/_shared/F01_functions.r")
-cherry_gdd <- read.csv("./code/liestal/outputs/A13_Liestal_gdd.csv")
+cherry_gdd <- read.csv("./code/vancouver/outputs/A16_van_df.csv")
 
 n_fold <- 8
-
 cherry_df <- F01_train_val_test_split(
     gdd_df = cherry_gdd
     , val_year = 2013:2017
@@ -17,30 +16,15 @@ cherry_df <- F01_train_val_test_split(
     , n_fold = n_fold
     , seed = 42
 )
-
-# head(cherry_df[["train"]])
-# dim(cherry_df[["val"]])
-
 feature_names <- c("month", "day", "Cd_cumsum", "Ca_cumsum", "lat", "long", "alt", "daily_Ca", "daily_Cd", "tmax", "tmin")
 
 target_col <- "is_bloom"
 
-Rdata_name <- "./code/liestal/outputs/M21_lgb_RDada_Liestal3.RData"
-grid_result_filename <- "./code/liestal/outputs/M22_lgb_grid_Liestal3.csv"
-grid_best_filename <- "./code/liestal/outputs/M23_lgb_best_params_Liestal3.csv"
-lgb_final_name <- "./code/liestal/outputs/M24_lgb_final_Liestal3.rds"
+Rdata_name <- "./code/vancouver/outputs/M21_lgb_RDada_van3.RData"
+grid_result_filename <- "./code/vancouver/outputs/M22_lgb_grid_van3.csv"
+grid_best_filename <- "./code/vancouver/outputs/M23_lgb_best_params_van3.csv"
+lgb_final_name <- "./code/vancouver/outputs/M24_lgb_final_van3.rds"
 
-
-# grid_search <- expand.grid(
-#     boostings = c("gbdt")
-#     , learning_rates = c(0.1, 0.01) # 
-#     , max_bins = c(255) 
-#     , min_data_in_leaf = c(20)
-#     , num_leaves = c(31)
-#     , max_depth = c(-1)
-# ) %>%
-#     mutate(val_score = NA) %>%
-#     mutate(test_score = NA)
 
 grid_search <- expand.grid(
     boostings = c("gbdt")
@@ -54,12 +38,12 @@ grid_search <- expand.grid(
     mutate(test_score = NA)
 
 # grid_search <- expand.grid(
-#     boostings = c("gbdt", "dart")
+#     boostings = c("gbdt")
 #     , learning_rates = c(0.1, 0.01) # 
-#     , max_bins = c(255, 64, 128) 
-#     , min_data_in_leaf = c(20, 12, 40)
-#     , num_leaves = c(31, 63, 75)
-#     , max_depth = c(-1, 30, 50)
+#     , max_bins = c(255) 
+#     , min_data_in_leaf = c(20)
+#     , num_leaves = c(31)
+#     , max_depth = c(-1)
 # ) %>%
 #     mutate(val_score = NA) %>%
 #     mutate(test_score = NA)
@@ -230,8 +214,8 @@ write.csv(best_score, grid_best_filename, row.names = FALSE)
 
 
 
-# cherry_train_val <- read.csv("./code/liestal/outputs/A14_Liestal_train_val.csv")
-# val_cv <- read.csv("./code/liestal/outputs/A14_Liestal_test.csv")
+# cherry_train_val <- read.csv("./code/vancouver/outputs/A14_van_train_val.csv")
+# val_cv <- read.csv("./code/vancouver/outputs/A14_van_test.csv")
 
 
 

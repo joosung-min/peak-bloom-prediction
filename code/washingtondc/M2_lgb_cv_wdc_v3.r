@@ -4,9 +4,9 @@ library(lightgbm)
 
 # load gdd data
 setwd("/home/joosungm/projects/def-lelliott/joosungm/projects/peak-bloom-prediction/")
-# setwd("./code/liestal")
+# setwd("./code/washingtondc")
 source(".code/_shared/F01_functions.r")
-cherry_gdd <- read.csv("./code/liestal/outputs/A13_Liestal_gdd.csv")
+cherry_gdd <- read.csv("./code/washingtondc/outputs/A13_wdc_temperature.csv")
 
 n_fold <- 8
 
@@ -18,17 +18,17 @@ cherry_df <- F01_train_val_test_split(
     , seed = 42
 )
 
-# head(cherry_df[["train"]])
-# dim(cherry_df[["val"]])
-
 feature_names <- c("month", "day", "Cd_cumsum", "Ca_cumsum", "lat", "long", "alt", "daily_Ca", "daily_Cd", "tmax", "tmin")
+# head(cherry_df[["train"]])
+# train_cv <- cherry_df[["train"]]
+# head(train_cv[, feature_names])
 
 target_col <- "is_bloom"
 
-Rdata_name <- "./code/liestal/outputs/M21_lgb_RDada_Liestal3.RData"
-grid_result_filename <- "./code/liestal/outputs/M22_lgb_grid_Liestal3.csv"
-grid_best_filename <- "./code/liestal/outputs/M23_lgb_best_params_Liestal3.csv"
-lgb_final_name <- "./code/liestal/outputs/M24_lgb_final_Liestal3.rds"
+Rdata_name <- "./code/washingtondc/outputs/M21_lgb_RDada_wdc3.RData"
+grid_result_filename <- "./code/washingtondc/outputs/M22_lgb_grid_wdc3.csv"
+grid_best_filename <- "./code/washingtondc/outputs/M23_lgb_best_params_wdc3.csv"
+lgb_final_name <- "./code/washingtondc/outputs/M24_lgb_final_wdc3.rds"
 
 
 # grid_search <- expand.grid(
@@ -63,6 +63,9 @@ grid_search <- expand.grid(
 # ) %>%
 #     mutate(val_score = NA) %>%
 #     mutate(test_score = NA)
+
+
+
 
 # grid_cols <- colnames(grid_search)
 # cv_result <- data.frame(matrix(nrow = nrow(grid_search), ncol = length(grid_cols), dimnames = list(NULL, grid_cols)))
@@ -230,8 +233,8 @@ write.csv(best_score, grid_best_filename, row.names = FALSE)
 
 
 
-# cherry_train_val <- read.csv("./code/liestal/outputs/A14_Liestal_train_val.csv")
-# val_cv <- read.csv("./code/liestal/outputs/A14_Liestal_test.csv")
+# cherry_train_val <- read.csv("./code/washingtondc/outputs/A14_wdc_train_val.csv")
+# val_cv <- read.csv("./code/washingtondc/outputs/A14_wdc_test.csv")
 
 
 

@@ -147,28 +147,28 @@ write.csv(cherry_gdd, "./code/vancouver/outputs/A16_van_df.csv")
 # source("./M2_lgb_cv_van.r")
 # source("./M3_lgb_final_van.r")
 
-feature_names <- c("tmax", "tmin", "month", "day", "daily_Cd", "daily_Ca", "Cd_cumsum", "Ca_cumsum", "lat", "long", "alt")
-target_col <- "is_bloom"
+# feature_names <- c("tmax", "tmin", "month", "day", "daily_Cd", "daily_Ca", "Cd_cumsum", "Ca_cumsum", "lat", "long", "alt")
+# target_col <- "is_bloom"
 
 
-cherry_test <- read.csv("./outputs/A14_Liestal_test.csv")
+# # cherry_test <- read.csv("./outputs/A14_van_test.csv")
 
-# Model assessments
-lgb_final <- readRDS.lgb.Booster('./outputs/M31_lgb_final_Liestal.rds')
-pred <- predict(lgb_final, as.matrix(cherry_test[, feature_names]))
-cherry_test$predicted <- ifelse(pred > 0.5, 1, 0)
+# # Model assessments
+# lgb_final <- readRDS.lgb.Booster('./outputs/M31_lgb_final_Liestal.rds')
+# pred <- predict(lgb_final, as.matrix(cherry_test[, feature_names]))
+# cherry_test$predicted <- ifelse(pred > 0.5, 1, 0)
 
-# - Confusion matrix
-library(caret)
-confusionMatrix(factor(cherry_test$predicted), factor(cherry_test$is_bloom))
+# # - Confusion matrix
+# library(caret)
+# confusionMatrix(factor(cherry_test$predicted), factor(cherry_test$is_bloom))
 
-# - ROC curve
-library(ROCR)
-roc_pred <- prediction(pred, cherry_test$is_bloom)
-roc <- performance(roc_pred, "sens", "spec")
-plot(roc, main="ROC curve")
-abline(a=0, b=1)
+# # - ROC curve
+# library(ROCR)
+# roc_pred <- prediction(pred, cherry_test$is_bloom)
+# roc <- performance(roc_pred, "sens", "spec")
+# plot(roc, main="ROC curve")
+# abline(a=0, b=1)
 
-# - Feature importance
-lgb_imp <- lgb.importance(lgb_final)
-lgb.plot.importance(lgb_imp, top_n = 10L, measure = "Gain")
+# # - Feature importance
+# lgb_imp <- lgb.importance(lgb_final)
+# lgb.plot.importance(lgb_imp, top_n = 10L, measure = "Gain")
