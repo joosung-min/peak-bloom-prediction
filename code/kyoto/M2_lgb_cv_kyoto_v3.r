@@ -193,6 +193,8 @@ write.csv(grid_search_out, grid_result_filename, row.names = FALSE)
 
 best_score <- grid_search_out[which(grid_search_out$test_score == max(grid_search_out$test_score)), ]
 
+best_score <- grid_search_out[which(grid_search_out$test_score == min(grid_search_out$test_score)), ]
+
 print(best_score)
 write.csv(best_score, grid_best_filename, row.names = FALSE)
 
