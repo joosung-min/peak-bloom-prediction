@@ -4,8 +4,7 @@ library(lightgbm)
 
 # load gdd data
 setwd("/home/joosungm/projects/def-lelliott/joosungm/projects/peak-bloom-prediction/")
-# setwd("./code/liestal")
-source(".code/_shared/F01_functions.r")
+source("./code/_shared/F01_functions.r")
 cherry_gdd <- read.csv("./code/liestal/outputs/A13_Liestal_gdd.csv")
 
 n_fold <- 8
