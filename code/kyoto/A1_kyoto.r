@@ -142,26 +142,26 @@ plot(kyoto_blooms$Cd_cumsum, kyoto_blooms$bloom_doy, type = "p")
 library(tidyverse)
 library(lightgbm)
 
-lgb_final <- readRDS.lgb.Booster("./code/kyoto/data/M24_lgb_final_kyoto4.rds")
+lgb_final <- readRDS.lgb.Booster("./code/kyoto/data/M24_lgb_final_kyoto3.rds")
+lgb_final <- readRDS.lgb.Booster("./code/kyoto/data/B_outputs/archive/best4/B21_lgb_final1.rds")
 cherry_gdd <- read.csv("./code/kyoto/data/A14_kyoto_temp_gdd.csv") %>%
     filter(month %in% c(3, 4))
 
 # Make prediction on the last 4 years
-feature_names <- c("tmax", "tmin", "daily_Ca", "daily_Cd", "Cd_cumsum", "Ca_cumsum", "lat", "long", "alt", "month", "day")
+feature_names <- c("tmax", "tmin", "daily_Ca", "daily_Cd", "Cd_cumsum", "Ca_cumsum", "lat", "long", "alt", "month", "day", "prcp")
 # feature_names <- c("tmax", "tmin", "daily_Ca", "daily_Cd", "Cd_cumsum", "Ca_cumsum", "lat", "long", "alt", "doy")
 
 target_col <- "is_bloom"
 
-target_years <- 2019:2022
+target_years <- 2013:2022
 
 test_set <- cherry_gdd %>%
     filter(city == "Kyoto") %>%
     filter(year %in% target_years) %>%
-    mutate(month = as.factor(month), day = as.factor(day)) %>%
     select(all_of(feature_names), all_of(target_col))
 
 pred <- predict(lgb_final, as.matrix(test_set[, feature_names]))
-test_set$predicted <- ifelse(pred > 0.10, 1, 0)
+test_set$predicted <- ifelse(pred > 0.5, 1, 0)
 hist(pred, breaks =100)
 tail(sort(pred))
 
@@ -182,10 +182,10 @@ lgb_imp
 lgb.plot.importance(lgb_imp, top_n = 10L, measure = "Gain")
 
 # Compute the MAE for the most recent years
-F01_compute_MAE(target_city = "Kyoto", cherry_gdd = cherry_gdd, lgb_final = lgb_final, target_years = c(2012:2022), p_thresh = 0.1)
+F01_compute_MAE(target_city = "Kyoto", cherry_gdd = cherry_gdd, lgb_final = lgb_final, target_years = c(2012:2022), p_thresh = 0.2)
 
 # Generate and save the prediction plot for the most recent years
-F01_pred_plot_past(target_city = "Kyoto", cherry_gdd = cherry_gdd, lgb_final = lgb_final, target_years = c(2019:2022), p_thresh = 0.1)
+F01_pred_plot_past(target_city = "Kyoto", cherry_gdd = cherry_gdd, lgb_final = lgb_final, target_years = c(2019:2022), p_thresh = 0.2)
 
 
 #######################################
