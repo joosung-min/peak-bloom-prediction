@@ -4,19 +4,22 @@ library(lightgbm)
 # load gdd data
 setwd("/home/joosungm/projects/def-lelliott/joosungm/projects/peak-bloom-prediction/")
 source("./code/_shared/F01_functions.r")
-cherry_gdd <- read.csv("./code/washingtondc/data/A12_wdc_temperature.csv")
+cherry_gdd <- read.csv("./code/washingtondc/data/A12_wdc_temperature.csv") %>%  filter(month %in% c(3,4,5))
 
-n_fold <- 8
+n_fold <- 6
 
-cherry_df <- F01_train_val_test_split(
-    gdd_df = cherry_gdd
-    , val_year = 2013:2017
-    , test_year = 2018:2022
-    , n_fold = n_fold
-    , seed = 42
-)
+# stratified train-test split
+set.seed(42)
+cherry_isbloom <- cherry_gdd %>% filter(is_bloom == 1)
+cherry_isbloom$fold <- sample(1:n_fold, nrow(cherry_isbloom), replace = TRUE)
 
-total_df <- rbind(cherry_df$train, cherry_df$test, cherry_df$val)
+cherry_nobloom <- cherry_gdd %>% filter(is_bloom == 0)
+cherry_nobloom$fold <- sample(1:n_fold, nrow(cherry_nobloom), replace = TRUE)
+
+# combine and shuffle
+cherry_combined <- cherry_isbloom %>% bind_rows(cherry_nobloom)
+total_df <- cherry_combined[sample(1:nrow(cherry_combined), replace = FALSE), ]
+
 
 feature_names <- c("lat", "long", "alt", "tmax", "tmin", "Ca_cumsum", "doy", "species")
 
