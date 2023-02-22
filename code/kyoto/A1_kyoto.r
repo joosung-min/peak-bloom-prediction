@@ -99,7 +99,7 @@ kyoto_gdd <- F01_compute_gdd(
 #     filter(city %in% kyoto_group) %>%
 #     select(city, bloom_doy, bloom_date)
 
-# We use kyoto_gdd2 for the following analysis.
+# We use kyoto_gdd2 for the final model fitting and prediction
 # kyoto_gdd2 <- kyoto_gdd %>%
 #     merge(y = city_station_pair, by = "id", all.x = TRUE) %>%
 #     merge(y = cherry_city_blooms

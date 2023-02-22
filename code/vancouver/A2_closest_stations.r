@@ -74,3 +74,13 @@ city_station_pairs <- city_station_pair %>%
 write.csv(city_station_pairs, "./code/vancouver/data/A11_city_station_pairs.csv", row.names = FALSE)
 
 print("done")
+
+
+van_stations <- ghcnd_stations() %>%
+    filter(str_sub(id, 1, 2) %in% c("CA")) %>%
+    distinct(id, .keep_all = TRUE) %>%
+    select(id, latitude, longitude, elevation, name) %>%
+    filter(id == "CA001108395")
+van_stations
+city_station_pairs[nrow(city_station_pairs)+1, ] <- c("Vancouver", "CA001108395", 49.25, -123.1, 4)
+write.csv(city_station_pairs, "./code/vancouver/data/A11_city_station_pairs.csv", row.names = FALSE)

@@ -11,10 +11,10 @@ source("./code/_shared/F01_functions.r")
 # - Compute Ca_cumsum upto April-30 for most recent 5 years.
 # - Do the same for all 
 
-city_station_pairs <- read.csv("./code/vancouver/data/A11_city_station_pairs.csv") %>%
-    rename_with(~"id", station)
+city_station_pairs <- read.csv("./code/vancouver/data/A11_city_station_pairs.csv")
+# write.csv(city_station_pairs, "./code/vancouver/data/A11_city_station_pairs.csv", row.names = FALSE)
 target_cities <- city_station_pairs$city
-target_stations <- city_station_pairs$station
+target_stations <- city_station_pairs$id
 
 van_temp <- F01_get_temperature(stationid = "CA001108395"
     , date_min = "2019-10-01", date_max = "2022-04-30") %>%
@@ -108,23 +108,42 @@ vancities_weather_df <- F01_get_imp_temperature(
 
 # Find optimal set of Tc, Rc_thresh, Rh_thresh for Liestal using the chill-day method
 # source("./M_gdd_cv_van.r") # CAUTION: Running this code may require a high computational power. HPC recommended.
-best_gdd <- read.csv("./code/vancouver/data/M12_van_gdd_best.csv")
+best_gdd <- read.csv("./code/vancouver/data/M12_van_gdd_best.csv")[1, ]
 best_gdd
 
 # Compute daily_Ca, daily_Cd, Ca_cumsum, Cd_cumsum using the above parameters.
-# vancities_weather_df <-read.csv("./code/vancouver/outputs/A13_vancities_weather_df.csv")
+vancities_weather_df <-read.csv("./code/vancouver/data/A13_vancities_weather_df.csv")
 gdd_df <- F01_compute_gdd(
     weather_df = vancities_weather_df
     , noaa_station_ids = unique(vancities_weather_df$id)
     , Rc_thresh = best_gdd$Rc_thresholds
     , Tc = best_gdd$Tcs)
+gdd_df$date <- as.Date(gdd_df$date)
 dim(gdd_df)
 head(gdd_df)
 
-target_stations <- gdd_df$id
+# Get vancouver temperature data for 2022
+van_temp <- F01_get_temperature(stationid = "CA001108395"
+    , date_min = "2021-10-01", date_max = "2022-04-30") %>%
+    filter(year > 2020)
+
+library(mice)
+tempData <- mice(van_temp, m = 5, method = "pmm", seed = 42)
+imputed_van <- complete(tempData, 5)
+van_gdd <- F01_compute_gdd(
+    weather_df = imputed_van
+    , noaa_station_ids = "CA001108395"
+    , Rc_thresh = best_gdd$Rc_thresholds
+    , Tc = best_gdd$Tcs
+) %>% mutate(year = as.integer(year)) %>% bind_rows(gdd_df)
+
+
+
+target_stations <- van_gdd$id
 
 # Attach blossom dates.
-gdd_city <- gdd_df %>% 
+city_station_pairs <- read.csv("./code/vancouver/data/A11_city_station_pairs.csv")
+gdd_city <- van_gdd %>% 
     merge(y = city_station_pairs, by = "id", all.x = TRUE)
 
 cherry_targets <- cherry_sub %>%
@@ -134,25 +153,32 @@ cherry_targets <- cherry_sub %>%
 cherry_gdd <- gdd_city %>%
     merge(y = cherry_targets, by.x = c("city", "date"), by.y = c("city", "bloom_date"), all.x = TRUE) %>%
     mutate(is_bloom = ifelse(!is.na(bloom_doy), 1, 0)) %>%
-    # filter(year > 1986) %>%
-    filter(month %in% c(3, 4)) %>%
     mutate(doy = as.integer(strftime(date, "%j")))
+
+cherry_gdd[(cherry_gdd$city == "Vancouver" & cherry_gdd$date == as.Date("2022-03-27")), c("bloom_doy", "is_bloom")] <- c(86, 1)
+# cherry_gdd[(cherry_gdd$city == "Vancouver" & cherry_gdd$date == as.Date("2022-03-27")), ] 
 
 head(cherry_gdd)
 dim(cherry_gdd)
 table(cherry_gdd$is_bloom)
 write.csv(cherry_gdd, "./code/vancouver/data/A14_van_gdd.csv")
+cherry_gdd[cherry_gdd$city == "Vancouver" & cherry_gdd$is_bloom == 1, ]
 
+# hist(cherry_gdd[cherry_gdd$is_bloom == 1, "Ca_cumsum"], breaks = 100)
+# cut_range <- cherry_gdd %>% filter(100 < Ca_cumsum & Ca_cumsum < 250)
+# hist(cut_range[cut_range$is_bloom == 1, "Ca_cumsum"], breaks = 100)
 
-hist(cherry_gdd[cherry_gdd$is_bloom == 1, "Ca_cumsum"], breaks = 100)
+# cut_idx <- which(cherry_gdd$is_bloom == 1 & (100 > cherry_gdd$Ca_cumsum  | cherry_gdd$Ca_cumsum > 250))
+# cherry_gdd_cut <- cherry_gdd[-cut_idx, ]
 
-cut_range <- cherry_gdd %>% filter(100 < Ca_cumsum & Ca_cumsum < 250)
-hist(cut_range[cut_range$is_bloom == 1, "Ca_cumsum"], breaks = 100)
+# hist(cherry_gdd_cut[cherry_gdd_cut$is_bloom == 1, "Ca_cumsum"], breaks = 100)
+# write.csv(cherry_gdd_cut, "./code/vancouver/data/A14_van_gdd.csv")
+# cherry_gdd_cut[cherry_gdd_cut$city == "Vancouver" & cherry_gdd_cut$is_bloom == 1, ]
 
-
-unique(cut_range$city)  # add vancouver data.
-
+#############################################
 # Train lightgbm
+#############################################
+
 # source("./M2_lgb_cv_van.r")
 # source("./M3_lgb_final_van.r")
 

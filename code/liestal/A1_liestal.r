@@ -147,6 +147,7 @@ best_gdd
 
 # Compute daily_Ca, daily_Cd, Ca_cumsum, Cd_cumsum using the above parameters.
 city_station_pairs <- read.csv("./code/liestal/data/A11_city_station_pairs.csv")
+swiss_temp <- read.csv("./code/liestal/data/A12_Liestal_temperature.csv")
 gdd_df <- F01_compute_gdd(
     weather_df = swiss_temp
     , noaa_station_ids = unique(city_station_pairs$id)
@@ -159,29 +160,38 @@ target_stations <- gdd_df$id
 
 # Attach blossom dates.
 gdd_city <- gdd_df %>% 
-    merge(y = city_station_pairs, by.x = "id", by.y = "station", all.x = TRUE)
+    merge(y = city_station_pairs, by = "id", all.x = TRUE)
 
 cherry_targets <- cherry_sub %>%
     filter(city %in% unique(gdd_city$city)) %>%
     select(city, bloom_date, bloom_doy)
 
+# we use cherry_gdd for the final model fitting and prediction.
 cherry_gdd <- gdd_city %>%
     merge(y = cherry_targets, by.x = c("city", "date"), by.y = c("city", "bloom_date"), all.x = TRUE) %>%
     mutate(is_bloom = ifelse(!is.na(bloom_doy), 1, 0)) %>%
-    # filter(year > 1986) %>%
-    filter(month %in% c(3, 4)) %>%
-    mutate(doy = as.integer(strftime(date, "%j"))) 
-
-head(cherry_gdd)
+    mutate(doy = as.integer(strftime(date, "%j"))) %>%
+    filter(!(city %in% c("Villnachern", "Birmensdorf", "Rafz")))
+# head(cherry_gdd)
 dim(cherry_gdd)
-table(cherry_gdd$is_bloom)
+# table(cherry_gdd$is_bloom)
 write.csv(cherry_gdd, "./code/liestal/data/A14_Liestal_gdd.csv")
 
+cherry_gdd <- read.csv("./code/liestal/data/A14_Liestal_gdd.csv")
+
+hist(cherry_gdd[cherry_gdd$is_bloom == 1, "Ca_cumsum"], breaks = 30)
+
+cherry_gdd[(cherry_gdd$is_bloom == 1) & (cherry_gdd$Ca_cumsum > 230), ]
+
+hist(cherry_gdd %>%filter(city == "Liestal") %>%filter(is_bloom == 1) %>% pull(Ca_cumsum), breaks = 20)
+
+########################################
 # Train lightgbm
+########################################
 # source("./M2_lgb_cv_liestal.r")
 # source("./M3_lgb_final_liestal.r")
 
-feature_names <- c("tmax", "tmin", "month", "day", "daily_Cd", "daily_Ca", "Cd_cumsum", "Ca_cumsum", "lat", "long", "alt")
+feature_names <- c("tmax", "tmin", "doy", "daily_Cd", "daily_Ca", "Cd_cumsum", "Ca_cumsum", "lat", "long", "alt")
 target_col <- "is_bloom"
 
 

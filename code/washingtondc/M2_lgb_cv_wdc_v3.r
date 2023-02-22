@@ -4,9 +4,11 @@ library(lightgbm)
 # load gdd data
 setwd("/home/joosungm/projects/def-lelliott/joosungm/projects/peak-bloom-prediction/")
 source("./code/_shared/F01_functions.r")
-cherry_gdd <- read.csv("./code/washingtondc/data/A12_wdc_temperature.csv") %>%  filter(month %in% c(3,4,5))
+cherry_gdd <- read.csv("./code/washingtondc/data/A12_wdc_temperature.csv") %>%  filter(month %in% c(3,4)) %>% filter(350 < Ca_cumsum & Ca_cumsum < 850)
 
-n_fold <- 6
+# hist(cherry_gdd %>%filter(State == "DC") %>% filter(is_bloom == 1) %>%pull(Ca_cumsum), breaks = 10)
+colnames(cherry_gdd)
+n_fold <- 7
 
 # stratified train-test split
 set.seed(42)
@@ -20,8 +22,10 @@ cherry_nobloom$fold <- sample(1:n_fold, nrow(cherry_nobloom), replace = TRUE)
 cherry_combined <- cherry_isbloom %>% bind_rows(cherry_nobloom)
 total_df <- cherry_combined[sample(1:nrow(cherry_combined), replace = FALSE), ]
 
+table(cherry_combined$is_bloom)
 
-feature_names <- c("lat", "long", "alt", "tmax", "tmin", "Ca_cumsum", "doy", "species")
+
+feature_names <- c("lat", "long", "alt", "tmax", "tmin", "Ca_cumsum", "doy", "species", "State")
 
 target_col <- "is_bloom"
 
@@ -62,7 +66,7 @@ for (g in seq_len(nrow(grid_search))) {
         , params = list(
             max_bin = as.integer(param_grid[["max_bins"]])
         )
-        , categorical_feature = c("species")
+        , categorical_feature = c("species", "State")
     )
 
     params <- list(
@@ -85,7 +89,7 @@ for (g in seq_len(nrow(grid_search))) {
     lgb_cv <- lgb.cv(params = params
         , data = d_cv_set
         , nrounds = n_boosting_rounds
-        , nfold = 7
+        , nfold = 6
         , verbose = -1
         , stratified = TRUE
     )
@@ -95,7 +99,7 @@ for (g in seq_len(nrow(grid_search))) {
     dtest <- lgb.Dataset(
         data = data.matrix(test_cv[, feature_names])
         , label = test_cv[[target_col]]
-        , categorical_feature = c("species")
+        , categorical_feature = c("species", "State")
     )
 
     valids2 <- list(test = dtest)

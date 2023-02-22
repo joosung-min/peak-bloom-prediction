@@ -5,8 +5,9 @@ library(lightgbm)
 # load gdd data
 setwd("/home/joosungm/projects/def-lelliott/joosungm/projects/peak-bloom-prediction/")
 source("./code/_shared/F01_functions.r")
-cherry_gdd <- read.csv("./code/vancouver/data/A16_van_df.csv")
-
+cherry_gdd <- read.csv("./code/vancouver/data/A14_van_gdd.csv") %>%
+    filter(month %in% c(3, 4))
+dim(cherry_gdd)
 n_fold <- 8
 
 cherry_df <- F01_train_val_test_split(
@@ -18,7 +19,9 @@ cherry_df <- F01_train_val_test_split(
 )
 
 total_df <- rbind(cherry_df$train, cherry_df$test, cherry_df$val)
-
+# dim(total_df)
+# table(total_df$is_bloom)
+# total_df[(total_df$city == "Vancouver" & total_df$is_bloom == 1), ]
 
 feature_names <- c("doy", "Cd_cumsum", "Ca_cumsum", "lat", "long", "alt", "daily_Ca", "daily_Cd", "tmax", "tmin")
 
@@ -32,10 +35,10 @@ lgb_final_name <- "./code/vancouver/data/M24_lgb_final_van3.rds"
 n_boosting_rounds <- 2000
 
 grid_search <- expand.grid(
-    boostings = c("gbdt", "dart")
+    boostings = c("gbdt")
     , learning_rates = c(0.1, 0.01) # 
     , max_bins = c(255, 511, 1023) 
-    , min_data_in_leaf = c(20, 50, 100)
+    , min_data_in_leaf = c(20, 40, 80)
     , max_depth = c(-1, 5, 10)
     , feature_fractions = c(0.8, 0.9, 1)
     , bagging_fractions = c(0.8, 0.9, 1)
@@ -82,7 +85,7 @@ for (g in seq_len(nrow(grid_search))) {
     lgb_cv <- lgb.cv(params = params
         , data = d_cv_set
         , nrounds = n_boosting_rounds
-        , nfold = 7
+        , nfold = 8
         , verbose = -1
         , stratified = TRUE
     )
