@@ -141,12 +141,16 @@ F01_compute_gdd <- function(weather_df, noaa_station_ids, Rc_thresh, Tc) {
     #  * washington = 
     #  * vancouver = (-111, 8)
     
+    # weather_df = swiss_temp
+    # noaa_station_ids = unique(city_station_pair$id)
+    # Rc_thresh = best_gdd[["Rc_thresholds"]]
+    # Tc = best_gdd[["Tcs"]]
 
     ## Compute daily_Ca, daily_Cd
     Ca_Cd_list <- list()
 
     for (st in noaa_station_ids) {
-        
+        st = noaa_station_ids[1]
         temp_df <- weather_df[weather_df$id == st, ]
         temp_df$daily_Cd <- apply(temp_df, MARGIN = 1, FUN = F01_chill_days, Tc = Tc)[1, ]
         temp_df$daily_Ca <- apply(temp_df, MARGIN = 1, FUN = F01_chill_days, Tc = Tc)[2, ]
