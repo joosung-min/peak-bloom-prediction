@@ -35,15 +35,15 @@ lgb_final_name <- "./code/kyoto/data/M24_lgb_final_kyoto3.rds"
 n_boosting_rounds <- 2000
 
 grid_search <- expand.grid(
-    boostings = c("gbdt", "dart")
+    boostings = c("gbdt")
     , learning_rates = c(0.1, 0.01) # 
-    , max_bins = c(255, 511, 1023) 
-    , min_data_in_leaf = c(20, 50, 100)
+    , max_bins = c(255, 127, 511) 
+    , min_data_in_leaf = c(20, 10, 40)
     , max_depth = c(-1, 5, 10)
     , feature_fractions = c(0.8, 0.9, 1)
     , bagging_fractions = c(0.8, 0.9, 1)
     , bagging_freqs = c(1, 5, 10)
-    , lambda_l2s = c(0, 0.5, 1)
+    , lambda_l2s = c(0)
 ) %>%
     mutate(val_score = NA) %>%
     mutate(test_score = NA)
@@ -69,7 +69,7 @@ for (g in seq_len(nrow(grid_search))) {
         objective = "binary"
         , metric = c("binary_logloss")
         , is_enable_sparse = TRUE
-        , is_unbalance = TRUE
+        #, is_unbalance = TRUE
         , boosting = as.character(param_grid[["boostings"]])
         , learning_rate = as.numeric(param_grid[["learning_rates"]])
         , min_data_in_leaf = as.numeric(param_grid[["min_data_in_leaf"]])
