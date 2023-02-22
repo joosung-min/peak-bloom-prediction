@@ -70,7 +70,7 @@ for (g in seq_len(nrow(grid_search))) {
         , params = list(
             max_bin = as.integer(param_grid[["max_bins"]])
         )
-        , categorical_feature = c("species", "State")
+        , categorical_feature = c("species")
     )
 
     params <- list(
@@ -103,7 +103,7 @@ for (g in seq_len(nrow(grid_search))) {
     dtest <- lgb.Dataset(
         data = data.matrix(test_cv[, feature_names])
         , label = test_cv[[target_col]]
-        , categorical_feature = c("species", "State")
+        , categorical_feature = c("species")
     )
 
     valids2 <- list(test = dtest)
