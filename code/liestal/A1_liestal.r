@@ -124,12 +124,10 @@ city_station_pairs <- city_station_pair %>%
     merge(y = cherry_loc, by = "city", all.x = TRUE) %>% select(-dist, -idx) %>%
     rename_with(~"id", station)
 city_station_pairs
-write.csv(city_station_pairs, "./code/liestal/data/A11_city_station_pairs.csv", row.names = FALSE)
+# write.csv(city_station_pairs, "./code/liestal/data/A11_city_station_pairs.csv", row.names = FALSE)
 
 
 # Pull weather data from the stations
-aa <- cherry_sub %>%filter(city == "Liestal")
-min(aa$year)
 
 swiss_temp <- F01_get_imp_temperature(
     city_station_pairs
@@ -138,19 +136,20 @@ swiss_temp <- F01_get_imp_temperature(
     , date_min = "1952-01-01")
 # head(swiss_temp)
 # dim(swiss_temp)
-write.csv(swiss_temp, "./code/liestal/data/A12_Liestal_temperature.csv", row.names = FALSE)
+# write.csv(swiss_temp, "./code/liestal/data/A12_Liestal_temperature.csv", row.names = FALSE)
 
 
 # Find optimal set of Tc, Rc_thresh, Rh_thresh for Liestal using the chill-day method
 # CAUTION: Running this code may require a high computational power. HPC recommended.
 # source("./code/liestal/M1_gdd_cv_liestal.r") 
-best_gdd <- read.csv("./code/liestal/data/M12_Liestal_gdd_best.csv")
+best_gdd <- read.csv("./code/liestal/data/M12_Liestal_gdd_best.csv")[1,]
 best_gdd
 
 # Compute daily_Ca, daily_Cd, Ca_cumsum, Cd_cumsum using the above parameters.
+city_station_pairs <- read.csv("./code/liestal/data/A11_city_station_pairs.csv")
 gdd_df <- F01_compute_gdd(
     weather_df = swiss_temp
-    , noaa_station_ids = city_station_pair$id
+    , noaa_station_ids = unique(city_station_pairs$id)
     , Rc_thresh = best_gdd[["Rc_thresholds"]]
     , Tc = best_gdd[["Tcs"]])
 
@@ -171,48 +170,12 @@ cherry_gdd <- gdd_city %>%
     mutate(is_bloom = ifelse(!is.na(bloom_doy), 1, 0)) %>%
     # filter(year > 1986) %>%
     filter(month %in% c(3, 4)) %>%
-    mutate(doy = as.numeric(as.Date(date) - as.Date(paste0(year, "-01-01")) + 1)) %>%
-    filter(doy > 74)
+    mutate(doy = as.integer(strftime(date, "%j"))) 
 
 head(cherry_gdd)
 dim(cherry_gdd)
 table(cherry_gdd$is_bloom)
-write.csv(cherry_gdd, "./outputs/A13_Liestal_gdd.csv")
-
-
-liestal_df <- F01_train_val_test_split(gdd_df = cherry_gdd, val_year = c(2019, 2020), train_year = c(2021, 2022))
-
-liestal_train <- liestal_df[["train"]]
-liestal_val <- liestal_df[["val"]]
-liestal_test <- liestal_df[["test"]]
-
-write.csv(liestal_train, "./outputs/A14_Liestal_train.csv", row.names = FALSE)
-write.csv(liestal_val, "./outputs/A14_Liestal_val.csv", row.names = FALSE)
-write.csv(liestal_test, "./outputs/A14_Liestal_test.csv", row.names = FALSE)
-
-
-
-
-# Under sampling to balance is_bloom == 1 and 0
-yes_bloom <- cherry_gdd[cherry_gdd$is_bloom == 1, ]
-no_bloom <- cherry_gdd[cherry_gdd$is_bloom == 0, ]
-set.seed(42)
-under_sample_idx <- sample(seq_len(nrow(no_bloom)), size = nrow(yes_bloom) * 1.5, replace = FALSE)
-under_sample_no_bloom <- no_bloom[under_sample_idx, ]
-cherry_gdd_new <- rbind(under_sample_no_bloom, yes_bloom)
-cherry_gdd_shuffled <- cherry_gdd_new[sample(seq_len(nrow(cherry_gdd_new)), size = nrow(cherry_gdd_new), replace = FALSE), ]
-dim(cherry_gdd_shuffled)
-table(cherry_gdd_shuffled$is_bloom)
-
-
-# split train and test sets
-length(sort(unique(cherry_gdd_shuffled$year)))
-cherry_train_val <- cherry_gdd_shuffled %>% filter(year < 2015)
-cherry_test <- cherry_gdd_shuffled %>% filter(year >= 2015)
-
-write.csv(cherry_train_val, "./outputs/A14_Liestal_train_val.csv", row.names = FALSE)
-write.csv(cherry_test, "./outputs/A14_Liestal_test.csv", row.names = FALSE)
-
+write.csv(cherry_gdd, "./code/liestal/data/A14_Liestal_gdd.csv")
 
 # Train lightgbm
 # source("./M2_lgb_cv_liestal.r")
