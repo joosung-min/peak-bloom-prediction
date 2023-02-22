@@ -1,63 +1,37 @@
 library(tidyverse)
 
 # Here we try to obtain the best Tc, Rc_thresh, Rh_thresh
-setwd("/home/joosungm/projects/def-lelliott/joosungm/projects/peak-bloom-prediction")
+# setwd("/home/joosungm/projects/def-lelliott/joosungm/projects/peak-bloom-prediction")
 source("./code/_shared/F01_functions.r")
 
 
-city_station_pair <- read.csv("./code/kyoto/outputs/A11_city_station_pairs.csv")
+city_station_pair <- read.csv("./code/kyoto/data/A11_city_station_pairs.csv")
 cherry_city <- "Kyoto"
-cherry_id <- city_station_pair[city_station_pair$city == cherry_city, "station"]
+cherry_id <- city_station_pair[city_station_pair$city == cherry_city, "id"]
 
 # temperature data
 years <- 2013:2022
-cherry_city_temp <- read.csv("./code/kyoto/outputs/A12_kyoto_temperature.csv") %>%
+cherry_city_temp <- read.csv("./code/kyoto/data/A12_kyoto_temperature.csv") %>%
     filter(id == cherry_id) %>%
     filter(year %in% c(min(years)-1, years))
 
 # bloom_date date
 cherry_sub <- read.csv("./code/_shared/outputs/A11_cherry_sub.csv") %>%
     filter(city == cherry_city)
-# For kyoto, the data for 2022 is not inserted yet. We insert it manually.
-#nrow(cherry_sub) #69
-cherry_sub[70, ] <- cherry_sub[69, ]
-cherry_sub[70, "bloom_date"] <- "2022-04-01"
-cherry_sub[70, "year"] <- "2022"
-cherry_sub[70, "bloom_doy"] <- as.numeric(as.Date("2022-04-01")) - as.numeric(as.Date("2022-01-01")) + 1
-tail(cherry_sub)
-# dim(cherry_sub)
 
 # filenames for the outputs
-gdd_result_filename <- paste0("./code/kyoto/outputs/M11_", cherry_city, "_gdd_grid.csv")
-best_gdd_filename <- paste0("./code/kyoto/outputs/M12_", cherry_city, "_gdd_best.csv")
+gdd_result_filename <- paste0("./code/kyoto/data/M11_", cherry_city, "_gdd_grid.csv")
+best_gdd_filename <- paste0("./code/kyoto/data/M12_", cherry_city, "_gdd_best.csv")
 
 
 # Grid search start here.
 gdd_grid <- expand.grid(
     Tcs = seq(from = 5, to = 9, by = 1)
-    , Rc_thresholds = seq(from = -90, to = -150, by = -5) # 
-    , Rh_thresholds = seq(from = 120, to = 240, by = 5) 
-    , first_Tc_reach_days = c(0, 1)
+    , Rc_thresholds = seq(from = -90, to = -150, by = -1)
+    , Rh_thresholds = seq(from = 120, to = 240, by = 1)
+    , first_Tc_reach_days = c(0)
     ) %>%
         mutate(MAE = NA)
-
-# gdd_grid <- expand.grid(
-#     Tcs = c(7)
-#     , Rc_thresholds = seq(from = -120, to = -130, by = -1) # 
-#     , Rh_thresholds = seq(from = 210, to = 220, by = 1) 
-#     , first_Tc_reach_days = c(0)
-#     ) %>%
-#         mutate(MAE = NA)
-
-# gdd_grid <- expand.grid(
-#     Tcs = c(7)
-#     , Rc_thresholds = seq(from = -121, to = -123, by = -0.1) # 
-#     , Rh_thresholds = seq(from = 216, to = 218, by = 0.1) 
-#     , first_Tc_reach_days = c(0)
-#     ) %>%
-#         mutate(MAE = NA)
-
-# dim(gdd_grid)
 
 library(doParallel)
 n_clusters <- detectCores() - 1
@@ -160,8 +134,6 @@ print("grid search completed")
 
 gdd_result_out <- data.frame(gdd_result) %>%
     'colnames<-'(colnames(gdd_grid))
-# write.csv(gdd_result_out, "../outputs/C_outputs/C11_gdd_grid_recent3.csv", row.names = FALSE)
-
 write.csv(gdd_result_out, gdd_result_filename, row.names = FALSE)
 print("table1 saved")
 

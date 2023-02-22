@@ -5,7 +5,7 @@ source("./code/_shared/F01_functions.r")
 cherry_sub <- read.csv("./code/_shared/outputs/A11_cherry_sub.csv") %>%
     distinct(city, bloom_date, .keep_all = TRUE)
 
-# Perform PCA to find close cities using the latest 10-year blossom dates.
+# Perform PCA to find close cities using the latest 5-year blossom dates.
 cherry_pca <- cherry_sub %>%
     filter(country == "Japan") %>%
     filter(year == 2021) %>%
@@ -14,7 +14,7 @@ cherry_pca <- cherry_sub %>%
 rownames(cherry_pca) <- cherry_pca$city
 colnames(cherry_pca)[5] <- "2021_bloom_doy"
 
-years <- 2012:2020
+years <- 2017:2020
 
 for (yr in years) {
     # yr = 2012
@@ -41,7 +41,7 @@ pca_out <- data.frame(-1 * pca_result$x)
 kyoto_dist <- data.frame(as.matrix(dist(pca_out))) %>%
     dplyr::select(Kyoto) %>%
     arrange(Kyoto)
-head(kyoto_dist, 11)
+head(kyoto_dist, 15)
 
 # Get city names
 kyoto_group <- rownames(kyoto_dist)[1:11]
@@ -50,18 +50,23 @@ kyoto_group <- rownames(kyoto_dist)[1:11]
 # # Pull weather stations ids for those cities.
 library(rnoaa)
 weather_stations <- ghcnd_stations() %>%
-    filter(last_year %in% 2021:2023) %>%
+    filter(last_year > 2021) %>%
+    filter(first_year < 1954) %>%
     distinct(id, .keep_all = TRUE) %>%
     filter(str_sub(id, 1, 2) %in% c("JA")) %>%
     filter(name %in% toupper(kyoto_group))
-write.csv(weather_stations, "./code/kyoto/outputs/A11_weather_stations_kyoto.csv", row.names = FALSE)
-weather_stations <- read.csv("./code/kyoto/outputs/A11_weather_stations_kyoto.csv")
+write.csv(weather_stations, "./code/kyoto/data/A11_weather_stations_kyoto.csv", row.names = FALSE)
+weather_stations <- read.csv("./code/kyoto/data/A11_weather_stations_kyoto.csv")
 
 city_station_pair <- weather_stations %>% 
-    rename_with(~"station", id) %>%
+    # rename_with(~"station", id) %>%
     mutate(city = str_to_title(name)) %>%
-    select(-name)
-write.csv(city_station_pair, "./code/kyoto/outputs/A11_city_station_pairs.csv", row.names = FALSE)
+    select(-c(name, state, gsn_flag, wmo_id, element, first_year, last_year)) %>%
+    rename_with(~"lat", latitude) %>%
+    rename_with(~"long", longitude) %>%
+    rename_with(~"alt", elevation)
+head(city_station_pair)
+write.csv(city_station_pair, "./code/kyoto/data/A11_city_station_pairs.csv", row.names = FALSE)
 
 # Get weather info using the station ids
 kyoto_weather <- F01_get_imp_temperature(
@@ -69,14 +74,13 @@ kyoto_weather <- F01_get_imp_temperature(
     , target_country = c("Japan")
     , cherry_sub = cherry_sub
     )
-write.csv(kyoto_weather, "./code/kyoto/outputs/A12_kyoto_temperature.csv", row.names = FALSE)
-kyoto_weather <- read.csv("./code/kyoto/outputs/A12_kyoto_temperature.csv")
-
+write.csv(kyoto_weather, "./code/kyoto/data/A12_kyoto_temperature.csv", row.names = FALSE)
+kyoto_weather <- read.csv("./code/kyoto/data/A12_kyoto_temperature.csv")
 
 # Find optimal Rc_thresh and Tc using the chill-day model
 # - CAUTION: running the code below may require a high computational power.
-# source("./code/kyoto/M1_gdd_cv_kyoto.r")
-best_gdd_params <- read.csv("./code/kyoto/outputs/M12_Kyoto_gdd_best.csv")[1, ]
+source("./code/kyoto/M1_gdd_cv_kyoto.r")
+best_gdd_params <- read.csv("./code/kyoto/data/M12_Kyoto_gdd_best.csv")[1, ]
 best_gdd_params
 
 # Compute daily_Ca, daily_Cd, Ca_cumsum(=AGDD), Cd_cumsum
@@ -113,8 +117,8 @@ kyoto_gdd_out <- kyoto_gdd2 %>%
     select(-first_day_of_year, -bloom_doy, -id, -first_year, -last_year, -state, -gsn_flag, -wmo_id, -element)
 head(kyoto_gdd_out)
 
-write.csv(kyoto_gdd_out, "./code/kyoto/outputs/A14_kyoto_temp_gdd.csv", row.names = FALSE)
-# kyoto_gdd_out <- read.csv("./code/kyoto/outputs/A14_kyoto_temp_gdd.csv")
+write.csv(kyoto_gdd_out, "./code/kyoto/data/A14_kyoto_temp_gdd.csv", row.names = FALSE)
+# kyoto_gdd_out <- read.csv("./code/kyoto/data/A14_kyoto_temp_gdd.csv")
 
 #######################################
 # Train lightgbm
@@ -133,10 +137,11 @@ write.csv(kyoto_gdd_out, "./code/kyoto/outputs/A14_kyoto_temp_gdd.csv", row.name
 #######################################
 # Model performance
 #######################################
+library(tidyverse)
 library(lightgbm)
 
-lgb_final <- readRDS.lgb.Booster("./code/kyoto/outputs/M24_lgb_final_kyoto3.rds")
-cherry_gdd <- read.csv("./code/kyoto/outputs/A14_kyoto_temp_gdd.csv") %>%
+lgb_final <- readRDS.lgb.Booster("./code/kyoto/data/M24_lgb_final_kyoto4.rds")
+cherry_gdd <- read.csv("./code/kyoto/data/A14_kyoto_temp_gdd.csv") %>%
     filter(month %in% c(3, 4))
 
 # Make prediction on the last 4 years
@@ -149,12 +154,12 @@ target_years <- 2019:2022
 
 test_set <- cherry_gdd %>%
     filter(city == "Kyoto") %>%
-    filter(year %in% targer_years) %>%
+    filter(year %in% target_years) %>%
     mutate(month = as.factor(month), day = as.factor(day)) %>%
     select(all_of(feature_names), all_of(target_col))
 
 pred <- predict(lgb_final, as.matrix(test_set[, feature_names]))
-test_set$predicted <- ifelse(pred > 0.12, 1, 0)
+test_set$predicted <- ifelse(pred > 0.10, 1, 0)
 hist(pred, breaks =100)
 tail(sort(pred))
 
@@ -186,7 +191,7 @@ F01_pred_plot_past(target_city = "Kyoto", cherry_gdd = cherry_gdd, lgb_final = l
 #######################################
 
 # Weather data for 2023 march and april obtained from 
-city_station_pair <- read.csv("./code/kyoto/outputs/A11_city_station_pairs.csv") %>% filter(city == "Kyoto") %>%
+city_station_pair <- read.csv("./code/kyoto/data/A11_city_station_pairs.csv") %>% filter(city == "Kyoto") %>%
     rename_with(~"lat", latitude) %>%
     rename_with(~"long", longitude) %>%
     rename_with(~"alt", elevation) %>%
@@ -201,7 +206,7 @@ temp_2223 <- F01_get_imp_temperature(
     select(id, date, year, month, day, tmin, tmax) %>% "rownames<-"(NULL)
 tail(temp_2223)
 
-data_2023 <- read.csv("./code/kyoto/outputs/2023-mar-apr-kyoto.csv") %>%
+data_2023 <- read.csv("./code/kyoto/data/2023-mar-apr-kyoto.csv") %>%
     mutate(id = "JA000047759") %>%
     mutate(year = 2023) %>%
     mutate(month = as.integer(strftime(date, "%m"))) %>%
@@ -212,7 +217,7 @@ merged_2223 <- rbind(temp_2223, data_2023) %>% "rownames<-"(NULL)
 tail(merged_2223)
 
 # Compute GDD
-best_gdd_params <- read.csv("./code/kyoto/outputs/M12_Kyoto_gdd_best.csv")[1, ]
+best_gdd_params <- read.csv("./code/kyoto/data/M12_Kyoto_gdd_best.csv")[1, ]
 best_gdd_params
 gdd_2223 <- F01_compute_gdd(merged_2223
     , noaa_station_ids = unique(merged_2223$id)
@@ -227,7 +232,7 @@ gdd_2223 <- F01_compute_gdd(merged_2223
 # tail(gdd_2223)
 
 # Make final prediction
-lgb_final <- readRDS.lgb.Booster("./code/kyoto/outputs/M24_lgb_final_kyoto3.rds")
+lgb_final <- readRDS.lgb.Booster("./code/kyoto/data/M24_lgb_final_kyoto3.rds")
 final_pred <- predict(lgb_final, as.matrix(gdd_2223[, feature_names]))
 
 p_final_pred <- F01_pred_plot_final(target_city = "Kyoto"
@@ -237,5 +242,5 @@ p_final_pred <- F01_pred_plot_final(target_city = "Kyoto"
     , p_thresh = 0.1)
 p_final_pred
 
-ggsave("./code/kyoto/outputs/A19_final_pred_kyoto.png", p_final_pred
+ggsave("./code/kyoto/data/A19_final_pred_kyoto.png", p_final_pred
     , width = 10, height = 5, units = "in", dpi = 100)

@@ -25,7 +25,7 @@ F01_get_temperature <- function (stationid, date_min = "1950-01-01", date_max = 
 
 F01_get_imp_temperature <- function(city_station_pair, target_country, cherry_sub, date_min = "1950-01-01", date_max = "2023-04-30", imp_method = "pmm") {
 
-    station_ids <- city_station_pair$station
+    station_ids <- city_station_pair$id
     cities <- city_station_pair$city
     # target_country = c("Japan", "South Korea")
     
