@@ -1,7 +1,7 @@
 library(tidyverse)
 
 # Here we try to obtain the best Tc, Rc_thresh, Rh_thresh
-# setwd("/home/joosungm/projects/def-lelliott/joosungm/projects/peak-bloom-prediction")
+setwd("/home/joosungm/projects/def-lelliott/joosungm/projects/peak-bloom-prediction")
 source("./code/_shared/F01_functions.r")
 
 
