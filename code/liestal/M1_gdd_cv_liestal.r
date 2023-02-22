@@ -3,35 +3,35 @@ library(tidyverse)
 ### 
 # Here we try to obtain the best Tc, Rc_thresh, Rh_thresh
 setwd("/home/joosungm/projects/def-lelliott/joosungm/projects/peak-bloom-prediction/code/liestal/")
-source("../F01_functions.r")
+source("./code/_shared/F01_functions.r")
 
 
-city_station_pair <- read.csv("./outputs/A11_city_station_pairs.csv")
+city_station_pair <- read.csv("./code/liestal/data/A11_city_station_pairs.csv")
 cherry_city <- "Liestal"
-cherry_id <- city_station_pair[city_station_pair$city == cherry_city, "station"]
+cherry_id <- city_station_pair[city_station_pair$city == cherry_city, "id"]
 
 # temperature data
 years <- 2013:2022
-cherry_city_temp <- read.csv("./outputs/A12_Liestal_temperature.csv") %>%
+cherry_city_temp <- read.csv("./code/liestal/data/A12_Liestal_temperature.csv") %>%
     filter(id == cherry_id) %>%
     filter(year %in% c(min(years)-1, years))
 
 # bloom_date date
-cherry_sub <- read.csv("../outputs/A_outputs/A11_cherry_sub.csv") %>%
+cherry_sub <- read.csv("./code/_shared/outputs/A11_cherry_sub.csv") %>%
     filter(city == cherry_city)
 # dim(cherry_sub)
 
 # filenames for the outputs
-gdd_result_filename <- paste0("./outputs/M11_", cherry_city, "_gdd_grid.csv")
-best_gdd_filename <- paste0("./outputs/M12_", cherry_city, "_gdd_best.csv")
+gdd_result_filename <- paste0("./code/liestal/data/M11_", cherry_city, "_gdd_grid.csv")
+best_gdd_filename <- paste0("./code/liestal/data/M12_", cherry_city, "_gdd_best.csv")
 
 
 # Grid search start here.
 gdd_grid <- expand.grid(
     Tcs = seq(from = 5, to = 9, by = 1)
-    , Rc_thresholds = seq(from = -90, to = -150, by = -5) # 
-    , Rh_thresholds = seq(from = 120, to = 240, by = 5) 
-    , first_Tc_reach_days = c(0, 1)
+    , Rc_thresholds = seq(from = -90, to = -150, by = -1) # 
+    , Rh_thresholds = seq(from = 120, to = 240, by = 1) 
+    , first_Tc_reach_days = c(0)
     ) %>%
         mutate(MAE = NA)
 
@@ -82,7 +82,7 @@ gdd_result <- foreach (
         # yr = 2013
         actual_date <- cherry_sub[cherry_sub$year == yr, "bloom_date"]
         # head(cherry_sub)
-        # cherry_temp_yr <- read.csv("./outputs/A12_kyoto_temperature.csv")
+        # cherry_temp_yr <- read.csv("./code/liestal/data/A12_kyoto_temperature.csv")
         cherry_temp_yr <- cherry_city_temp %>% filter(year %in% c(yr - 1, yr))
         
         if (length(unique(cherry_temp_yr$year)) == 1) {
@@ -149,12 +149,12 @@ gdd_result <- foreach (
 
 stopCluster(myCluster)
 
-# save(gdd_result, file = "../outputs/C11_gdd_result.RData")
+# save(gdd_result, file = "../code/liestal/data/C11_gdd_result.RData")
 print("grid search completed")
 
 gdd_result_out <- data.frame(gdd_result) %>%
     'colnames<-'(colnames(gdd_grid))
-# write.csv(gdd_result_out, "../outputs/C_outputs/C11_gdd_grid_recent3.csv", row.names = FALSE)
+# write.csv(gdd_result_out, "../code/liestal/data/C_outputs/C11_gdd_grid_recent3.csv", row.names = FALSE)
 
 write.csv(gdd_result_out, gdd_result_filename, row.names = FALSE)
 print("table1 saved")

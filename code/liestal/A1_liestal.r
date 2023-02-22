@@ -1,10 +1,10 @@
 library(tidyverse)
 
 setwd("/home/joosungm/projects/def-lelliott/joosungm/projects/peak-bloom-prediction/code/liestal")
-source("../F01_functions.r")
+source("./code/_shared/F01_functions.r")
 
 # Load base data
-cherry_sub <- read.csv("../outputs/A_outputs/A11_cherry_sub.csv")
+cherry_sub <- read.csv("./code/_shared/outputs/A11_cherry_sub.csv")
 
 
 # Perform PCA to find close cities using the latest 10-year blossom dates.
@@ -12,13 +12,13 @@ cherry_sub <- read.csv("../outputs/A_outputs/A11_cherry_sub.csv")
 # - Prepare table that contains each city's lat, long, alt, and bloom_doy of last 10 years
 cherry_pca <- cherry_sub %>%
     filter(country == "Switzerland") %>%
-    filter(year == 2021) %>%
+    filter(year == 2022) %>%
     dplyr::select(city, lat, long, alt, bloom_doy) %>%
     distinct(city, .keep_all = TRUE)
 rownames(cherry_pca) <- cherry_pca$city
-colnames(cherry_pca)[5] <- "2021_bloom_doy"
+colnames(cherry_pca)[5] <- "2022_bloom_doy"
 
-years <- 2013:2022
+years <- 2013:2021
 
 for (yr in years) {
     # yr = 2012
@@ -34,8 +34,10 @@ rownames(cherry_pca) <- cherry_pca$city
 cherry_pca <- cherry_pca %>%
     select(-city) %>%
     drop_na()
+head(cherry_pca)
 dim(cherry_pca)
 "Liestal" %in% rownames(cherry_pca)
+
 ############################################################
 
 # - Perform PCA
@@ -50,14 +52,15 @@ liestal_dist <- data.frame(as.matrix(dist(pca_out))) %>%
 head(liestal_dist, 11)
 
 # - Get city names
-liestal_cities <- rownames(liestal_dist)[1:30]
+liestal_cities <- rownames(liestal_dist)[1:20]
 liestal_cities
 # -- Must check if the weather data has those city's info.
 
 
 # NOAA stations
 stations <- ghcnd_stations() %>%
-    filter(last_year %in% c(2022, 2023)) %>%
+    filter(last_year > 2021) %>%
+    filter(first_year < 1954) %>%
     distinct(id, .keep_all = TRUE) %>%
     filter(str_sub(id, 1, 2) %in% c("SZ", "AU", "FR", "GM"))
 dim(stations)
@@ -113,26 +116,44 @@ while (length(redo_cities) > 1) {
 }
 
 cherry_loc <- cherry_pca %>% 
-    mutate(city = rownames(cherry_pca)) %>% select(city, lat, long, alt) %>%
+    mutate(city = rownames(cherry_pca)) %>% 
+    select(city, lat, long, alt) %>%
     filter(city %in% city_station_pair$city)
-city_station_pairs <- city_station_pair %>% merge(y = cherry_loc, by = "city", all.x = TRUE) %>% select(-dist, -idx)
-write.csv(city_station_pairs, "./outputs/A11_city_station_pairs.csv", row.names = FALSE)
+
+city_station_pairs <- city_station_pair %>% 
+    merge(y = cherry_loc, by = "city", all.x = TRUE) %>% select(-dist, -idx) %>%
+    rename_with(~"id", station)
+city_station_pairs
+write.csv(city_station_pairs, "./code/liestal/data/A11_city_station_pairs.csv", row.names = FALSE)
 
 
 # Pull weather data from the stations
-swiss_temp <- F01_get_imp_temperature(city_station_pair, target_country = "Switzerland")
+aa <- cherry_sub %>%filter(city == "Liestal")
+min(aa$year)
+
+swiss_temp <- F01_get_imp_temperature(
+    city_station_pairs
+    , cherry_sub = cherry_sub
+    , target_country = "Switzerland"
+    , date_min = "1952-01-01")
 # head(swiss_temp)
 # dim(swiss_temp)
-# write.csv(swiss_temp, "./outputs/A12_Liestal_temperature.csv", row.names = FALSE)
+write.csv(swiss_temp, "./code/liestal/data/A12_Liestal_temperature.csv", row.names = FALSE)
 
 
 # Find optimal set of Tc, Rc_thresh, Rh_thresh for Liestal using the chill-day method
-# source("./M_gdd_model.r") # CAUTION: Running this code may require a high computational power. HPC recommended.
+# CAUTION: Running this code may require a high computational power. HPC recommended.
+# source("./code/liestal/M1_gdd_cv_liestal.r") 
 best_gdd <- read.csv("./outputs/M12_Liestal_gdd_best.csv")
 best_gdd
 
 # Compute daily_Ca, daily_Cd, Ca_cumsum, Cd_cumsum using the above parameters.
-gdd_df <- F01_compute_gdd(weather_df = swiss_temp, noaa_station_ids = city_station_pair$station, Rc_thresh = -150, Tc = 8)
+gdd_df <- F01_compute_gdd(
+    weather_df = swiss_temp
+    , noaa_station_ids = city_station_pair$id
+    , Rc_thresh = best_gdd[["Rc_thresholds"]]
+    , Tc = best_gdd[["Tcs"]])
+
 dim(gdd_df)
 head(gdd_df)
 target_stations <- gdd_df$id

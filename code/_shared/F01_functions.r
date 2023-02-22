@@ -142,11 +142,6 @@ F01_compute_gdd <- function(weather_df, noaa_station_ids, Rc_thresh, Tc) {
     #  * vancouver = (-111, 8)
     
 
-    # weather_df = read.csv("./code/vancouver/outputs/A14_vancities_weather_df.csv")
-    # noaa_station_ids =  unique(weather_df$id)
-    # Rc_thresh = -111
-    # Tc = 8
-
     ## Compute daily_Ca, daily_Cd
     Ca_Cd_list <- list()
 
@@ -550,8 +545,9 @@ F01_focal_loss <- function(preds, dtrain) {
     # Compute the gradient and hessian of focal loss
     labels <- get_field(dtrain, "label")
     eps <- 1e-10
-    preds <- pmax(pmin(preds, 1 - eps), eps)
     preds <- 1.0 / (1.0 + exp(-preds))
+    preds <- pmax(pmin(preds, 1 - eps), eps)
+    
     alpha_t <- labels * alpha + (1 - labels) * (1 - alpha)
     focal_weight <- alpha_t * ((1 - preds) ** gamma)
     grad <- gamma * (labels - preds) * ((1 - preds) ** (gamma - 1)) * focal_weight
@@ -569,8 +565,9 @@ F01_focal_evaluation <- function(preds, dtrain) {
 
     labels <- get_field(dtrain, "label")
     eps <- 1e-10
-    preds <- pmax(pmin(preds, 1 - eps), eps)
     preds <- 1.0 / (1.0 + exp(-preds))
+    preds <- pmax(pmin(preds, 1 - eps), eps)
+    
     alpha_t <- labels * alpha + (1 - labels) * (1 - alpha)
     loss <- -alpha_t * ((1 - preds) ** gamma) * log(pmax(preds, eps)) - (1 - alpha_t) * (preds ** gamma) * log(pmax(1 - preds, eps))
     

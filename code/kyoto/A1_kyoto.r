@@ -55,7 +55,7 @@ weather_stations <- ghcnd_stations() %>%
     distinct(id, .keep_all = TRUE) %>%
     filter(str_sub(id, 1, 2) %in% c("JA")) %>%
     filter(name %in% toupper(kyoto_group))
-write.csv(weather_stations, "./code/kyoto/data/A11_weather_stations_kyoto.csv", row.names = FALSE)
+# write.csv(weather_stations, "./code/kyoto/data/A11_weather_stations_kyoto.csv", row.names = FALSE)
 weather_stations <- read.csv("./code/kyoto/data/A11_weather_stations_kyoto.csv")
 
 city_station_pair <- weather_stations %>% 
@@ -66,7 +66,7 @@ city_station_pair <- weather_stations %>%
     rename_with(~"long", longitude) %>%
     rename_with(~"alt", elevation)
 head(city_station_pair)
-write.csv(city_station_pair, "./code/kyoto/data/A11_city_station_pairs.csv", row.names = FALSE)
+# write.csv(city_station_pair, "./code/kyoto/data/A11_city_station_pairs.csv", row.names = FALSE)
 
 # Get weather info using the station ids
 kyoto_weather <- F01_get_imp_temperature(
@@ -74,12 +74,12 @@ kyoto_weather <- F01_get_imp_temperature(
     , target_country = c("Japan")
     , cherry_sub = cherry_sub
     )
-write.csv(kyoto_weather, "./code/kyoto/data/A12_kyoto_temperature.csv", row.names = FALSE)
+# write.csv(kyoto_weather, "./code/kyoto/data/A12_kyoto_temperature.csv", row.names = FALSE)
 kyoto_weather <- read.csv("./code/kyoto/data/A12_kyoto_temperature.csv")
 
 # Find optimal Rc_thresh and Tc using the chill-day model
 # - CAUTION: running the code below may require a high computational power.
-source("./code/kyoto/M1_gdd_cv_kyoto.r")
+# source("./code/kyoto/M1_gdd_cv_kyoto.r")
 best_gdd_params <- read.csv("./code/kyoto/data/M12_Kyoto_gdd_best.csv")[1, ]
 best_gdd_params
 
@@ -116,8 +116,15 @@ kyoto_gdd_out <- kyoto_gdd2 %>%
     rename_with(~"alt", elevation) %>%
     select(-first_day_of_year, -bloom_doy, -id, -first_year, -last_year, -state, -gsn_flag, -wmo_id, -element)
 head(kyoto_gdd_out)
-
 write.csv(kyoto_gdd_out, "./code/kyoto/data/A14_kyoto_temp_gdd.csv", row.names = FALSE)
+
+
+# Check histogram of Ca_cumsum of those is_bloom = 1
+kyoto_gdd_out <- read.csv("./code/kyoto/data/A14_kyoto_temp_gdd.csv")
+hist(kyoto_gdd_out %>% filter(is_bloom == 1) %>% pull(Ca_cumsum), breaks = 100)
+hist(kyoto_gdd_out %>% filter(is_bloom == 1) %>% filter(city =="Kyoto") %>% pull(Ca_cumsum), breaks =100)
+
+
 # kyoto_gdd_out <- read.csv("./code/kyoto/data/A14_kyoto_temp_gdd.csv")
 
 #######################################
