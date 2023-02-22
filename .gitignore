@@ -9,3 +9,4 @@ test-project
 *.npmignore
 *.sh
 *.swp
+*z_dump
