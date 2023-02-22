@@ -287,7 +287,254 @@ F01_train_val_test_split <- function(gdd_df, val_year, test_year, n_fold, seed =
 }
 
 
+F01_compute_MAE <- function(target_city, cherry_gdd, lgb_final, target_years, p_thresh) {
 
+    city_gdd <- cherry_gdd %>%
+        filter(city == target_city) %>%
+        filter(year %in% target_years)
+    
+    head(city_gdd %>% filter(month == 4))
+
+    target_years <- unique(city_gdd$year)
+    
+    error_cols <- c("year", "date", "pred_date", "diff")
+    error_table <- data.frame(
+        matrix(nrow = length(target_years)
+            , ncol = length(error_cols)
+            , dimnames = list(NULL, error_cols)))
+
+
+    for (y in seq_len(length(target_years))) {
+        # y = 2
+        yr <- target_years[y]
+        
+        year_data <- city_gdd[city_gdd$year == yr, ]
+        year_data$idx <- seq_len(nrow(year_data))
+        
+        pred <- predict(lgb_final, as.matrix(year_data[, feature_names]))
+        year_data$pred_prob <- pred
+        year_data$pred_bin <- ifelse(pred > p_thresh, 1, 0)
+
+        actual_bloom_idx <- which(year_data$is_bloom == 1)
+        actual_bloom_date <- year_data[actual_bloom_idx, "date"]
+        
+        pred_blooms <- which(year_data$pred_bin == 1)
+        pred_bloom_start_idx <- year_data[pred_blooms, "date"][1]
+        pred_bloom_end_idx <- year_data[pred_blooms, "date"][length(pred_blooms)]
+
+        # peak_date = take the highest probability day as the blooming date.
+        pred_bloom_peak_idx <- which(year_data$pred_prob == max(year_data$pred_prob))[1] 
+        pred_bloom_peak_date <- year_data[pred_bloom_peak_idx, "date"]
+        
+        if (is.na(pred_bloom_peak_date)) {
+            pred_bloom_peak_date <- year_data[which(temp_data$pred_prob == max(temp_data$pred_prob))[1], "date"]
+        }
+
+        diff_days <- as.numeric(as.Date(pred_bloom_peak_date)) - as.numeric(as.Date(actual_bloom_date))
+        
+        error_table[y, ] <- c(yr, actual_bloom_date, pred_bloom_peak_date, diff_days)
+
+    }
+    
+    MAE <- mean(abs(as.numeric(error_table$diff)), na.rm = TRUE)
+    
+    return(list(MAE_table = error_table, MAE = MAE))
+
+}
+
+
+
+
+F01_pred_plot_past <- function(target_city, cherry_gdd, lgb_final, target_years, p_thresh){
+
+    # target_city = "Kyoto"
+    # target_years = c(2019:2022)
+    # p_thresh = 0.1
+
+    city_gdd <- cherry_gdd %>%
+        filter(city == target_city) %>%
+        filter(year %in% target_years)
+    
+    # head(city_gdd %>% filter(month == 4))
+
+    target_years <- unique(city_gdd$year)
+    
+    error_cols <- c("year", "date", "pred_date", "diff")
+    error_table <- data.frame(
+        matrix(nrow = length(target_years)
+            , ncol = length(error_cols)
+            , dimnames = list(NULL, error_cols)))
+
+    p_list <- list()
+
+    for (y in seq_len(length(target_years))) {
+        # y = 2
+        yr <- target_years[y]
+        
+        year_data <- city_gdd[city_gdd$year == yr, ]
+        year_data$idx <- seq_len(nrow(year_data))
+        
+        pred <- predict(lgb_final, as.matrix(year_data[, feature_names]))
+        year_data$pred_prob <- pred
+        year_data$pred_bin <- ifelse(pred > p_thresh, 1, 0)
+
+        actual_bloom_idx <- which(year_data$is_bloom == 1)
+        actual_bloom_date <- year_data[actual_bloom_idx, "date"]
+        
+        pred_blooms <- which(year_data$pred_bin == 1)
+        pred_bloom_start_idx <- year_data[pred_blooms, "date"][1]
+        pred_bloom_end_idx <- year_data[pred_blooms, "date"][length(pred_blooms)]
+
+        # peak_date = take the highest probability day as the blooming date.
+        pred_bloom_peak_idx <- which(year_data$pred_prob == max(year_data$pred_prob))[1] 
+        pred_bloom_peak_date <- year_data[pred_bloom_peak_idx, "date"]
+        
+        if (is.na(pred_bloom_start_idx)) {
+            pred_bloom_start_idx <- pred_bloom_peak_date
+        }
+
+        diff_days <- as.numeric(as.Date(pred_bloom_peak_date)) - as.numeric(as.Date(actual_bloom_date))
+        error_table[y, ] <- c(yr, actual_bloom_date, pred_bloom_peak_date, diff_days)
+
+        # Make plot
+        year_data$date <- as.Date(year_data$date, format = "%Y-%m-%d")
+        p <- ggplot(data = year_data)
+        p <- p + geom_point(aes(x = date, y = pred_prob)
+            , color = "dark green", lwd = 2)
+        p <- p + scale_y_continuous(limits = c(0, 1)
+            , breaks = seq(0, 1, 0.1))
+        p <- p + ylab("Probability of blooming")
+        p <- p + scale_x_date(date_labels = "%d"
+            , date_breaks = "2 day"
+            , limits = c(min(year_data$date), max(year_data$date)))
+        p <- p + geom_hline(yintercept = p_thresh, color = "blue"
+            , linetype = "longdash")
+        p <- p + geom_vline(
+            xintercept = as.Date(actual_bloom_date, format = "%Y-%m-%d")
+            , color = "steelblue", linetype = "solid", lwd = 1)
+        p <- p + geom_vline(
+            xintercept = as.Date(pred_bloom_peak_date, format = "%Y-%m-%d")
+            , color = "tomato", linetype = "solid", lwd = 1)
+        p <- p + geom_vline(
+            xintercept = as.Date(paste0(as.character(yr), "-04-01")
+                , format = "%Y-%m-%d")
+            , color = "grey", linetype = "solid", linewidth = 0.5)
+        p <- p + annotate("text", x = min(year_data$date)+1, y = 0.90
+            , label = yr
+            , fontface = "bold", color = "black", size = 6, hjust = 0)
+        p <- p + annotate("text", x = min(year_data$date)+1, y = 0.80
+            , label = paste0("Actual date: ", actual_bloom_date)
+            , size = 4, color = "steelblue", hjust = 0)
+        p <- p + annotate("text", x = min(year_data$date)+1, y = 0.70
+            , label = paste0("Predicted date: ", pred_bloom_peak_date)
+            , size = 4, color = "tomato", hjust = 0)
+        p <- p + annotate("text", x = min(year_data$date)+1, y = 0.60
+            , label = paste0("Diff (Predicted - Actual): ", diff_days)
+            , color = "black"
+            , size = 4, hjust = 0)
+        p <- p + annotate("rect"
+            , xmin = as.Date(pred_bloom_start_idx, format = "%Y-%m-%d")
+            , xmax = as.Date(pred_bloom_end_idx, format = "%Y-%m-%d")
+            , ymin = 0, ymax = 1, alpha = 0.2, color = "pink"
+            , fill = "pink")
+        p <- p + annotate("text"
+            , x = as.Date(paste0(as.character(yr), "-03-13")
+                , format = "%Y-%m-%d"), y = 0.0
+            , label = "March", fontface = "bold"
+            , size = 6, color = "dark grey", hjust = 0, vjust = 0)
+        p <- p + annotate("text"
+            , x = as.Date(paste0(as.character(yr), "-04-16")
+                , format = "%Y-%m-%d"), y = 0.0
+            , label = "April", fontface = "bold"
+            , size = 6, color = "dark grey", hjust = 0, vjust = 0)
+        p <- p + theme_bw()
+        
+        p_list[[y]] <- p
+
+        }
+    
+    MAE <- mean(abs(as.numeric(error_table$diff)), na.rm = TRUE)
+    library(ggpubr)
+    p_comb_top <- paste0(target_city, " cherry blossoms prediction: ", min(target_years), "-", max(target_years))
+    p_combined <- ggpubr::ggarrange(plotlist = p_list
+        , ncol = 2, nrow = length(target_years)/2
+        , labels = NULL)
+    p_final <- ggpubr::annotate_figure(p_combined
+        , top = p_comb_top)
+    p_filename <- paste0("./code/kyoto/outputs/A18_", target_city, "_prediction_", min(target_years), "-", max(target_years), ".jpg")
+
+    ggsave(filename = p_filename, plot = p_final
+        , width = 15, height = 4 * length(target_years)/2
+        , unit = "in", bg = "white", dpi = 300)
+    p_final
+    return(p_final)
+
+}
+
+
+F01_pred_plot_final <- function(year_data, target_city, feature_names, lgb_final, p_thresh) {
+
+    year_data <- gdd_2223
+    year_data$pred_prob <- predict(lgb_final, as.matrix(year_data[, feature_names]))
+    year_data$pred_bin <- ifelse(year_data$pred_prob > p_thresh, 1, 0)
+
+    pred_blooms <- which(year_data$pred_bin == 1)
+    pred_bloom_start_idx <- year_data[pred_blooms, "date"][1]
+    pred_bloom_end_idx <- year_data[pred_blooms, "date"][length(pred_blooms)]
+
+    # peak_date = take the highest probability day as the blooming date.
+    pred_bloom_peak_idx <- which(year_data$pred_prob == max(year_data$pred_prob))[1] 
+    pred_bloom_peak_date <- year_data[pred_bloom_peak_idx, "date"]
+
+    if (is.na(pred_bloom_start_idx)) {
+        pred_bloom_start_idx <- pred_bloom_peak_date
+    }
+
+    # Make plot
+    year_data$date <- as.Date(year_data$date, format = "%Y-%m-%d")
+    yr = 2023
+    p <- ggplot(data = year_data)
+    p <- p + geom_point(aes(x = date, y = pred_prob)
+        , color = "dark green", lwd = 2)
+    p <- p + scale_y_continuous(limits = c(0, 1)
+        , breaks = seq(0, 1, 0.1))
+    p <- p + ylab("Probability of blooming")
+    p <- p + scale_x_date(date_labels = "%d"
+        , date_breaks = "2 day"
+        , limits = c(min(year_data$date), max(year_data$date)))
+    p <- p + geom_hline(yintercept = p_thresh, color = "blue"
+        , linetype = "longdash")
+    p <- p + geom_vline(
+        xintercept = as.Date(pred_bloom_peak_date, format = "%Y-%m-%d")
+        , color = "tomato", linetype = "solid", lwd = 1)
+    p <- p + geom_vline(
+        xintercept = as.Date(paste0(as.character(yr), "-04-01")
+            , format = "%Y-%m-%d")
+        , color = "grey", linetype = "solid", linewidth = 0.5)
+    p <- p + annotate("text", x = min(year_data$date)+1, y = 0.90
+        , label = paste0("Predicted date: ", pred_bloom_peak_date)
+        , size = 4, color = "tomato", hjust = 0)
+    p <- p + annotate("rect"
+        , xmin = as.Date(pred_bloom_start_idx, format = "%Y-%m-%d")
+        , xmax = as.Date(pred_bloom_end_idx, format = "%Y-%m-%d")
+        , ymin = 0, ymax = 1, alpha = 0.2, color = "pink"
+        , fill = "pink")
+    p <- p + annotate("text"
+        , x = as.Date(paste0(as.character(yr), "-03-13")
+            , format = "%Y-%m-%d"), y = 0.0
+        , label = "March", fontface = "bold"
+        , size = 6, color = "dark grey", hjust = 0, vjust = 0)
+    p <- p + annotate("text"
+        , x = as.Date(paste0(as.character(yr), "-04-16")
+            , format = "%Y-%m-%d"), y = 0.0
+        , label = "April", fontface = "bold"
+        , size = 6, color = "dark grey", hjust = 0, vjust = 0)
+    p <- p + theme_bw()
+    p <- p + ggtitle(paste0("2023 ", target_city, " cherry blossoms prediction"))
+    p <- p + theme(plot.title = element_text(face = "bold", size = 12))
+    
+    return(p)
+}
 
 
 

@@ -24,6 +24,7 @@ cherry_df <- F01_train_val_test_split(
 total_df <- rbind(cherry_df$train, cherry_df$test, cherry_df$val)
 
 feature_names <- c("month", "day", "Cd_cumsum", "Ca_cumsum", "lat", "long", "alt", "daily_Ca", "daily_Cd", "tmax", "tmin")
+# feature_names <- c("doy", "Cd_cumsum", "Ca_cumsum", "lat", "long", "alt", "daily_Ca", "daily_Cd", "tmax", "tmin")
 
 target_col <- "is_bloom"
 

@@ -25,6 +25,10 @@ tail(cherry_main)
 cherry_main_kyoto <- cherry_main %>%
     filter(location == "kyoto") %>%
     filter(year %in% 1953:2022)
+cherry_main_kyoto %>%filter(year == 2019)
+# head(cherry_main_kyoto)
+# sort(unique(cherry_main_kyoto$year))
+# str(cherry_main_kyoto)
 # write.csv(cherry_main_kyoto, "./code/_shared/A11_cherry_main_kyoto.csv", row.names = FALSE)
 tail(cherry_main_kyoto)
 
@@ -37,7 +41,7 @@ cherry_sub$country = str_split(cherry_sub$location, pattern = "/", simplify = TR
 cherry_sub$city = str_split(cherry_sub$location, pattern = "/", simplify = TRUE)[, 2]
 
 # Replace the Kyoto data from cherry_sub with the data from cherry_main_kyoto.
-cherry_sub2 <- cherry_sub %>% select(-location) %>% filter(city != "kyoto")
+cherry_sub2 <- cherry_sub %>% select(-location) %>% filter(city != "Kyoto")
 
 cherry_main_kyoto2 <- cherry_main_kyoto %>% 
     select(-location, -species) %>%
@@ -47,3 +51,5 @@ cherry_main_kyoto2 <- cherry_main_kyoto %>%
 cherry_sub_out <- rbind(cherry_sub2, cherry_main_kyoto2)
 
 write.csv(cherry_sub_out, "./code/_shared/outputs/A11_cherry_sub.csv", row.names = FALSE)
+
+cherry_sub_out %>%filter(city=="Kyoto") %>%filter(year==2019)
