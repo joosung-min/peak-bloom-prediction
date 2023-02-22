@@ -141,16 +141,16 @@ F01_compute_gdd <- function(weather_df, noaa_station_ids, Rc_thresh, Tc) {
     #  * washington = 
     #  * vancouver = (-111, 8)
     
-    # weather_df = swiss_temp
-    # noaa_station_ids = unique(city_station_pair$id)
-    # Rc_thresh = best_gdd[["Rc_thresholds"]]
-    # Tc = best_gdd[["Tcs"]]
+    # weather_df = kyoto_gdd_out %>% filter(id == "JA000047770")
+    # noaa_station_ids = "JA000047770"
+    # Rc_thresh = best_gdd_params[["Rc_thresholds"]]
+    # Tc = best_gdd_params[["Tcs"]]
 
     ## Compute daily_Ca, daily_Cd
     Ca_Cd_list <- list()
 
     for (st in noaa_station_ids) {
-        st = noaa_station_ids[1]
+        # st = noaa_station_ids[1]
         temp_df <- weather_df[weather_df$id == st, ]
         temp_df$daily_Cd <- apply(temp_df, MARGIN = 1, FUN = F01_chill_days, Tc = Tc)[1, ]
         temp_df$daily_Ca <- apply(temp_df, MARGIN = 1, FUN = F01_chill_days, Tc = Tc)[2, ]
@@ -175,7 +175,7 @@ F01_compute_gdd <- function(weather_df, noaa_station_ids, Rc_thresh, Tc) {
             # print(yr)
             
             # st = "GME00120934"
-            # yr = 1986
+            # yr = 2020
             
             Rc_start <- paste0(as.character(as.numeric(yr)-1), "-09-30")
             
@@ -205,13 +205,19 @@ F01_compute_gdd <- function(weather_df, noaa_station_ids, Rc_thresh, Tc) {
             }
             Rc_thresh_day <- sub_df[Rc_thresh_loc, "date"] 
             # print(paste0("reaches the Rc threshold on ", Rc_thresh_day)) # 저온요구도 달성일 i.e., 내생휴면 해제일. 
-
-            sub_df_afterRc <- sub_df[Rc_thresh_loc:nrow(sub_df), ]
-            first_Tc_reach_loc <- which(sub_df_afterRc$tmax > Tc)[1]
-            first_Tc_reach_day <- sub_df_afterRc[first_Tc_reach_loc, "date"] 
+            
+            if (as.integer(strftime(Rc_thresh_day, format = "%j")) > 31){
+                first_Tc_reach_day <- as.Date(paste0(as.character(yr), "-01-31"))
+            } else {
+                sub_df_afterRc <- sub_df[Rc_thresh_loc:nrow(sub_df), ]
+                first_Tc_reach_loc <- which(sub_df_afterRc$tmax > Tc)[1]
+                first_Tc_reach_day <- sub_df_afterRc[first_Tc_reach_loc, "date"] 
+            }
+            
             if (is.na(first_Tc_reach_day)){
                 next
             }
+            
             first_Tc_reach_loc2 <- which(sub_df$date == first_Tc_reach_day) # Ca accumulates starting this day.
             sub_df$Ca_cumsum[first_Tc_reach_loc2:nrow(sub_df)] <- cumsum(sub_df$daily_Ca[first_Tc_reach_loc2:nrow(sub_df)])
             

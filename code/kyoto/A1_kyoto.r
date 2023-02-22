@@ -89,43 +89,38 @@ kyoto_gdd <- F01_compute_gdd(
     , noaa_station_ids = unique(kyoto_weather$id)
     , Rc_thresh = best_gdd_params[["Rc_thresholds"]]
     , Tc = best_gdd_params[["Tcs"]])
+# unique(kyoto_gdd$id)
+# head(kyoto_gdd)
 
 # Attach city names and their lat, long, alt
-cherry_city_loc <- cherry_sub %>%
-    filter(city %in% kyoto_group) %>%
-    # distinct(city, .keep_all = TRUE) %>%
-    select(city, lat, long, alt, bloom_doy, bloom_date)
+# city_station_pair <- read.csv("./code/kyoto/data/A11_city_station_pairs.csv")
+# kyoto_group <- city_station_pair$city
+# cherry_city_blooms <- cherry_sub %>%
+#     filter(city %in% kyoto_group) %>%
+#     select(city, bloom_doy, bloom_date)
 
-kyoto_gdd2 <- kyoto_gdd %>%
-    merge(y = city_station_pair
-        , by.x = "id", by.y = "station", all.x = TRUE) %>%
-    merge(y = cherry_city_loc[, c("city", "lat", "long", "alt")] %>% distinct(city, .keep_all = TRUE)
-        , by = "city", all.x = TRUE) %>%
-    merge(y = cherry_city_loc[, c("city", "bloom_date", "bloom_doy")]
-        , by.x = c("city", "date"), by.y = c("city", "bloom_date")
-        , all.x = TRUE) %>%
-    mutate(is_bloom = ifelse(!is.na(bloom_doy), 1, 0)) %>%
-    mutate(first_day_of_year = paste0(year, "-01-01")) %>%
-    mutate(doy = as.numeric(difftime(date, first_day_of_year, units = "days")) + 1)
-
-kyoto_gdd_out <- kyoto_gdd2 %>% 
-    # select(-latitude, -longitude, -elevation) %>%
-    select(-lat, -long, -alt) %>%  # use the coordinates of the stations
-    rename_with(~"lat", latitude) %>%
-    rename_with(~"long", longitude) %>%
-    rename_with(~"alt", elevation) %>%
-    select(-first_day_of_year, -bloom_doy, -id, -first_year, -last_year, -state, -gsn_flag, -wmo_id, -element)
-head(kyoto_gdd_out)
-write.csv(kyoto_gdd_out, "./code/kyoto/data/A14_kyoto_temp_gdd.csv", row.names = FALSE)
+# We use kyoto_gdd2 for the following analysis.
+# kyoto_gdd2 <- kyoto_gdd %>%
+#     merge(y = city_station_pair, by = "id", all.x = TRUE) %>%
+#     merge(y = cherry_city_blooms
+#     , by.x = c("city", "date")
+#     , by.y = c("city", "bloom_date"), all.x = TRUE) %>%
+#     mutate(doy = as.integer(strftime(date, format = "%j"))) %>%
+#     mutate(is_bloom = ifelse(!is.na(bloom_doy), 1, 0))
+# write.csv(kyoto_gdd2, "./code/kyoto/data/A14_kyoto_temp_gdd.csv", row.names = FALSE)
 
 
 # Check histogram of Ca_cumsum of those is_bloom = 1
-kyoto_gdd_out <- read.csv("./code/kyoto/data/A14_kyoto_temp_gdd.csv")
-hist(kyoto_gdd_out %>% filter(is_bloom == 1) %>% pull(Ca_cumsum), breaks = 100)
-hist(kyoto_gdd_out %>% filter(is_bloom == 1) %>% filter(city =="Kyoto") %>% pull(Ca_cumsum), breaks =100)
+kyoto_gdd2 <- read.csv("./code/kyoto/data/A14_kyoto_temp_gdd.csv")
+hist(kyoto_gdd2 %>% filter(is_bloom == 1) %>% pull(Ca_cumsum), breaks = 30)
+hist(kyoto_gdd2 %>% filter(is_bloom == 1) %>% filter(city =="Kyoto") %>% pull(Ca_cumsum), breaks =30)
 
+kyoto_blooms <- kyoto_gdd2 %>% filter(city == "Kyoto") %>%filter(is_bloom == 1)
 
-# kyoto_gdd_out <- read.csv("./code/kyoto/data/A14_kyoto_temp_gdd.csv")
+plot(kyoto_blooms$year, kyoto_blooms$Ca_cumsum, type = "l")
+plot(kyoto_blooms$year, kyoto_blooms$bloom_doy, type = "l")
+plot(kyoto_blooms$Cd_cumsum, kyoto_blooms$bloom_doy, type = "p")
+
 
 #######################################
 # Train lightgbm
