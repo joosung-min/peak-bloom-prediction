@@ -40,8 +40,8 @@ n_boosting_rounds <- 2000
 grid_search <- expand.grid(
     boostings = c("gbdt")
     , learning_rates = c(0.1, 0.01)
-    , max_bins = c(255, 511, 1023) 
-    , min_data_in_leaf = c(20, 50, 100)
+    , max_bins = c(255, 127, 300) 
+    , min_data_in_leaf = c(20, 5, 30)
     , max_depth = c(-1, 5, 10)
     , feature_fractions = c(0.8, 0.9, 1)
     , bagging_fractions = c(0.8, 0.9, 1)
