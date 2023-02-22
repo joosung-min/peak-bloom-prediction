@@ -2,7 +2,7 @@ library(tidyverse)
 
 # setwd("/home/joosungm/projects/def-lelliott/joosungm/projects/peak-bloom-prediction/code/vancouver")
 # setwd("./code/vancouver/")
-source("./code/F01_functions.r")
+source("./code/_shared/F01_functions.r")
 
 
 
@@ -11,7 +11,8 @@ source("./code/F01_functions.r")
 # - Compute Ca_cumsum upto April-30 for most recent 5 years.
 # - Do the same for all 
 
-city_station_pairs <- read.csv("./code/vancouver/outputs/A11_city_station_pairs.csv")
+city_station_pairs <- read.csv("./code/vancouver/data/A11_city_station_pairs.csv") %>%
+    rename_with(~"id", station)
 target_cities <- city_station_pairs$city
 target_stations <- city_station_pairs$station
 
@@ -36,18 +37,17 @@ for (ym in van_temp$year_month){
     }
 }
 
-
+cherry_sub <- read.csv("./code/_shared/outputs/A11_cherry_sub.csv")
 
 temps <- F01_get_imp_temperature(
     city_station_pair = city_station_pairs
     , target_country = c("Japan", "South Korea")
+    , cherry_sub = cherry_sub
     , date_min = "2019-10-01"
     , date_max = "2022-04-30")
 
-city_temps <- temps %>%merge(y = city_station_pairs, by.x = "id", by.y = "station", all.x = TRUE)
-# write.csv(city_temps, "./outputs/A12_city_temps.csv", row.names = FALSE)
-
-
+city_temps <- temps %>% merge(y = city_station_pairs, by = "id", all.x = TRUE)
+# write.csv(city_temps, "./code/vancouver/data/A12_city_temps.csv", row.names = FALSE)
 
 target_city_df <- data.frame(matrix(ncol = length(van_city_cols)
     , dimnames = list(NULL, van_city_cols)))
@@ -92,19 +92,23 @@ van_dist <- data.frame(as.matrix(dist(pca_out))) %>%
 head(van_dist, 20)
 
 # # - Get city names
-van_cities <- rownames(van_dist)[1:15]
+van_cities <- rownames(van_dist)[1:20]
 van_cities
 
 
 # Pull the weather data for those cities
 csp2 <- city_station_pairs %>% filter(city %in% van_cities)
-vancities_weather_df <- F01_get_imp_temperature(city_station_pair = csp2, target_country = c("Japan", "South Korea"))
-# write.csv(vancities_weather_df, "./outputs/A14_vancities_weather_df.csv", row.names = FALSE)
+cherry_sub <- read.csv("./code/_shared/outputs/A11_cherry_sub.csv")
+vancities_weather_df <- F01_get_imp_temperature(
+    city_station_pair = csp2
+    , target_country = c("Japan", "South Korea")
+    , cherry_sub = cherry_sub)
+write.csv(vancities_weather_df, "./code/vancouver/data/A14_vancities_weather.csv", row.names = FALSE)
 
 
 # Find optimal set of Tc, Rc_thresh, Rh_thresh for Liestal using the chill-day method
 # source("./M_gdd_cv_van.r") # CAUTION: Running this code may require a high computational power. HPC recommended.
-best_gdd <- read.csv("./outputs/M12_van_gdd_best.csv")
+best_gdd <- read.csv("./code/vancouver/data/M12_van_gdd_best.csv")
 best_gdd
 
 # Compute daily_Ca, daily_Cd, Ca_cumsum, Cd_cumsum using the above parameters.
@@ -112,18 +116,16 @@ best_gdd
 gdd_df <- F01_compute_gdd(
     weather_df = vancities_weather_df
     , noaa_station_ids = unique(vancities_weather_df$id)
-    , Rc_thresh = -111, Tc = 8)
+    , Rc_thresh = best_gdd$Rc_thresholds
+    , Tc = best_gdd$Tcs)
 dim(gdd_df)
 head(gdd_df)
-# write.csv(gdd_df, "./code/vancouver/outputs/A15_van_gdd.csv", row.names = FALSE)
 
 target_stations <- gdd_df$id
 
 # Attach blossom dates.
 gdd_city <- gdd_df %>% 
-    merge(y = city_station_pairs, by.x = "id", by.y = "station", all.x = TRUE)
-
-cherry_sub <- read.csv("./code/outputs/A_outputs/A11_cherry_sub.csv")
+    merge(y = city_station_pairs, by = "id", all.x = TRUE)
 
 cherry_targets <- cherry_sub %>%
     filter(city %in% unique(gdd_city$city)) %>%
@@ -134,14 +136,21 @@ cherry_gdd <- gdd_city %>%
     mutate(is_bloom = ifelse(!is.na(bloom_doy), 1, 0)) %>%
     # filter(year > 1986) %>%
     filter(month %in% c(3, 4)) %>%
-    mutate(doy = as.numeric(as.Date(date) - as.Date(paste0(year, "-01-01")) + 1)) %>%
-    filter(doy > 74)
+    mutate(doy = as.integer(strftime(date, "%j")))
 
 head(cherry_gdd)
 dim(cherry_gdd)
 table(cherry_gdd$is_bloom)
-write.csv(cherry_gdd, "./code/vancouver/outputs/A16_van_df.csv")
+write.csv(cherry_gdd, "./code/vancouver/data/A14_van_gdd.csv")
 
+
+hist(cherry_gdd[cherry_gdd$is_bloom == 1, "Ca_cumsum"], breaks = 100)
+
+cut_range <- cherry_gdd %>% filter(100 < Ca_cumsum & Ca_cumsum < 250)
+hist(cut_range[cut_range$is_bloom == 1, "Ca_cumsum"], breaks = 100)
+
+
+unique(cut_range$city)  # add vancouver data.
 
 # Train lightgbm
 # source("./M2_lgb_cv_van.r")

@@ -144,7 +144,7 @@ write.csv(swiss_temp, "./code/liestal/data/A12_Liestal_temperature.csv", row.nam
 # Find optimal set of Tc, Rc_thresh, Rh_thresh for Liestal using the chill-day method
 # CAUTION: Running this code may require a high computational power. HPC recommended.
 # source("./code/liestal/M1_gdd_cv_liestal.r") 
-best_gdd <- read.csv("./outputs/M12_Liestal_gdd_best.csv")
+best_gdd <- read.csv("./code/liestal/data/M12_Liestal_gdd_best.csv")
 best_gdd
 
 # Compute daily_Ca, daily_Cd, Ca_cumsum, Cd_cumsum using the above parameters.

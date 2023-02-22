@@ -137,7 +137,7 @@ F01_compute_gdd <- function(weather_df, noaa_station_ids, Rc_thresh, Tc) {
     # Tc: Threshold temperature for computing Ca and Cd.
     # - Optimal sets (Rc_thresh, Tc)
     #  * kyoto = 
-    #  * liestal = 
+    #  * liestal = (-90, 8)
     #  * washington = 
     #  * vancouver = (-111, 8)
     

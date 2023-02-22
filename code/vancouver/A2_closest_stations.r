@@ -1,19 +1,18 @@
 library(tidyverse)
 library(rnoaa)
 
-setwd("/home/joosungm/projects/def-lelliott/joosungm/projects/peak-bloom-prediction/code/vancouver")
-source("../F01_functions.r")
+setwd("/home/joosungm/projects/def-lelliott/joosungm/projects/peak-bloom-prediction/")
+source("./code/_shared/F01_functions.r")
 
-cherry_sub <- read.csv("../outputs/A_outputs/A11_cherry_sub.csv")
+cherry_sub <- read.csv("./code/_shared/outputs/A11_cherry_sub.csv")
 cherry_subsub <- cherry_sub %>% filter(year %in% 2019:2021) %>%
     filter(country %in% c("Japan", "South Korea")) %>%
     distinct(city, .keep_all = TRUE)
 target_cities <- cherry_subsub$city
 
-stations <- read.csv("../outputs/A11_weather_stations.csv")
+stations <- read.csv("./code/_shared/outputs/A11_weather_stations.csv")
 
 temp_df <- cherry_sub %>%
-    # filter(country == "Switzerland") %>%
     filter(city %in% target_cities) %>%
     select(city, lat, long, alt) %>%
     distinct(city, .keep_all = TRUE)
@@ -72,6 +71,6 @@ city_station_pairs <- city_station_pair %>%
         distinct(city, .keep_all = TRUE), by = "city", all.x = TRUE) %>%
     select(-dist, -idx)
 
-write.csv(city_station_pairs, "./outputs/A11_city_station_pairs.csv", row.names = FALSE)
+write.csv(city_station_pairs, "./code/vancouver/data/A11_city_station_pairs.csv", row.names = FALSE)
 
 print("done")
