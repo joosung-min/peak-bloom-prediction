@@ -25,10 +25,10 @@ feature_names <- c("doy", "Cd_cumsum", "Ca_cumsum", "lat", "long", "alt", "daily
 
 target_col <- "is_bloom"
 
-Rdata_name <- "./code/liestal/outputs/M21_lgb_RDada_Liestal3.RData"
-grid_result_filename <- "./code/liestal/outputs/M22_lgb_grid_Liestal3.csv"
-grid_best_filename <- "./code/liestal/outputs/M23_lgb_best_params_Liestal3.csv"
-lgb_final_name <- "./code/liestal/outputs/M24_lgb_final_Liestal3.rds"
+Rdata_name <- "./code/liestal/data/M21_lgb_RDada_Liestal3.RData"
+grid_result_filename <- "./code/liestal/data/M22_lgb_grid_Liestal3.csv"
+grid_best_filename <- "./code/liestal/data/M23_lgb_best_params_Liestal3.csv"
+lgb_final_name <- "./code/liestal/data/M24_lgb_final_Liestal3.rds"
 
 n_boosting_rounds <- 2000
 
