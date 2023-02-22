@@ -48,14 +48,14 @@ npn_out <- npn_stat %>%
 # - We use the last two years data as our test set.
 cherry_lgb_df <- npn_out %>% filter(month %in% c(3, 4, 5))
 dim(cherry_lgb_df)
-write.csv(npn_out, "./code/washingtondc/outputs/A12_wdc_temperature.csv", row.names = FALSE)
+write.csv(npn_out, "./code/washingtondc/data/A12_wdc_temperature.csv", row.names = FALSE)
 
 
 cherry_train_val <- cherry_lgb_df %>%filter(year < 2020)
-write.csv(cherry_train_val, "./code/washingtondc/outputs/A13_wdc_train_val.csv", row.names =FALSE)
+write.csv(cherry_train_val, "./code/washingtondc/data/A13_wdc_train_val.csv", row.names =FALSE)
 
 cherry_test <- cherry_lgb_df %>%filter(2020 <= year)
-write.csv(cherry_test, "./code/washingtondc/outputs/A14_wdc_test.csv", row.names = FALSE)
+write.csv(cherry_test, "./code/washingtondc/data/A14_wdc_test.csv", row.names = FALSE)
 
 # Find best lightgbm parameters using cross-validation
 # ** CAUTION: running the below code requires a high computational power. HPC recommended. **
@@ -64,13 +64,13 @@ write.csv(cherry_test, "./code/washingtondc/outputs/A14_wdc_test.csv", row.names
 # Fit the final model
 # source("./M3_lgb_final_wdc.r")
 
-feature_names <- c("lat", "long", "alt", "tmax", "tmin", "Ca_cumsum", "month", "day", "species")
+feature_names <- c("lat", "long", "alt", "tmax", "tmin", "Ca_cumsum", "doy", "species")
 target_col <- "is_bloom"
 
-cherry_test <- read.csv("./code/washingtondc/outputs/A14_wdc_test.csv")
+cherry_test <- read.csv("./code/washingtondc/data/A14_wdc_test.csv")
 
 # Model assessments
-lgb_final <- readRDS.lgb.Booster('./code/washingtondc/outputs/M31_lgb_final_wdc1.rds')
+lgb_final <- readRDS.lgb.Booster('./code/washingtondc/data/M31_lgb_final_wdc3.rds')
 pred <- predict(lgb_final, as.matrix(cherry_test[, feature_names]))
 cherry_test$predicted <- ifelse(pred > 0.5, 1, 0)
 

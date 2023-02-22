@@ -103,7 +103,7 @@ vancities_weather_df <- F01_get_imp_temperature(
     city_station_pair = csp2
     , target_country = c("Japan", "South Korea")
     , cherry_sub = cherry_sub)
-write.csv(vancities_weather_df, "./code/vancouver/data/A14_vancities_weather.csv", row.names = FALSE)
+# write.csv(vancities_weather_df, "./code/vancouver/data/A14_vancities_weather.csv", row.names = FALSE)
 
 
 # Find optimal set of Tc, Rc_thresh, Rh_thresh for Liestal using the chill-day method
@@ -112,7 +112,7 @@ best_gdd <- read.csv("./code/vancouver/data/M12_van_gdd_best.csv")
 best_gdd
 
 # Compute daily_Ca, daily_Cd, Ca_cumsum, Cd_cumsum using the above parameters.
-# vancities_weather_df <-read.csv("./code/vancouver/outputs/A14_vancities_weather_df.csv")
+# vancities_weather_df <-read.csv("./code/vancouver/outputs/A13_vancities_weather_df.csv")
 gdd_df <- F01_compute_gdd(
     weather_df = vancities_weather_df
     , noaa_station_ids = unique(vancities_weather_df$id)
