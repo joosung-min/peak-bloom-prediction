@@ -4,7 +4,11 @@ library(lightgbm)
 # load gdd data
 setwd("/home/joosungm/projects/def-lelliott/joosungm/projects/peak-bloom-prediction/")
 source("./code/_shared/F01_functions.r")
-cherry_gdd <- read.csv("./code/washingtondc/data/A12_wdc_temperature.csv") %>%  filter(month %in% c(3,4)) %>% filter(350 < Ca_cumsum & Ca_cumsum < 850)
+
+#cherry_gdd <- read.csv("./code/washingtondc/data/A12_wdc_temperature.csv") %>%  filter(month %in% c(3,4)) %>% filter(350 < Ca_cumsum & Ca_cumsum < 850)
+# bad performace
+
+cherry_gdd <- read.csv("./code/washingtondc/data/A12_wdc_temperature.csv") %>%  filter(month %in% c(3,4))
 
 # hist(cherry_gdd %>%filter(State == "DC") %>% filter(is_bloom == 1) %>%pull(Ca_cumsum), breaks = 10)
 colnames(cherry_gdd)
