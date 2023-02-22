@@ -2,21 +2,21 @@ library(tidyverse)
 
 ### 
 # Here we try to obtain the best Tc, Rc_thresh, Rh_thresh
-setwd("/home/joosungm/projects/def-lelliott/joosungm/projects/peak-bloom-prediction/code/vancouver/")
-source("../F01_functions.r")
+setwd("/home/joosungm/projects/def-lelliott/joosungm/projects/peak-bloom-prediction/")
+source("./code/_shared/F01_functions.r")
 
 # temperature data
-cherry_city_temp <- read.csv("./outputs/A11_van_temperature.csv")
+cherry_city_temp <- read.csv("./code/vancouver/data/A11_van_temperature.csv")
 cherry_city = "van"
 
 # filenames for the outputs
-gdd_result_filename <- paste0("./outputs/M11_", cherry_city, "_gdd_grid.csv")
-best_gdd_filename <- paste0("./outputs/M12_", cherry_city, "_gdd_best.csv")
+gdd_result_filename <- paste0("./code/vancouver/data/M11_", cherry_city, "_gdd_grid.csv")
+best_gdd_filename <- paste0("./code/vancouver/data/M12_", cherry_city, "_gdd_best.csv")
 
 
 # Grid search start here.
 gdd_grid <- expand.grid(
-    Tcs = seq(from = 5, to = 9, by = 1)
+    Tcs = c(7)
     , Rc_thresholds = seq(from = -90, to = -150, by = -1) # 
     , Rh_thresholds = seq(from = 120, to = 240, by = 1) 
     , first_Tc_reach_days = c(0, 1)
@@ -57,7 +57,7 @@ gdd_result <- foreach (
     , .combine = rbind
     , .errorhandling = "remove"
 
-) %do% {
+) %dopar% {
     
     # Tc <- 6
     # Rc <- -110
@@ -134,21 +134,16 @@ gdd_result <- foreach (
 
 stopCluster(myCluster)
 
-save(gdd_result, file = "../outputs/M11_gdd_result_van.RData")
 print("grid search completed")
 
-load("../outputs/M11_gdd_result_van.RData")
 
 gdd_result_out <- data.frame(gdd_result) %>%
     'colnames<-'(colnames(gdd_grid))
-# write.csv(gdd_result_out, "../outputs/C_outputs/C11_gdd_grid_recent3.csv", row.names = FALSE)
-
 write.csv(gdd_result_out, gdd_result_filename, row.names = FALSE)
 print("table1 saved")
 
-
 best_gdd_idx <- which(gdd_result_out$MAE == min(gdd_result_out$MAE, na.rm = TRUE))
-best_gdd <- gdd_result_out[best_gdd_idx, ] %>% filter(Tcs == 8)
+best_gdd <- gdd_result_out[best_gdd_idx, ]
 write.csv(best_gdd[1, ], best_gdd_filename, row.names = FALSE)
 print("table2 saved")
 print(best_gdd)
