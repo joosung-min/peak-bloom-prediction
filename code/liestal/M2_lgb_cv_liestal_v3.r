@@ -34,7 +34,7 @@ lgb_final_name <- "./code/liestal/data/M24_lgb_final_Liestal3.rds"
 n_boosting_rounds <- 2000
 
 grid_search <- expand.grid(
-    boostings = c("gbdt", "dart")
+    boostings = c("gbdt")
     , learning_rates = c(0.1, 0.01) # 
     , max_bins = c(255, 511, 1023) 
     , min_data_in_leaf = c(20, 50, 100)

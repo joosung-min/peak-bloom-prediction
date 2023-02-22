@@ -26,8 +26,8 @@ best_gdd_filename <- paste0("./code/kyoto/data/M12_", cherry_city, "_gdd_best.cs
 
 # Grid search start here.
 gdd_grid <- expand.grid(
-    Tcs = seq(from = 5, to = 9, by = 1)
-    , Rc_thresholds = seq(from = -90, to = -150, by = -1)
+    Tcs = seq(from = 6, to = 8, by = 1)
+    , Rc_thresholds = seq(from = -95, to = -140, by = -1)
     , Rh_thresholds = seq(from = 120, to = 240, by = 1)
     , first_Tc_reach_days = c(0)
     ) %>%
@@ -49,7 +49,7 @@ gdd_result <- foreach (
     , .combine = rbind
     , .errorhandling = "remove"
 
-) %do% {
+) %dopar% {
     
     # Tc <- 6
     # Rc <- -110
