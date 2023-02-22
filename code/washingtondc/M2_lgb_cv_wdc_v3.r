@@ -29,7 +29,7 @@ total_df <- cherry_combined[sample(1:nrow(cherry_combined), replace = FALSE), ]
 table(cherry_combined$is_bloom)
 
 
-feature_names <- c("lat", "long", "alt", "tmax", "tmin", "Ca_cumsum", "doy", "species", "State")
+feature_names <- c("lat", "long", "alt", "tmax", "tmin", "Ca_cumsum","month", "day", "species")
 
 target_col <- "is_bloom"
 
@@ -44,13 +44,13 @@ n_boosting_rounds <- 2000
 grid_search <- expand.grid(
     boostings = c("gbdt")
     , learning_rates = c(0.1, 0.01)
-    , max_bins = c(255, 127, 300) 
+    , max_bins = c(255, 127, 512) 
     , min_data_in_leaf = c(20, 5, 30)
     , max_depth = c(-1, 5, 10)
     , feature_fractions = c(0.8, 0.9, 1)
     , bagging_fractions = c(0.8, 0.9, 1)
     , bagging_freqs = c(1, 5, 10)
-    , lambda_l2s = c(0, 0.5, 1)
+    , lambda_l2s = c(0)
 ) %>%
     mutate(val_score = NA) %>%
     mutate(test_score = NA)
@@ -77,7 +77,7 @@ for (g in seq_len(nrow(grid_search))) {
         objective = "binary"
         , metric = c("binary_logloss")
         , is_enable_sparse = TRUE
-        , is_unbalance = TRUE
+        #, is_unbalance = TRUE
         , boosting = as.character(param_grid[["boostings"]])
         , learning_rate = as.numeric(param_grid[["learning_rates"]])
         , min_data_in_leaf = as.numeric(param_grid[["min_data_in_leaf"]])

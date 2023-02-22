@@ -1,2 +1,2 @@
 "boostings","learning_rates","max_bins","min_data_in_leaf","max_depth","feature_fractions","bagging_fractions","bagging_freqs","lambda_l2s","val_score","test_score"
-"dart",0.1,511,20,5,0.8,0.9,1,0,0.256527897860303,0.304932478523726
+"gbdt",0.1,511,10,5,0.8,0.8,1,0,0.259206889794541,0.306009882021916

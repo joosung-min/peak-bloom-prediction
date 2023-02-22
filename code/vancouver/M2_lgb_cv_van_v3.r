@@ -8,7 +8,7 @@ source("./code/_shared/F01_functions.r")
 cherry_gdd <- read.csv("./code/vancouver/data/A14_van_gdd.csv") %>%
     filter(month %in% c(3, 4))
 dim(cherry_gdd)
-n_fold <- 8
+n_fold <- 7
 
 cherry_df <- F01_train_val_test_split(
     gdd_df = cherry_gdd
@@ -23,7 +23,7 @@ total_df <- rbind(cherry_df$train, cherry_df$test, cherry_df$val)
 # table(total_df$is_bloom)
 # total_df[(total_df$city == "Vancouver" & total_df$is_bloom == 1), ]
 
-feature_names <- c("doy", "Cd_cumsum", "Ca_cumsum", "lat", "long", "alt", "daily_Ca", "daily_Cd", "tmax", "tmin")
+feature_names <- c("month","day", "Cd_cumsum", "Ca_cumsum", "lat", "long", "alt", "daily_Ca", "daily_Cd", "tmax", "tmin")
 
 target_col <- "is_bloom"
 
@@ -37,13 +37,13 @@ n_boosting_rounds <- 2000
 grid_search <- expand.grid(
     boostings = c("gbdt")
     , learning_rates = c(0.1, 0.01) # 
-    , max_bins = c(255, 511, 1023) 
+    , max_bins = c(255, 127, 511, 1023) 
     , min_data_in_leaf = c(20, 40, 80)
     , max_depth = c(-1, 5, 10)
     , feature_fractions = c(0.8, 0.9, 1)
     , bagging_fractions = c(0.8, 0.9, 1)
     , bagging_freqs = c(1, 5, 10)
-    , lambda_l2s = c(0, 0.5, 1)
+    , lambda_l2s = c(0)
 ) %>%
     mutate(val_score = NA) %>%
     mutate(test_score = NA)
@@ -69,7 +69,7 @@ for (g in seq_len(nrow(grid_search))) {
         objective = "binary"
         , metric = c("binary_logloss")
         , is_enable_sparse = TRUE
-        , is_unbalance = TRUE
+        #, is_unbalance = TRUE
         , boosting = as.character(param_grid[["boostings"]])
         , learning_rate = as.numeric(param_grid[["learning_rates"]])
         , min_data_in_leaf = as.numeric(param_grid[["min_data_in_leaf"]])
@@ -85,7 +85,7 @@ for (g in seq_len(nrow(grid_search))) {
     lgb_cv <- lgb.cv(params = params
         , data = d_cv_set
         , nrounds = n_boosting_rounds
-        , nfold = 8
+        , nfold = 7
         , verbose = -1
         , stratified = TRUE
     )

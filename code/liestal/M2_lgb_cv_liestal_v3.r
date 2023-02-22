@@ -21,7 +21,7 @@ cherry_df <- F01_train_val_test_split(
 total_df <- cherry_df[[1]] %>% bind_rows(cherry_df[[2]]) %>% bind_rows(cherry_df[[3]])
 table(total_df$is_bloom)
 
-feature_names <- c("doy", "Cd_cumsum", "Ca_cumsum", "lat", "long", "alt", "daily_Ca", "daily_Cd", "tmax", "tmin")
+feature_names <- c("month","day", "Cd_cumsum", "Ca_cumsum", "lat", "long", "alt", "daily_Ca", "daily_Cd", "tmax", "tmin")
 
 target_col <- "is_bloom"
 
@@ -34,14 +34,14 @@ n_boosting_rounds <- 2000
 
 grid_search <- expand.grid(
     boostings = c("gbdt")
-    , learning_rates = c(0.1, 0.01) # 
-    , max_bins = c(255) 
-    , min_data_in_leaf = c(20, 5, 30)
-    , max_depth = c(-1, 5, 10)
+    , learning_rates = c(0.1, 0.01)
+    , max_bins = c(255, 127, 511) 
+    , min_data_in_leaf = c(20, 10, 40)
+    , max_depth = c(-1)
     , feature_fractions = c(0.8, 0.9, 1)
     , bagging_fractions = c(0.8, 0.9, 1)
     , bagging_freqs = c(1, 5, 10)
-    , lambda_l2s = c(0, 0.5, 1)
+    , lambda_l2s = c(0)
 ) %>%
     mutate(val_score = NA) %>%
     mutate(test_score = NA)
@@ -83,7 +83,7 @@ for (g in seq_len(nrow(grid_search))) {
     lgb_cv <- lgb.cv(params = params
         , data = d_cv_set
         , nrounds = n_boosting_rounds
-        , nfold = 6
+        , nfold = 7
         , verbose = -1
         , stratified = TRUE
     )
