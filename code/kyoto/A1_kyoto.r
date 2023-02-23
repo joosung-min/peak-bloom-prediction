@@ -84,11 +84,11 @@ best_gdd_params <- read.csv("./code/kyoto/data/M12_Kyoto_gdd_best.csv")[1, ]
 best_gdd_params
 
 # Compute daily_Ca, daily_Cd, Ca_cumsum(=AGDD), Cd_cumsum
-kyoto_gdd <- F01_compute_gdd(
-    weather_df = kyoto_weather
-    , noaa_station_ids = unique(kyoto_weather$id)
-    , Rc_thresh = best_gdd_params[["Rc_thresholds"]]
-    , Tc = best_gdd_params[["Tcs"]])
+# kyoto_gdd <- F01_compute_gdd(
+#     weather_df = kyoto_weather
+#     , noaa_station_ids = unique(kyoto_weather$id)
+#     , Rc_thresh = best_gdd_params[["Rc_thresholds"]]
+#     , Tc = best_gdd_params[["Tcs"]])
 # unique(kyoto_gdd$id)
 # head(kyoto_gdd)
 
@@ -108,10 +108,10 @@ kyoto_gdd <- F01_compute_gdd(
 #     mutate(doy = as.integer(strftime(date, format = "%j"))) %>%
 #     mutate(is_bloom = ifelse(!is.na(bloom_doy), 1, 0))
 # write.csv(kyoto_gdd2, "./code/kyoto/data/A14_kyoto_temp_gdd.csv", row.names = FALSE)
-
+kyoto_gdd2 <- read.csv("./code/kyoto/data/A14_kyoto_temp_gdd.csv")
 
 # Check histogram of Ca_cumsum of those is_bloom = 1
-kyoto_gdd2 <- read.csv("./code/kyoto/data/A14_kyoto_temp_gdd.csv")
+
 hist(kyoto_gdd2 %>% filter(is_bloom == 1) %>% pull(Ca_cumsum), breaks = 30)
 hist(kyoto_gdd2 %>% filter(is_bloom == 1) %>% filter(city =="Kyoto") %>% pull(Ca_cumsum), breaks =30)
 
@@ -120,7 +120,6 @@ kyoto_blooms <- kyoto_gdd2 %>% filter(city == "Kyoto") %>%filter(is_bloom == 1)
 plot(kyoto_blooms$year, kyoto_blooms$Ca_cumsum, type = "l")
 plot(kyoto_blooms$year, kyoto_blooms$bloom_doy, type = "l")
 plot(kyoto_blooms$Cd_cumsum, kyoto_blooms$bloom_doy, type = "p")
-
 
 #######################################
 # Train lightgbm
@@ -142,24 +141,25 @@ plot(kyoto_blooms$Cd_cumsum, kyoto_blooms$bloom_doy, type = "p")
 library(tidyverse)
 library(lightgbm)
 
-lgb_final <- readRDS.lgb.Booster("./code/kyoto/data/M24_lgb_final_kyoto3.rds")
-best_params <- read.csv("./code/kyoto/data/M23_lgb_best_score_kyoto3.csv")
+# best_params <- read.csv("./code/kyoto/data/M23_lgb_best_score_kyoto3.csv")
+# best_params
+best_params <- read.csv("./code/kyoto/data/archive/best1/M23_lgb_best_score_kyoto3.csv")
 best_params
-# lgb_final <- readRDS.lgb.Booster("./code/kyoto/data/B_outputs/archive/best4/B21_lgb_final1.rds")
+
+# contains actual bloom dates + past gdd info
 cherry_gdd <- read.csv("./code/kyoto/data/A14_kyoto_temp_gdd.csv") %>%
-    filter(month %in% c(3, 4))
+    filter(month %in% c(3, 4))  
 
-# Make prediction on the last 4 years
 feature_names <- c("tmax", "tmin", "daily_Ca", "daily_Cd", "Cd_cumsum", "Ca_cumsum", "lat", "long", "alt", "month", "day")
-
 # feature_names <- c("tmax", "tmin", "daily_Ca", "daily_Cd", "Cd_cumsum", "Ca_cumsum", "lat", "long", "alt", "doy")
-
 target_col <- "is_bloom"
 
+# Make prediction on the last 4 years
 target_years <- 2013:2022
 
 train_set <- cherry_gdd %>% filter(!(year %in% target_years))
-# stratified sampling from train_set
+
+# stratified under-sampling from train_set to balance the number of is_bloom = 1 and 0
 train_isbloom <- train_set %>% filter(is_bloom == 1)
 train_nobloom <- train_set %>% filter(is_bloom == 0)
 train_sample <- train_nobloom[sample(nrow(train_nobloom), nrow(train_isbloom) *1.5), ] %>% bind_rows(train_isbloom)
@@ -189,9 +189,8 @@ n_boosting_rounds <- 1000
 
 params <- list(
     objective = "binary"
-    , metric = c("auc")
+    , metric = c("binary_logloss")
     , is_enable_sparse = TRUE
-    #, is_unbalance = TRUE
     , boosting = as.character(best_params[["boostings"]])
     , learning_rate = as.numeric(best_params[["learning_rates"]])
     , min_data_in_leaf = as.numeric(best_params[["min_data_in_leaf"]])
@@ -213,7 +212,7 @@ lgb_final <- lgb.train(
 pred <- predict(lgb_final, as.matrix(test_set[, feature_names]))
 hist(pred, breaks =100)
 test_set$predicted <- ifelse(pred > 0.5, 1, 0)
-# tail(sort(pred))
+tail(sort(pred))
 
 # Confusion matrix
 library(caret)
@@ -232,10 +231,11 @@ lgb_imp
 lgb.plot.importance(lgb_imp, top_n = 10L, measure = "Gain")
 
 # Compute the MAE for the most recent years
-F01_compute_MAE(target_city = "Kyoto", cherry_gdd = cherry_gdd, lgb_final = lgb_final, target_years = c(2012:2022), p_thresh = 0.5)
+mae <- F01_compute_MAE(target_city = "Kyoto", cherry_gdd = cherry_gdd, lgb_final = lgb_final, target_years = c(2012:2022), p_thresh = 0.5, peak = TRUE)
+mae
 
 # Generate and save the prediction plot for the most recent years
-F01_pred_plot_past(target_city = "Kyoto", cherry_gdd = cherry_gdd, lgb_final = lgb_final, target_years = c(2019:2022), p_thresh = 0.5)
+F01_pred_plot_past(target_city = "Kyoto", cherry_gdd = cherry_gdd, lgb_final = lgb_final, target_years = c(2019:2022), p_thresh = 0.5, peak = TRUE)
 
 
 #######################################
@@ -243,51 +243,57 @@ F01_pred_plot_past(target_city = "Kyoto", cherry_gdd = cherry_gdd, lgb_final = l
 #######################################
 
 # Weather data for 2023 march and april obtained from 
-city_station_pair <- read.csv("./code/kyoto/data/A11_city_station_pairs.csv") %>% filter(city == "Kyoto")
 
-temp_2223 <- F01_get_imp_temperature(
-    city_station_pair = city_station_pair
-    , target_country = c("Japan")
-    , date_min = "2022-10-01", date_max = "2023-04-30") %>% 
-    mutate(year = as.integer(strftime(date, format = "%Y"))) %>%
-    filter(year %in% c(2022, 2023)) %>%
-    select(id, date, year, month, day, tmin, tmax) %>% "rownames<-"(NULL)
-head(temp_2223)
-tail(temp_2223)
+# city_station_pair <- read.csv("./code/kyoto/data/A11_city_station_pairs.csv") %>% filter(city == "Kyoto")
 
-data_2023 <- read.csv("./code/_shared/data/city_weather_2023.csv") %>%
-    filter(city == "Kyoto") %>%
-    mutate(year = 2023) %>%
-    mutate(month = as.integer(strftime(date, "%m"))) %>%
-    mutate(day = as.integer(strftime(date, "%d"))) %>%
-    select(id, date, year, month, day, tmin, tmax)
+# temp_2223 <- F01_get_imp_temperature(
+#     city_station_pair = city_station_pair
+#     , target_country = c("Japan")
+#     , date_min = "2022-10-01", date_max = "2023-04-30") %>% 
+#     mutate(year = as.integer(strftime(date, format = "%Y"))) %>%
+#     filter(year %in% c(2022, 2023)) %>%
+#     select(id, date, year, month, day, tmin, tmax) %>% "rownames<-"(NULL)
+# head(temp_2223)
+# tail(temp_2223)
 
-merged_2223 <- rbind(temp_2223, data_2023) %>% "rownames<-"(NULL)
-tail(merged_2223)
+# data_2023 <- read.csv("./code/_shared/data/city_weather_2023.csv") %>%
+#     filter(city == "Kyoto") %>%
+#     mutate(year = 2023) %>%
+#     mutate(month = as.integer(strftime(date, "%m"))) %>%
+#     mutate(day = as.integer(strftime(date, "%d"))) %>%
+#     select(id, date, year, month, day, tmin, tmax)
+
+# merged_2223 <- rbind(temp_2223, data_2023) %>% "rownames<-"(NULL)
+# tail(merged_2223)
+# write.csv(merged_2223, "./code/kyoto/data/A16_kyoto_weather_2023.csv", row.names = FALSE)
+merged_2223 <- read.csv("./code/kyoto/data/A16_kyoto_weather_2023.csv")
 
 # Compute GDD
-best_gdd_params <- read.csv("./code/kyoto/data/M12_Kyoto_gdd_best.csv")[1, ]
-best_gdd_params
-gdd_2223 <- F01_compute_gdd(merged_2223
-    , noaa_station_ids = unique(merged_2223$id)
-    ,Rc_thresh = best_gdd_params[["Rc_thresholds"]]
-    , Tc = best_gdd_params[["Tcs"]]) %>%
-    mutate(doy = as.integer(strftime(date, "%j"))) %>% 
-    merge(y = city_station_pair, by = "id"
-    , all.x = TRUE) %>% "rownames<-"(NULL) %>%
-    filter(month %in% c(3, 4))
-dim(gdd_2223)    
-head(gdd_2223)
-tail(gdd_2223)
+# best_gdd_params <- read.csv("./code/kyoto/data/M12_Kyoto_gdd_best.csv")[1, ]
+# best_gdd_params
+# gdd_2223 <- F01_compute_gdd(merged_2223
+#     , noaa_station_ids = unique(merged_2223$id)
+#     ,Rc_thresh = best_gdd_params[["Rc_thresholds"]]
+#     , Tc = best_gdd_params[["Tcs"]]) %>%
+#     mutate(doy = as.integer(strftime(date, "%j"))) %>% 
+#     merge(y = city_station_pair, by = "id"
+#     , all.x = TRUE) %>% "rownames<-"(NULL) %>%
+#     filter(month %in% c(3, 4))
+# dim(gdd_2223)    
+# head(gdd_2223)
+# tail(gdd_2223)
+# write.csv(gdd_2223, "./code/kyoto/data/A17_kyoto_gdd_2023.csv", row.names = FALSE)
+gdd_2223 <- read.csv("./code/kyoto/data/A17_kyoto_gdd_2023.csv")
 
-# Make final prediction
+# Make final prediction for 2023 Kyoto
 final_pred <- predict(lgb_final, as.matrix(gdd_2223[, feature_names]))
 
 p_final_pred <- F01_pred_plot_final(target_city = "Kyoto"
     , year_data = gdd_2223
     , feature_names = feature_names
     , lgb_final = lgb_final
-    , p_thresh = 0.5)
+    , p_thresh = 0.5
+    , peak = FALSE)
 p_final_pred
 
 ggsave("./code/kyoto/outputs/final_pred_kyoto.png", p_final_pred

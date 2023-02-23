@@ -22,13 +22,12 @@ npn_stat <- read.csv("./data/USA-NPN_status_intensity_observations_data.csv") %>
 npn_stat$year <- apply(npn_stat, MARGIN = 1, FUN = function(x) {as.integer(str_split(x[["Observation_Date"]], pattern = "/")[[1]][3])})
 npn_stat$month <- apply(npn_stat, MARGIN = 1, FUN = function(x) {as.integer(str_split(x[["Observation_Date"]], pattern = "/")[[1]][1])})
 npn_stat$day <- apply(npn_stat, MARGIN = 1, FUN = function(x) {as.integer(str_split(x[["Observation_Date"]], pattern = "/")[[1]][2])})
-npn_stat$first_day_year <- as.Date(paste0(npn_stat$year, "-01-01"))
-npn_stat$doy <- as.numeric(as.Date(npn_stat$Observation_Date, format = "%m/%d/%Y")) - as.numeric(npn_stat$first_day_year) + 1
 
-dim(npn_stat)
-table(npn_stat$Phenophase_Status)
+# dim(npn_stat)
+# table(npn_stat$Phenophase_Status)
 
 npn_out <- npn_stat %>%
+    rename_with(~"city", State) %>%
     rename_with(~"lat", Latitude) %>%
     rename_with(~"long", Longitude) %>%
     rename_with(~"alt", Elevation_in_Meters) %>%
@@ -38,34 +37,18 @@ npn_out <- npn_stat %>%
     rename_with(~"species", Species) %>%
     rename_with(~"is_bloom", Phenophase_Status) %>%
     # select(all_of(c("year", feature_names, target_col))) %>%
-    arrange(year, month, day)
+    arrange(year, month, day) %>%
+    mutate(date = as.Date(paste0(year, "-", month, "-", day))) %>%
+    mutate(doy = as.integer(strftime(date, format = "%j")))
+# write.csv(npn_out, "./code/washingtondc/data/A12_wdc_temperature.csv", row.names = FALSE)
 
 #########################################################
 # Fit lightgbm
 #########################################################
 
-# Train-test split
-# - We use the last two years data as our test set.
-cherry_lgb_df <- npn_out %>% filter(month %in% c(3, 4, 5))
-dim(cherry_lgb_df)
-write.csv(npn_out, "./code/washingtondc/data/A12_wdc_temperature.csv", row.names = FALSE)
-
-
-cherry_train_val <- cherry_lgb_df %>%filter(year < 2020)
-write.csv(cherry_train_val, "./code/washingtondc/data/A13_wdc_train_val.csv", row.names =FALSE)
-
-cherry_test <- cherry_lgb_df %>%filter(2020 <= year)
-write.csv(cherry_test, "./code/washingtondc/data/A14_wdc_test.csv", row.names = FALSE)
-
 # Find best lightgbm parameters using cross-validation
 # ** CAUTION: running the below code requires a high computational power. HPC recommended. **
-# source("./M2_lgb_cv_wdc.r)
-
-# Fit the final model
-# source("./M3_lgb_final_wdc.r")
-
-feature_names <- c("lat", "long", "alt", "tmax", "tmin", "Ca_cumsum", "doy", "species")
-target_col <- "is_bloom"
+# source("./code/washingtondc/M2_lgb_cv_wdc.r)
 
 #######################################
 # Model performance
@@ -73,26 +56,87 @@ target_col <- "is_bloom"
 library(tidyverse)
 library(lightgbm)
 
-lgb_final <- readRDS.lgb.Booster("./code/vancouver/data/M24_lgb_final_van3.rds")
-cherry_gdd <- read.csv("./code/vancouver/data/A14_van_gdd.csv") %>%
-    filter(month %in% c(3, 4))
-van_cities <- unique(cherry_gdd$city)
-# Make prediction on the last 4 years
-# feature_names <- c("tmax", "tmin", "daily_Ca", "daily_Cd", "Cd_cumsum", "Ca_cumsum", "lat", "long", "alt", "month", "day")
-feature_names <- c("tmax", "tmin", "daily_Ca", "daily_Cd", "Cd_cumsum", "Ca_cumsum", "lat", "long", "alt", "doy")
+# Train the final model using the best parameters
+best_params <- read.csv("./code/washingtondc/data/M23_lgb_best_params_wdc3.csv")
+best_params
+
+cherry_gdd <- read.csv("./code/washingtondc/data/A12_wdc_temperature.csv") 
+head(cherry_gdd)
+
+sort(unique(cherry_gdd$year))
+# test_years <- 2020:2021
+table(cherry_gdd$year) 
+# there are more data in later years. May not be appropriate to use the latest years as a test set.
+
+# K-fold split: Proceed with caution.
+set.seed(42)
+cherry_isbloom <- cherry_gdd %>% filter(is_bloom == 1)
+cherry_nobloom <- cherry_gdd %>% filter(is_bloom == 0)
+
+# combine and shuffle
+n_fold <- 10
+cherry_combined <- cherry_nobloom[sample(nrow(cherry_nobloom), nrow(cherry_isbloom)*1.5), ] %>% bind_rows(cherry_isbloom) %>% 
+    mutate(fold = sample(1:n_fold, nrow(.), replace = TRUE))
+
+feature_names <- c("lat", "long", "alt", "tmax", "tmin", "Ca_cumsum","month", "day", "species")
+# feature_names <- c("tmax", "tmin", "daily_Ca", "daily_Cd", "Cd_cumsum", "Ca_cumsum", "lat", "long", "alt", "doy")
 
 target_col <- "is_bloom"
 
-target_years <- 2019:2022
+train_set <- cherry_combined %>% filter(fold != n_fold)
+dim(train_set)
+test_set <- cherry_combined %>% filter(fold == n_fold)
+dim(test_set)
 
-test_set <- cherry_gdd %>%
-    filter(year %in% target_years) %>%
-    select(all_of(feature_names), all_of(target_col))
+dtrain <- lgb.Dataset(
+    data = data.matrix(train_set[, feature_names])
+    , label = train_set[, target_col]
+    , params = list(
+        max_bin = best_params$max_bins
+    )
+)
 
-pred <- predict(lgb_final, as.matrix(test_set[, feature_names]))
-test_set$predicted <- ifelse(pred > 0.05, 1, 0)
+dtest <- lgb.Dataset(
+    data = data.matrix(test_set[, feature_names])
+    , label = test_set[, target_col]
+ 
+)
+
+valids = list(test = dtest)
+
+n_boosting_rounds <- 500
+
+params <- list(
+    objective = "binary"
+    , metric = c("auc")
+    , is_enable_sparse = TRUE
+    #, is_unbalance = TRUE
+    , boosting = as.character(best_params[["boostings"]])
+    , learning_rate = as.numeric(best_params[["learning_rates"]])
+    , min_data_in_leaf = as.numeric(best_params[["min_data_in_leaf"]])
+    , max_depth = as.numeric(best_params[["max_depth"]])
+    , feature_fraction = as.numeric(best_params[["feature_fractions"]])
+    , bagging_fraction = as.numeric(best_params[["bagging_fractions"]])
+    , bagging_freq = as.numeric(best_params[["bagging_freqs"]])
+    , lambda_l2 = as.numeric(best_params[["lambda_l2s"]])
+    , early_stopping_rounds = as.integer(n_boosting_rounds * 0.1)
+    , seed = 42L
+)
+
+lgb_final <- lgb.train(
+    data = dtrain
+    , params = params
+    , valids = valids
+    , nrounds = n_boosting_rounds
+    , verbose = -1
+)
+lgb_final
+
+
+pred <- predict(lgb_final, data.matrix(test_set[, feature_names]))
 hist(pred, breaks =10)
-tail(sort(pred))
+test_set$predicted <- ifelse(pred > 0.45, 1, 0)
+# tail(sort(pred))
 
 # Confusion matrix
 library(caret)
@@ -111,10 +155,20 @@ lgb_imp
 lgb.plot.importance(lgb_imp, top_n = 10L, measure = "Gain")
 
 # Compute the MAE for the most recent years
-F01_compute_MAE(target_city = "vancouver", cherry_gdd = cherry_gdd, lgb_final = lgb_final, target_years = c(2019:2022), p_thresh = 0.1)
+F01_compute_MAE(target_city = "DC"
+    , cherry_gdd = cherry_gdd # contains the temperature data
+    , lgb_final = lgb_final
+    , target_years = c(2011:2021)
+    , p_thresh = 0.45
+    , peak = FALSE)
 
 # Generate and save the prediction plot for the most recent years
-F01_pred_plot_past(target_city = "vancouver", cherry_gdd = cherry_gdd, lgb_final = lgb_final, target_years = c(2019:2022), p_thresh = 0.1)
+F01_pred_plot_past(target_city = "DC"
+    , cherry_gdd = cherry_gdd
+    , lgb_final = lgb_final
+    , target_years = c(2011:2020)
+    , p_thresh = 0.5
+    , peak = FALSE)
 
 
 #######################################
@@ -123,38 +177,29 @@ F01_pred_plot_past(target_city = "vancouver", cherry_gdd = cherry_gdd, lgb_final
 
 # Weather data for 2023 march and april obtained from 
 
-city_station_pair <- read.csv("./code/vancouver/data/A11_city_station_pairs.csv") %>% filter(city == "vancouver") %>%
-    rename_with(~"lat", latitude) %>%
-    rename_with(~"long", longitude) %>%
-    rename_with(~"alt", elevation) %>%
-    select(station, city, lat, long, alt)
-temp_2223 <- F01_get_imp_temperature(
-    city_station_pair = city_station_pair
-    , target_country = c("Japan")
-    , date_min = "2022-10-01", date_max = "2023-04-30") %>% 
-    mutate(year = as.integer(strftime(date, format = "%Y"))) %>%
-    filter(year %in% c(2022, 2023)) %>%
-    select(id, date, year, month, day, tmin, tmax) %>% "rownames<-"(NULL)
-tail(temp_2223)
+final_weather <- read.csv("./code/_shared/data/city_weather_2023.csv") %>%
+    filter(city == "Washingtondc") %>%
+    mutate(city = "DC") %>%
+    mutate(species = "yedoensis") %>%
+    mutate(month = as.integer(strftime(date, format = "%m"))) %>%
+    mutate(day = as.integer(strftime(date, format = "%d"))) 
 
-data_2023 <- read.csv("./code/vancouver/data/2023-mar-apr-vancouver.csv") %>%
-    mutate(id = "JA000047759") %>%
-    mutate(year = 2023) %>%
-    mutate(month = as.integer(strftime(date, "%m"))) %>%
-    mutate(day = as.integer(strftime(date, "%d"))) %>%
-    select(id, date, year, month, day, tmin, tmax)
+head(final_weather)
+final_weather$daily_Ca <- apply(final_weather, MARGIN = 1, FUN = F01_chill_days)[2, ]
+final_weather$Ca_cumsum <- cumsum(final_weather$daily_Ca)
+final_weather <- final_weather %>%filter(month %in% c(3,4))
 
-merged_2223 <- rbind(temp_2223, data_2023) %>% "rownames<-"(NULL)
-tail(merged_2223)
+final_pred <- predict(lgb_final, data.matrix(final_weather[, feature_names]))
 
-# Compute GDD
-best_gdd_params <- read.csv("./code/vancouver/data/M12_vancouver_gdd_best.csv")[1, ]
-best_gdd_params
-gdd_2223 <- F01_compute_gdd(merged_2223
-    , noaa_station_ids = unique(merged_2223$id)
-    ,Rc_thresh = best_gdd_params[["Rc_thresholds"]]
-    , Tc = best_gdd_params[["Tcs"]]) %>%
-    mutate(doy = as.integer(strftime(date, "%j"))) %>% 
-    merge(y = city_station_pair, by.x = "id", by.y = "station"
-    , all.x = TRUE) %>% "rownames<-"(NULL) %>%
-    filter(month %in% c(3, 4))
+final_pred_plot <- F01_pred_plot_final(
+    year_data = final_weather
+    , lgb_final = lgb_final
+    , target_city = "DC"
+    , feature_names = feature_names
+    , p_thresh = 0.1
+    , peak = FALSE
+)
+final_pred_plot
+ggsave("./code/washingtondc/outputs/prediction_plot_2023.png", final_pred_plot, width = 10, height = 5)
+
+# END
