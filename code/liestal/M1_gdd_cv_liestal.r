@@ -31,7 +31,7 @@ gdd_grid <- expand.grid(
     Tcs = c(7)
     , Rc_thresholds = seq(from = -90, to = -150, by = -1) # 
     , Rh_thresholds = seq(from = 120, to = 240, by = 1) 
-    , first_Tc_reach_days = c(0)
+    , first_Tc_reach_days = c(1)
     ) %>%
         mutate(MAE = NA)
 
