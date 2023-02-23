@@ -33,7 +33,8 @@ gdd_grid <- expand.grid(
     , Rh_thresholds = seq(from = 120, to = 240, by = 1) 
     , first_Tc_reach_days = c(1)
     ) %>%
-        mutate(MAE = NA)
+        mutate(MAE = NA) %>%
+        mutate(RMSE = NA)
 
 # gdd_grid <- expand.grid(
 #     Tcs = c(7)
@@ -140,9 +141,10 @@ gdd_result <- foreach (
         yearly_mae[(yr - (min(years)-1)), ] <- c(yr, actual_date, Rh_thresh_day, diff)
     }
     
-    mae <- round(mean(abs(as.numeric(yearly_mae$diff)), na.rm = TRUE), 2)
+    mae <- round(mean(abs(as.numeric(yearly_mae$diff)), na.rm = TRUE), 3)
+    rmse <- round(sqrt(mean(as.numeric(yearly_mae$diff)^2, na.rm = TRUE)), 3)
 
-    out <- c(Tc, Rc, Rh, Tc_fixed, mae)
+    out <- c(Tc, Rc, Rh, Tc_fixed, mae, rmse)
     # print(out)    
     return(out)
 }
@@ -159,7 +161,9 @@ gdd_result_out <- data.frame(gdd_result) %>%
 write.csv(gdd_result_out, gdd_result_filename, row.names = FALSE)
 print("table1 saved")
 
-best_gdd_idx <- which(gdd_result_out$MAE == min(gdd_result_out$MAE))
+# best_gdd_idx <- which(gdd_result_out$MAE == min(gdd_result_out$MAE))
+# best_gdd <- gdd_result_out[best_gdd_idx, ]
+best_gdd_idx <- which(gdd_result_out$MAE == min(gdd_result_out$RMSE))
 best_gdd <- gdd_result_out[best_gdd_idx, ]
 write.csv(best_gdd, best_gdd_filename, row.names = FALSE)
 print("table2 saved")
