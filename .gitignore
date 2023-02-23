@@ -11,3 +11,4 @@ test-project
 *.swp
 *z_dump
 *Rplots.pdf
+*lightgbm.model
