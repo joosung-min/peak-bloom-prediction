@@ -10,15 +10,16 @@ city_station_pair <- read.csv("./code/liestal/data/A11_city_station_pairs.csv")
 cherry_city <- "Liestal"
 cherry_id <- city_station_pair[city_station_pair$city == cherry_city, "id"]
 
+cherry_sub <- read.csv("./code/_shared/data/A11_cherry_sub.csv") %>%
+    filter(city == cherry_city) %>%
+    filter(year > 1982)
+
 # temperature data
-years <- 2013:2022
+years <- sort(unique(cherry_sub$year))
 cherry_city_temp <- read.csv("./code/liestal/data/A12_Liestal_temperature.csv") %>%
     filter(id == cherry_id) %>%
     filter(year %in% c(min(years)-1, years))
 
-# bloom_date date
-cherry_sub <- read.csv("./code/_shared/data/A11_cherry_sub.csv") %>%
-    filter(city == cherry_city)
 # dim(cherry_sub)
 
 # filenames for the outputs

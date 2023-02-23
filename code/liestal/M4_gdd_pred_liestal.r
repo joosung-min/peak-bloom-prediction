@@ -4,7 +4,7 @@ source("./code/_shared/F01_functions.r")
 # From grid search we found the optimal parameters to be:
 # - Tc = 7
 # Rc_thresh = -90
-# Rh_thresh = 148
+# Rh_thresh = 145
 # Tc_fixed at Jan 31.
 
 # Load 2023 temperature data
@@ -20,7 +20,7 @@ liestal_2023$AGDD <- cumsum(liestal_2023$daily_Ca)
 
 # Find the first day that AGDD > Rh_thresh
 Rc_thresh <- -90
-Rh_thresh <- 148
+Rh_thresh <- 145
 
 bud_activation_idx <- which(liestal_2023$AGDD > -Rc_thresh)[1]
 bud_activation_day <- liestal_2023[bud_activation_idx, "date"]
@@ -38,3 +38,4 @@ cherry_sub <- read.csv("./code/_shared/data/A11_cherry_sub.csv") %>%
 tail(cherry_sub, 10)
 ggplot(aes(x = year, y = bloom_doy), data = cherry_sub) + 
     geom_line()
+sort(unique(cherry_sub$year))
