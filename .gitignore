@@ -10,3 +10,4 @@ test-project
 *.sh
 *.swp
 *z_dump
+*Rplots.pdf
