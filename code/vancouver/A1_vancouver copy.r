@@ -1,9 +1,6 @@
 library(tidyverse)
 
-# setwd("/home/joosungm/projects/def-lelliott/joosungm/projects/peak-bloom-prediction/code/vancouver")
-
 source("./code/_shared/F01_functions.r")
-
 
 # Find cities that had very similar bloom_doy as vancouver in 2022.
 van_bloom_df <- read.csv("./data/vancouver.csv")  %>% # bloom_doy = 86
@@ -11,7 +8,7 @@ van_bloom_df <- read.csv("./data/vancouver.csv")  %>% # bloom_doy = 86
     select(lat, long, alt, year, bloom_date, bloom_doy, city)
 
 bloom_doys <- 84:88
-van_proxy <- read.csv("./code/_shared/outputs/A11_cherry_sub.csv") %>%
+van_proxy <- read.csv("./code/_shared/data/A11_cherry_sub.csv") %>%
     filter(year == 2022 & bloom_doy %in% bloom_doys) %>%
     select(-country)
 van_proxy[nrow(van_proxy)+1, ] <- c(van_bloom_df)
@@ -82,10 +79,12 @@ van_proxy2 <- van_proxy %>%
     merge(city_station_pair, by = "city") %>%
     select(-dist, -idx)
 van_proxy2
+# At this step, I realized there won't be enough data available to train an ML-based model without suffering from high bias. 
+# - Each city has maximum ~60 data points for is_bloom == 1, which makes around 300 positive labels for the whole dataset with 5 cities.
+# - To train an ML model, we need to split the already small dataset into training, validation, test sets, which may result in a poor cross-validation and test quality. It is unlikely that I'll get a good ML model in this situation.
+# - So I decided to use another method.
 
-
-
-# Which model to use?
+# Here, I fit a linear regression using proxy cities' bloom_doy as the response variable, and year as the predictor variable.
 cherry_sub <- read.csv("./code/_shared/outputs/A11_cherry_sub.csv")
 proxy_blooms <- cherry_sub %>% filter(city %in% van_proxy2$city)
 
@@ -98,7 +97,6 @@ ggplot(aes(x = year, y = bloom_doy), data = proxy_blooms %>%filter(city %in% van
     xlab("Year") +
     ylab("Bloom DOY")+
     theme_bw()
-
 # - Locarno-Monti has a very different bloom_doy pattern (upward pattern) than the rest. We exclude it from the proxy list.
 
 # - For the rest of the cities, we compute the yearly average bloom_doy.
@@ -147,12 +145,15 @@ plot(van_proxy_test$diff)
 van_proxy_lm <- lm(bloom_doy ~ year, data = van_proxy3)
 summary(van_proxy_lm)
 
-# Make the final prediction for Vancouver 2023 using the model.
-pred <- as.integer(predict(van_proxy_lm, data.frame(year = 2023)))
+# Make the final prediction for Vancouver 2023:2032 using the model.
+pred <- as.integer(predict(van_proxy_lm, data.frame(year = 2023:2032)))
 pred # 92
-
+final_pred <- pred - 3
+final_pred
 # - The model predicts that the bloom_doy for Vancouver in 2023 will be 92 which corresponds to April 2nd, 2023.
-# - However, since the model's prediction seems to be later than the (proxy) actual bloom_doy, we subtract 3 days (~5.3/2) from the prediction, which is 89 (March 30th, 2023)
+# - However, since the model's prediction seems to be later than the (proxy) actual bloom_doy. 
+# - Therefore, we finalize our forecasts by subtracting 3 days (~ceiling(5.3/2)) from the predictions, which makes the prediction for 2023 **89** (March 30th, 2023)
+
 
 
 # END

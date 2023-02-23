@@ -4,7 +4,7 @@ library(lme4)
 source("./code/_shared/F01_functions.r")
 
 # Load base data
-cherry_sub <- data.frame(read.csv("./code/_shared/outputs/A11_cherry_sub.csv") %>%
+cherry_sub <- data.frame(read.csv("./code/_shared/data/A11_cherry_sub.csv") %>%
     filter(country == "Switzerland") %>%
     filter(year >= 1983) %>%
     group_by(city) %>%
@@ -104,15 +104,28 @@ qqnorm(resid(final_model))
 qqline(resid(final_model))
 # - The results for the final model are similar to the results from the other models.
 
-# Make final prediction for Liestal in 2023.
+# Make final prediction for Liestal in 2023 to 2032.
 final_pred1 <- as.integer(predict(final_model
-    , newdata = data.frame(year = 2023, city = "Liestal", alt = 400)))
+    , newdata = data.frame(year = 2023:2032, city = "Liestal", alt = 350)))
 
-final_pred1 #94
+final_pred1 #93
+# - The final prediction for Liestal in 2023 is 93.
+# - Since the earlier models showed that the predictions tend to be later than the actual values, we subtract 5(=ceiling(8.8/2)) from the final prediction.
+# - Therefore, our final prediction for Liestal in 2023 is 88, which corresponds to March 29th, 2023.
+# - Take away 5 from the predictions for 2024 to 2032 as well.
+final_pred2 <- final_pred1 - 5
+final_pred2 # 88 87 87 87 86 86 86 85 85 85
 
 
-# - The final prediction for Liestal in 2023 is 94.
-# - Since the earlier models showed that the predictions tend to be later than the actual values, we subtract 5 from the final prediction.
-# - Therefore, our final prediction for Liestal in 2023 is 89, which corresponds to March 30th, 2023.
+
+
+# P.S. We also tried a segmented regression model for Liestal.
+# However, the results were not satisfactory. Therefore, we don't use this result.
+
+library(segmented)
+liestal_df <- cherry_sub %>% filter(city == "Liestal")
+liestal_lm <- lm(bloom_doy ~ year, data = liestal_df)
+liestal_seg <- segmented(liestal_lm, npsi = 1)
+summary(liestal_seg) # a large p-value, and low R-squared.
 
 # END
