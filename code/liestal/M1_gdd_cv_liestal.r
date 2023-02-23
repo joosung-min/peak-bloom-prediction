@@ -17,7 +17,7 @@ cherry_city_temp <- read.csv("./code/liestal/data/A12_Liestal_temperature.csv") 
     filter(year %in% c(min(years)-1, years))
 
 # bloom_date date
-cherry_sub <- read.csv("./code/_shared/outputs/A11_cherry_sub.csv") %>%
+cherry_sub <- read.csv("./code/_shared/data/A11_cherry_sub.csv") %>%
     filter(city == cherry_city)
 # dim(cherry_sub)
 
@@ -163,7 +163,7 @@ print("table1 saved")
 
 # best_gdd_idx <- which(gdd_result_out$MAE == min(gdd_result_out$MAE))
 # best_gdd <- gdd_result_out[best_gdd_idx, ]
-best_gdd_idx <- which(gdd_result_out$MAE == min(gdd_result_out$RMSE))
+best_gdd_idx <- which(gdd_result_out$RMSE == min(gdd_result_out$RMSE))
 best_gdd <- gdd_result_out[best_gdd_idx, ]
 write.csv(best_gdd, best_gdd_filename, row.names = FALSE)
 print("table2 saved")
