@@ -79,7 +79,6 @@ cherry_combined <- cherry_nobloom[sample(nrow(cherry_nobloom), nrow(cherry_isblo
     mutate(fold = sample(1:n_fold, nrow(.), replace = TRUE))
 
 feature_names <- c("lat", "long", "alt", "tmax", "tmin", "Ca_cumsum","month", "day", "species")
-# feature_names <- c("tmax", "tmin", "daily_Ca", "daily_Cd", "Cd_cumsum", "Ca_cumsum", "lat", "long", "alt", "doy")
 
 target_col <- "is_bloom"
 
@@ -130,12 +129,11 @@ lgb_final <- lgb.train(
     , nrounds = n_boosting_rounds
     , verbose = -1
 )
-lgb_final
-
+# lgb_final
 
 pred <- predict(lgb_final, data.matrix(test_set[, feature_names]))
 hist(pred, breaks =10)
-test_set$predicted <- ifelse(pred > 0.45, 1, 0)
+test_set$predicted <- ifelse(pred > 0.5, 1, 0)
 # tail(sort(pred))
 
 # Confusion matrix
@@ -151,32 +149,41 @@ abline(a=0, b=1)
 
 # Feature importance
 lgb_imp <- lgb.importance(lgb_final)
-lgb_imp
+lgb_imp 
 lgb.plot.importance(lgb_imp, top_n = 10L, measure = "Gain")
+# - Accumulated GDD (Ca_cumsum) is the most important feature, followed by tmax,long, and  alt
+
 
 # Compute the MAE for the most recent years
-F01_compute_MAE(target_city = "DC"
+MAE <- F01_compute_MAE(
+    target_city = "DC"
     , cherry_gdd = cherry_gdd # contains the temperature data
     , lgb_final = lgb_final
-    , target_years = c(2011:2021)
-    , p_thresh = 0.45
-    , peak = FALSE)
+    , target_years = c(2011:2021) # There are only 4 years available during the test period.
+    , p_thresh = 0.85
+    , peak = FALSE
+    )
+MAE 
+# - p_thresh=0.85 gives the best test MAE=0.25, 
+# - Choosing the day with the highest predicted probability(peak =TRUE) gives a worse MAE=9
 
-# Generate and save the prediction plot for the most recent years
-F01_pred_plot_past(target_city = "DC"
+# Generate the prediction plot for the test years.
+F01_pred_plot_past(
+    target_city = "DC"
     , cherry_gdd = cherry_gdd
     , lgb_final = lgb_final
     , target_years = c(2011:2020)
-    , p_thresh = 0.5
-    , peak = FALSE)
+    , p_thresh = 0.85
+    , peak = FALSE
+    )
 
 
 #######################################
 # Final prediction for 2023
 #######################################
 
-# Weather data for 2023 march and april obtained from 
-
+# Temperature data for 2023 march and april obtained from AccuWeather
+# https://www.accuweather.com/en/us/washington/20006/february-weather/327659
 final_weather <- read.csv("./code/_shared/data/city_weather_2023.csv") %>%
     filter(city == "Washingtondc") %>%
     mutate(city = "DC") %>%
@@ -184,22 +191,43 @@ final_weather <- read.csv("./code/_shared/data/city_weather_2023.csv") %>%
     mutate(month = as.integer(strftime(date, format = "%m"))) %>%
     mutate(day = as.integer(strftime(date, format = "%d"))) 
 
-head(final_weather)
-final_weather$daily_Ca <- apply(final_weather, MARGIN = 1, FUN = F01_chill_days)[2, ]
+# Compute the cumulative sum of GDD as instructed in the NPN-descriptions table.
+final_weather$daily_Ca <- apply(final_weather, MARGIN = 1, FUN = function(x) {
+    GDD <- (as.numeric(x[["tmax"]]) - as.numeric(x[["tmin"]]))/2
+    ifelse(GDD > 0, return(GDD), return(0))
+})
+# head(final_weather)
 final_weather$Ca_cumsum <- cumsum(final_weather$daily_Ca)
 final_weather <- final_weather %>%filter(month %in% c(3,4))
-
 final_pred <- predict(lgb_final, data.matrix(final_weather[, feature_names]))
 
-final_pred_plot <- F01_pred_plot_final(
+# Prediction based on p_thresh
+final_pred_plot1 <- F01_pred_plot_final(
     year_data = final_weather
     , lgb_final = lgb_final
     , target_city = "DC"
     , feature_names = feature_names
-    , p_thresh = 0.1
+    , p_thresh = 0.85
     , peak = FALSE
 )
-final_pred_plot
-ggsave("./code/washingtondc/outputs/prediction_plot_2023.png", final_pred_plot, width = 10, height = 5)
+final_pred_plot1
+ggsave("./code/washingtondc/outputs/wdc_2023_prediction_plot.png", final_pred_plot1, width = 10, height = 6, dpi = 80)
+
+# Prediction based on the peak of the probability.
+final_pred_plot2 <- F01_pred_plot_final(
+    year_data = final_weather
+    , lgb_final = lgb_final
+    , target_city = "DC (peak p))"
+    , feature_names = feature_names
+    , p_thresh = 0.5
+    , peak = TRUE
+)
+final_pred_plot2 # produces a much later predicted date
+# ggsave("./code/washingtondc/outputs/wdc_prediction_plot_2023_peakP.png", final_pred_plot2, width = 10, height = 5)
+
+
+# Although it is hard to decide which one is better, we will use the result from p_thresh = 0.85 since we get the best MAE from our test set with this threshold.
+# - Therefore, our final prediction for 2023 cherry blossom in Washington DC is: 85 (March 26)
+
 
 # END

@@ -27,7 +27,6 @@ F01_get_imp_temperature <- function(city_station_pair, target_country, cherry_su
 
     station_ids <- city_station_pair$id
     cities <- city_station_pair$city
-    # target_country = c("Japan", "South Korea")
     
     if (length(station_ids) > 1){
         
@@ -70,7 +69,6 @@ F01_get_imp_temperature <- function(city_station_pair, target_country, cherry_su
 
         }
 
-
         city_temp_list[[c]] <- imputed_temp
     }
 
@@ -82,6 +80,10 @@ F01_get_imp_temperature <- function(city_station_pair, target_country, cherry_su
 
 F01_chill_days <- function(r, Tc = 7) {
     
+    # Computes chill days (Cd) and anti-chill days (Ca).
+    # - the anti-chill day is computed in the same way as the growth degree day (GDD) model.
+    # - Ca_cumsum here is equivalent to Accumulated GDD (AGDD).
+
     Tmin <- as.numeric(r[["tmin"]])
     Tmax <- as.numeric(r[["tmax"]])
     Tmean <- (Tmin + Tmax)/2
@@ -135,16 +137,7 @@ F01_compute_gdd <- function(weather_df, noaa_station_ids, Rc_thresh, Tc) {
     # Rc_thresh and Tc are learnt from gdd_model
     # Rc_thresh accumulated Cd threshold to start accumulating GDD.
     # Tc: Threshold temperature for computing Ca and Cd.
-    # - Optimal sets (Rc_thresh, Tc)
-    #  * kyoto = 
-    #  * liestal = (-90, 8)
-    #  * washington = 
-    #  * vancouver = (-111, 8)
     
-    # weather_df = kyoto_weather
-    # noaa_station_ids = c(target_stations[1])
-    # Rc_thresh = target_Rc_thresh[1]
-    # Tc = 7
 
     ## Compute daily_Ca, daily_Cd
     Ca_Cd_list <- list()
@@ -240,11 +233,6 @@ F01_train_val_test_split <- function(gdd_df, val_year, test_year, n_fold, seed =
 
     # Split samples using undersampling    
     set.seed(seed)
-
-    # gdd_df <- cherry_gdd
-    # val_year <- c(2019, 2020)
-    # test_year <- c(2021, 2022)
-    # n_fold <- 8
     
     train <- gdd_df %>% filter(year < val_year[1])
     train_bloom <- train %>%filter(is_bloom == 1)
@@ -288,14 +276,6 @@ F01_train_val_test_split <- function(gdd_df, val_year, test_year, n_fold, seed =
 
 
 F01_compute_MAE <- function(target_city, cherry_gdd, lgb_final, target_years, p_thresh, peak = TRUE) {
-
-    # target_city = "DC"
-    # cherry_gdd = cherry_gdd
-    # lgb_final = lgb_final
-    # target_years = 2018:2021
-    # p_thresh = 0.5
-    # peak = FALSE
-
 
     city_gdd <- cherry_gdd %>%
         filter(city == target_city) %>%
@@ -352,7 +332,8 @@ F01_compute_MAE <- function(target_city, cherry_gdd, lgb_final, target_years, p_
     }
     
     MAE <- mean(abs(as.numeric(error_table$diff)), na.rm = TRUE)
-    
+    error_table <- error_table %>% drop_na()
+
     return(list(MAE_table = error_table, MAE = MAE))
 
 }
@@ -362,19 +343,9 @@ F01_compute_MAE <- function(target_city, cherry_gdd, lgb_final, target_years, p_
 
 F01_pred_plot_past <- function(target_city, cherry_gdd, lgb_final, target_years, p_thresh, peak = TRUE){
 
-    # target_city = "DC"
-    # cherry_gdd = cherry_gdd
-    # lgb_final = lgb_final
-    # target_years = 2011:2021
-    # p_thresh = 0.5
-    # peak = FALSE
-
-
     city_gdd <- cherry_gdd %>%
         filter(city == target_city) %>%
         filter(year %in% target_years)
-    
-    # head(city_gdd %>% filter(month == 4))
 
     target_years <- unique(city_gdd$year)
     
@@ -387,7 +358,7 @@ F01_pred_plot_past <- function(target_city, cherry_gdd, lgb_final, target_years,
     p_list <- list()
 
     for (y in seq_len(length(target_years))) {
-        # y = 1        
+            
         yr <- target_years[y]
         
         if (is.na(yr)){
@@ -404,6 +375,10 @@ F01_pred_plot_past <- function(target_city, cherry_gdd, lgb_final, target_years,
         actual_bloom_idx <- sort(which(year_data$is_bloom == 1))[1]
         actual_bloom_date <- year_data[actual_bloom_idx, "date"]
         
+        if (is.na(actual_bloom_date)){
+            next
+        }
+
         pred_blooms <- which(year_data$pred_bin == 1)
         pred_bloom_start_idx <- year_data[pred_blooms, "date"][1]
         pred_bloom_end_idx <- year_data[pred_blooms, "date"][length(pred_blooms)]
@@ -451,16 +426,24 @@ F01_pred_plot_past <- function(target_city, cherry_gdd, lgb_final, target_years,
             xintercept = as.Date(paste0(as.character(yr), "-04-01")
                 , format = "%Y-%m-%d")
             , color = "grey", linetype = "solid", linewidth = 0.5)
-        p <- p + annotate("text", x = min(year_data$date)+1, y = 0.90
+        p <- p + annotate("text"
+            , x = as.Date(paste0(as.character(yr), "-03-01"), format = "%Y-%m-%d") + 1
+            , y = 0.90
             , label = yr
             , fontface = "bold", color = "black", size = 6, hjust = 0)
-        p <- p + annotate("text", x = min(year_data$date)+1, y = 0.80
+        p <- p + annotate("text"
+            , x = as.Date(paste0(as.character(yr), "-03-01"), format = "%Y-%m-%d") + 1
+            , y = 0.80
             , label = paste0("Actual date: ", actual_bloom_date)
             , size = 4, color = "steelblue", hjust = 0)
-        p <- p + annotate("text", x = min(year_data$date)+1, y = 0.70
+        p <- p + annotate("text"
+            , x = as.Date(paste0(as.character(yr), "-03-01"), format = "%Y-%m-%d") + 1
+            , y = 0.70
             , label = paste0("Predicted date: ", pred_bloom_peak_date)
             , size = 4, color = "tomato", hjust = 0)
-        p <- p + annotate("text", x = min(year_data$date)+1, y = 0.60
+        p <- p + annotate("text"
+            , x = as.Date(paste0(as.character(yr), "-03-01"), format = "%Y-%m-%d") + 1
+            , y = 0.60
             , label = paste0("Diff (Predicted - Actual): ", diff_days)
             , color = "black"
             , size = 4, hjust = 0)
@@ -484,6 +467,8 @@ F01_pred_plot_past <- function(target_city, cherry_gdd, lgb_final, target_years,
         p_list[[y]] <- p
 
         }
+    p_list <- p_list %>% discard(is.null)
+    error_table <- error_table %>% drop_na()
     
     MAE <- mean(abs(as.numeric(error_table$diff)), na.rm = TRUE)
     library(ggpubr)
@@ -493,12 +478,12 @@ F01_pred_plot_past <- function(target_city, cherry_gdd, lgb_final, target_years,
         , labels = NULL)
     p_final <- ggpubr::annotate_figure(p_combined
         , top = p_comb_top)
-    p_filename <- paste0("./code/_shared/outputs/A18_", target_city, "_prediction_", min(target_years), "-", max(target_years), ".jpg")
+    # p_filename <- paste0("./code/_shared/outputs/A18_", target_city, "_prediction_", min(target_years), "-", max(target_years), ".jpg")
 
-    ggsave(filename = p_filename, plot = p_final
-        , width = 15, height = 4 * length(target_years)/2
-        , unit = "in", bg = "white", dpi = 300)
-    p_final
+    # ggsave(filename = p_filename, plot = p_final
+    #     , width = 15, height = 4 * length(target_years)/2
+    #     , unit = "in", bg = "white", dpi = 300)
+    # p_final
     return(p_final)
 
 }

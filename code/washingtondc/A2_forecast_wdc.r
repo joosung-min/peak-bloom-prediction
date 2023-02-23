@@ -30,8 +30,8 @@ wdc_forecast <- data.frame(year = 2023:2032)
 preds <- round(predict(wdc_lm, wdc_forecast))
 preds
 
-# - We replace the first element (year = 2023) with the predicted bloom date for 2023 from the lightgbm model. (104, which is April 14th)
-preds[1] <- 104
-preds # 104  90  90  90  90  90  89  89  89  89
+# - We replace the first element (year = 2023) with the predicted bloom date for 2023 from the lightgbm model.
+preds[1] <- 85
+preds # 85  90  90  90  90  90  89  89  89  89
 
 # END

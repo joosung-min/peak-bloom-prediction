@@ -296,5 +296,5 @@ p_final_pred <- F01_pred_plot_final(target_city = "Kyoto"
     , peak = FALSE)
 p_final_pred
 
-ggsave("./code/kyoto/outputs/final_pred_kyoto.png", p_final_pred
-    , width = 10, height = 5, units = "in", dpi = 80)
+ggsave("./code/kyoto/outputs/kyoto_2023_prediction_plot.png", p_final_pred
+    , width = 10, height = 6, units = "in", dpi = 80)
