@@ -439,12 +439,12 @@ F01_pred_plot_past <- function(target_city, cherry_gdd, lgb_final, target_years,
             , fill = "pink")
         p <- p + annotate("text"
             , x = as.Date(paste0(as.character(yr), "-03-13")
-                , format = "%Y-%m-%d"), y = 0.0
+                , format = "%Y-%m-%d"), y = 0.2
             , label = "March", fontface = "bold"
             , size = 6, color = "dark grey", hjust = 0, vjust = 0)
         p <- p + annotate("text"
             , x = as.Date(paste0(as.character(yr), "-04-16")
-                , format = "%Y-%m-%d"), y = 0.0
+                , format = "%Y-%m-%d"), y = 0.2
             , label = "April", fontface = "bold"
             , size = 6, color = "dark grey", hjust = 0, vjust = 0)
         p <- p + theme_bw()
@@ -521,12 +521,12 @@ F01_pred_plot_final <- function(year_data, target_city, feature_names, lgb_final
         , fill = "pink")
     p <- p + annotate("text"
         , x = as.Date(paste0(as.character(yr), "-03-13")
-            , format = "%Y-%m-%d"), y = 0.0
+            , format = "%Y-%m-%d"), y = 0.2
         , label = "March", fontface = "bold"
         , size = 6, color = "dark grey", hjust = 0, vjust = 0)
     p <- p + annotate("text"
         , x = as.Date(paste0(as.character(yr), "-04-16")
-            , format = "%Y-%m-%d"), y = 0.0
+            , format = "%Y-%m-%d"), y = 0.2
         , label = "April", fontface = "bold"
         , size = 6, color = "dark grey", hjust = 0, vjust = 0)
     p <- p + theme_bw()
