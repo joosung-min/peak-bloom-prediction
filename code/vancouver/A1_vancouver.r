@@ -1,279 +1,157 @@
 library(tidyverse)
 
-# setwd("/home/joosungm/projects/def-lelliott/joosungm/projects/peak-bloom-prediction/code/vancouver")
-# setwd("./code/vancouver/")
 source("./code/_shared/F01_functions.r")
 
+# Find cities that had very similar bloom_doy as vancouver in 2022.
+van_bloom_df <- read.csv("./data/vancouver.csv")  %>% # bloom_doy = 86
+    mutate(city = str_to_title(location)) %>% 
+    select(lat, long, alt, year, bloom_date, bloom_doy, city)
 
+bloom_doys <- 84:88
+van_proxy <- read.csv("./code/_shared/data/A11_cherry_sub.csv") %>%
+    filter(year == 2022 & bloom_doy %in% bloom_doys) %>%
+    select(-country)
+van_proxy[nrow(van_proxy)+1, ] <- c(van_bloom_df)
+van_proxy
+# - We use these cities as proxies for vancouver.
+# - Unfortunately, the npn data does not have data for year 2022.
 
-# Find the closest places to vancouver in terms of the AGDD.
-# - Find optimal set of Tc, Rc_thresh using the 2022 data.
-# - Compute Ca_cumsum upto April-30 for most recent 5 years.
-# - Do the same for all 
+# Find the nearest noaa weather stations to the proxy cities.
+weather_stations <- ghcnd_stations() %>%
+    filter(last_year == 2023) %>%
+    filter(first_year < 1954) %>%
+    distinct(id, .keep_all = TRUE) %>%
+    filter(str_sub(id, 1, 2) %in% c("SZ", "GM", "CA"))
 
-city_station_pairs <- read.csv("./code/vancouver/data/A11_city_station_pairs.csv")
-# write.csv(city_station_pairs, "./code/vancouver/data/A11_city_station_pairs.csv", row.names = FALSE)
-target_cities <- city_station_pairs$city
-target_stations <- city_station_pairs$id
+temp_df <- van_proxy %>%
+    select(city, lat, long, alt) %>%
+    distinct(city, .keep_all = TRUE)
 
-van_temp <- F01_get_temperature(stationid = "CA001108395"
-    , date_min = "2019-10-01", date_max = "2022-04-30") %>%
-    group_by(year, month) %>%
-    dplyr::summarise(Atmax = mean(tmax, na.rm = TRUE)
-        , Atmin = mean(tmin, na.rm = TRUE)
-        , Aprcp = mean(prcp, na.rm = TRUE)) %>%
-    filter(!(month %in% c(5, 6, 7, 8, 9))) %>%
-    mutate(year_month = paste0(year, ".", month))
-    # select(-year, -month)
+temp_station <- weather_stations %>%
+    mutate(lat = latitude) %>%
+    mutate(long = longitude) %>%
+    mutate(alt = elevation) %>%
+    rename_with(~"city", id) %>%
+    select(city, lat, long, alt)
 
-van_temp2 <-van_temp[, c("Atmax", "Atmin", "Aprcp")]
-van_temp3 <- c("Vancouver", as.vector(t(as.matrix(van_temp2))))
+city_station_pair <- data.frame(
+    matrix(NA, nrow = 0, ncol = 4
+        , dimnames = list(NULL, c("city", "station", "dist", "idx"))))
+redo_cities <- van_proxy$city
+temp_idx <- 2
 
+while (length(redo_cities) > 1) {
+    # length(redo_cities)
+    for (c in seq_len(length(redo_cities))) {
+        # c = 1
+        ct <- redo_cities[c]
+        # ct
+        ct_converted <- str_replace(str_replace(str_replace(str_replace(redo_cities[c], "-", "."), " ", "."), ",", "."), "'",".")
 
-van_city_cols <- c("city")
-for (ym in van_temp$year_month){
-    for (aa in c("Atmax", "Atmin", "Aprcp")){
-        van_city_cols <- c(van_city_cols, paste0(aa, ym))
+        temp_merged <- rbind(temp_df %>% filter(city == ct), temp_station) %>%
+            select(city, lat, long)
+        rownames(temp_merged) <- temp_merged$city
+
+        temp_dist <- data.frame(as.matrix(dist(temp_merged))) %>%
+            select(all_of(ct_converted)) %>%
+            arrange(!!as.symbol(ct_converted))
+
+        station_id <- rownames(temp_dist)[temp_idx]
+        station_dist <- temp_dist[, 1][temp_idx]
+
+        city_station_pair[nrow(city_station_pair) + 1, ] <- c(ct, station_id, station_dist, temp_idx)
     }
+
+    city_station_pair <- city_station_pair %>%
+        arrange(dist) %>%
+        distinct(station, .keep_all = TRUE)
+
+    redo_cities <- redo_cities[!(redo_cities %in% city_station_pair$city)]
+
+    temp_idx <- temp_idx + 1
 }
 
-cherry_sub <- read.csv("./code/_shared/outputs/A11_cherry_sub.csv")
+city_station_pair <- city_station_pair %>% filter(dist < 1)
+city_station_pair
+# - Now we have a list of weather stations that are close to the proxy cities.
 
-temps <- F01_get_imp_temperature(
-    city_station_pair = city_station_pairs
-    , target_country = c("Japan", "South Korea")
-    , cherry_sub = cherry_sub
-    , date_min = "2019-10-01"
-    , date_max = "2022-04-30")
+van_proxy2 <- van_proxy %>%
+    merge(city_station_pair, by = "city") %>%
+    select(-dist, -idx)
+van_proxy2
+# At this stage, I realized there won't be enough data available to train an ML-based model without suffering from high bias. 
+# - There are 5 cities I can use, each city has maximum ~60 data points for is_bloom == 1, which makes around 300 positive labels for the whole dataset.
+# - To train an ML model, we need to split the already small dataset into training, validation, test sets, which may result in a poor cross-validation and test quality. It is unlikely that I'll get a good ML model in this situation.
+# - So I decided to use another method.
 
-city_temps <- temps %>% merge(y = city_station_pairs, by = "id", all.x = TRUE)
-# write.csv(city_temps, "./code/vancouver/data/A12_city_temps.csv", row.names = FALSE)
+# Here, I fit a linear regression using proxy cities' bloom_doy as the response variable, and year as the predictor variable.
+cherry_sub <- read.csv("./code/_shared/data/A11_cherry_sub.csv")
+proxy_blooms <- cherry_sub %>% filter(city %in% van_proxy2$city)
 
-target_city_df <- data.frame(matrix(ncol = length(van_city_cols)
-    , dimnames = list(NULL, van_city_cols)))
+ggplot(aes(x = year, y = bloom_doy), data = proxy_blooms %>%filter(city %in% van_proxy2$city)) +
+    geom_point()+
+    geom_smooth(method = "lm") +
+    facet_wrap(~city, scales = "free") +
+    ylim(c(70, 150))+
+    xlim(c(1980, 2025))+
+    xlab("Year") +
+    ylab("Bloom DOY")+
+    theme_bw()
+# - Locarno-Monti has a very different bloom_doy pattern (upward pattern) than the rest. We exclude it from the proxy list.
 
-target_city_df[1, ] <- c("Vancouver", as.vector(t(as.matrix(van_temp2))))
+# - For the rest of the cities, we compute the yearly average bloom_doy.
+van_proxy3 <- proxy_blooms %>% 
+    filter(city != "Locarno-Monti") %>%
+    group_by(year) %>% 
+    summarize(bloom_doy = mean(bloom_doy)) %>% 
+    ungroup()
 
-for (r in 1:length(target_cities)) {
-    # r = 3
-    temp_city <- target_cities[r]
-    temp_temp <- city_temps %>% filter(city == temp_city) %>%
-        group_by(year, month) %>%
-        dplyr::summarise(Atmax = mean(tmax, na.rm = TRUE)
-        , Atmin = mean(tmin, na.rm = TRUE)
-        , Aprcp = mean(prcp, na.rm = TRUE)) %>%
-        filter(!(month %in% c(5, 6, 7, 8, 9))) %>%
-        mutate(year_month = paste0(year, ".", month))    
-    if (nrow(temp_temp) < 21) {
-        next
-    }
-    temp_temp2 <- temp_temp[, c("Atmax", "Atmin", "Aprcp")]
-    temp_temp3 <- c(temp_city, as.vector(t(as.matrix(temp_temp2))))
-    target_city_df[(nrow(target_city_df)+1), ] <- temp_temp3
-}
-# write.csv(target_city_df, "./outputs/A13_target_city_df.csv", row.names = FALSE)
-
-
-# Perform PCA to find close cities using the latest 10-year blossom dates.
-
-# - Perform PCA
-cherry_pca <- target_city_df %>% 'rownames<-'(target_city_df$city) %>% select(-city) %>% drop_na()
-
-cherry_pca2 <- apply(cherry_pca, MARGIN = 2, FUN = as.numeric) %>% 'rownames<-'(target_city_df$city)
-
-pca_result <- prcomp(cherry_pca2, scale = TRUE)
-pca_out <- data.frame(-1 * pca_result$x)
-head(pca_out)
-
-# - Get (Euclidean) distance matrix
-van_dist <- data.frame(as.matrix(dist(pca_out))) %>%
-    dplyr::select(Vancouver) %>%
-    arrange(Vancouver)
-head(van_dist, 20)
-
-# # - Get city names
-van_cities <- rownames(van_dist)[1:20]
-van_cities
+ggplot(aes(x = year, y = bloom_doy), data = van_proxy3) +
+    geom_point()+
+    geom_smooth(method = "lm") +
+    ylim(c(70, 150))+
+    xlim(c(1980, 2025))+
+    xlab("Year") +
+    ylab("Bloom DOY")+
+    theme_bw()
 
 
-# Pull the weather data for those cities
-csp2 <- city_station_pairs %>% filter(city %in% van_cities)
-cherry_sub <- read.csv("./code/_shared/outputs/A11_cherry_sub.csv")
-vancities_weather_df <- F01_get_imp_temperature(
-    city_station_pair = csp2
-    , target_country = c("Japan", "South Korea")
-    , cherry_sub = cherry_sub)
-# write.csv(vancities_weather_df, "./code/vancouver/data/A14_vancities_weather.csv", row.names = FALSE)
+# Split the data into training and test sets. The training set includes data before year 2018, and the test set includes data after year 2018.
+van_proxy_train <- van_proxy3 %>% filter(year < 2018)
+van_proxy_test <- van_proxy3 %>% filter(year >= 2018)
 
+# Fit a linear regression model using the training set.
+van_train_lm <- lm(bloom_doy ~ year, data = van_proxy_train)
+summary(van_train_lm)
 
-# Find optimal set of Tc, Rc_thresh, Rh_thresh for vancouver using the chill-day method
-# source("./M_gdd_cv_van.r") # CAUTION: Running this code may require a high computational power. HPC recommended.
-best_gdd <- read.csv("./code/vancouver/data/M12_van_gdd_best.csv")[1, ]
-best_gdd
+plot(van_train_lm)
+qqnorm(residuals(van_train_lm))
+qqline(residuals(van_train_lm))
+# - The residual plots look okay.
 
-# Compute daily_Ca, daily_Cd, Ca_cumsum, Cd_cumsum using the above parameters.
-vancities_weather_df <-read.csv("./code/vancouver/data/A13_vancities_weather_df.csv")
-gdd_df <- F01_compute_gdd(
-    weather_df = vancities_weather_df
-    , noaa_station_ids = unique(vancities_weather_df$id)
-    , Rc_thresh = best_gdd$Rc_thresholds
-    , Tc = best_gdd$Tcs)
-gdd_df$date <- as.Date(gdd_df$date)
-dim(gdd_df)
-head(gdd_df)
+# Make predictions using the test set.
+van_test_pred <- predict(van_train_lm, data.frame(year = van_proxy_test$year))
+van_proxy_test$pred <- van_test_pred
+van_proxy_test$diff <- van_proxy_test$pred - van_proxy_test$bloom_doy
+van_proxy_test$abs_diff <- abs(van_proxy_test$diff)
+MAE <- mean(van_proxy_test$abs_diff)
+MAE  # 5.3
+# - The predicted bloom_doy is 5.3 days later than the actual bloom_doy on average.
 
-# Get vancouver temperature data for 2022
-van_temp <- F01_get_temperature(stationid = "CA001108395"
-    , date_min = "2021-10-01", date_max = "2022-04-30") %>%
-    filter(year > 2020)
+plot(van_proxy_test$diff)
+# - From the plot, we see that the model's prediction is later than the (proxy) actual bloom_doy for most years.
 
-library(mice)
-tempData <- mice(van_temp, m = 5, method = "pmm", seed = 42)
-imputed_van <- complete(tempData, 5)
-van_gdd <- F01_compute_gdd(
-    weather_df = imputed_van
-    , noaa_station_ids = "CA001108395"
-    , Rc_thresh = best_gdd$Rc_thresholds
-    , Tc = best_gdd$Tcs
-) %>% mutate(year = as.integer(year)) %>% bind_rows(gdd_df)
+# Fit a linear model to the yearly average bloom_doy using the whole dataset.
+van_proxy_lm <- lm(bloom_doy ~ year, data = van_proxy3)
+summary(van_proxy_lm)
 
+# Make the final prediction for Vancouver 2023:2032 using the model.
+pred <- as.integer(predict(van_proxy_lm, data.frame(year = 2023:2032)))
+pred # 92
+final_pred <- pred - 3
+final_pred
+# - The model predicts that the bloom_doy for Vancouver in 2023 will be 92 which corresponds to April 2nd, 2023.
+# - However, since the model's prediction seems to be later than the (proxy) actual bloom_doy. 
+# - Therefore, we finalize our forecasts by subtracting 3 days (~ceiling(5.3/2)) from the predictions, which makes the prediction for 2023 **89** (March 30th, 2023)
 
-
-target_stations <- van_gdd$id
-
-# Attach blossom dates.
-city_station_pairs <- read.csv("./code/vancouver/data/A11_city_station_pairs.csv")
-gdd_city <- van_gdd %>% 
-    merge(y = city_station_pairs, by = "id", all.x = TRUE)
-
-cherry_targets <- cherry_sub %>%
-    filter(city %in% unique(gdd_city$city)) %>%
-    select(city, bloom_date, bloom_doy)
-
-cherry_gdd <- gdd_city %>%
-    merge(y = cherry_targets, by.x = c("city", "date"), by.y = c("city", "bloom_date"), all.x = TRUE) %>%
-    mutate(is_bloom = ifelse(!is.na(bloom_doy), 1, 0)) %>%
-    mutate(doy = as.integer(strftime(date, "%j")))
-
-cherry_gdd[(cherry_gdd$city == "Vancouver" & cherry_gdd$date == as.Date("2022-03-27")), c("bloom_doy", "is_bloom")] <- c(86, 1)
-# cherry_gdd[(cherry_gdd$city == "Vancouver" & cherry_gdd$date == as.Date("2022-03-27")), ] 
-
-head(cherry_gdd)
-dim(cherry_gdd)
-table(cherry_gdd$is_bloom)
-write.csv(cherry_gdd, "./code/vancouver/data/A14_van_gdd.csv")
-cherry_gdd[cherry_gdd$city == "Vancouver" & cherry_gdd$is_bloom == 1, ]
-
-# hist(cherry_gdd[cherry_gdd$is_bloom == 1, "Ca_cumsum"], breaks = 100)
-# cut_range <- cherry_gdd %>% filter(100 < Ca_cumsum & Ca_cumsum < 250)
-# hist(cut_range[cut_range$is_bloom == 1, "Ca_cumsum"], breaks = 100)
-
-# cut_idx <- which(cherry_gdd$is_bloom == 1 & (100 > cherry_gdd$Ca_cumsum  | cherry_gdd$Ca_cumsum > 250))
-# cherry_gdd_cut <- cherry_gdd[-cut_idx, ]
-
-# hist(cherry_gdd_cut[cherry_gdd_cut$is_bloom == 1, "Ca_cumsum"], breaks = 100)
-# write.csv(cherry_gdd_cut, "./code/vancouver/data/A14_van_gdd.csv")
-# cherry_gdd_cut[cherry_gdd_cut$city == "Vancouver" & cherry_gdd_cut$is_bloom == 1, ]
-
-#############################################
-# Train lightgbm
-#############################################
-
-# source("./M2_lgb_cv_van.r")
-# source("./M3_lgb_final_van.r")
-
-# feature_names <- c("tmax", "tmin", "month", "day", "daily_Cd", "daily_Ca", "Cd_cumsum", "Ca_cumsum", "lat", "long", "alt")
-# target_col <- "is_bloom"
-
-
-#######################################
-# Model performance
-#######################################
-library(tidyverse)
-library(lightgbm)
-
-lgb_final <- readRDS.lgb.Booster("./code/vancouver/data/M24_lgb_final_van3.rds")
-cherry_gdd <- read.csv("./code/vancouver/data/A14_van_gdd.csv") %>%
-    filter(month %in% c(3, 4))
-van_cities <- unique(cherry_gdd$city)
-# Make prediction on the last 4 years
-# feature_names <- c("tmax", "tmin", "daily_Ca", "daily_Cd", "Cd_cumsum", "Ca_cumsum", "lat", "long", "alt", "month", "day")
-feature_names <- c("tmax", "tmin", "daily_Ca", "daily_Cd", "Cd_cumsum", "Ca_cumsum", "lat", "long", "alt", "doy")
-
-target_col <- "is_bloom"
-
-target_years <- 2019:2022
-
-test_set <- cherry_gdd %>%
-    filter(year %in% target_years) %>%
-    select(all_of(feature_names), all_of(target_col))
-
-pred <- predict(lgb_final, as.matrix(test_set[, feature_names]))
-test_set$predicted <- ifelse(pred > 0.05, 1, 0)
-hist(pred, breaks =10)
-tail(sort(pred))
-
-# Confusion matrix
-library(caret)
-confusionMatrix(factor(test_set$predicted), factor(test_set$is_bloom))
-
-# ROC curve
-library(ROCR)
-roc_pred <- prediction(pred, test_set$is_bloom)
-roc <- performance(roc_pred, "sens", "spec")
-plot(roc, main="ROC curve")
-abline(a=0, b=1)
-
-# Feature importance
-lgb_imp <- lgb.importance(lgb_final)
-lgb_imp
-lgb.plot.importance(lgb_imp, top_n = 10L, measure = "Gain")
-
-# Compute the MAE for the most recent years
-F01_compute_MAE(target_city = "vancouver", cherry_gdd = cherry_gdd, lgb_final = lgb_final, target_years = c(2019:2022), p_thresh = 0.1)
-
-# Generate and save the prediction plot for the most recent years
-F01_pred_plot_past(target_city = "vancouver", cherry_gdd = cherry_gdd, lgb_final = lgb_final, target_years = c(2019:2022), p_thresh = 0.1)
-
-
-#######################################
-# Final prediction for 2023
-#######################################
-
-# Weather data for 2023 march and april obtained from 
-
-city_station_pair <- read.csv("./code/vancouver/data/A11_city_station_pairs.csv") %>% filter(city == "vancouver") %>%
-    rename_with(~"lat", latitude) %>%
-    rename_with(~"long", longitude) %>%
-    rename_with(~"alt", elevation) %>%
-    select(station, city, lat, long, alt)
-temp_2223 <- F01_get_imp_temperature(
-    city_station_pair = city_station_pair
-    , target_country = c("Japan")
-    , date_min = "2022-10-01", date_max = "2023-04-30") %>% 
-    mutate(year = as.integer(strftime(date, format = "%Y"))) %>%
-    filter(year %in% c(2022, 2023)) %>%
-    select(id, date, year, month, day, tmin, tmax) %>% "rownames<-"(NULL)
-tail(temp_2223)
-
-data_2023 <- read.csv("./code/vancouver/data/2023-mar-apr-vancouver.csv") %>%
-    mutate(id = "JA000047759") %>%
-    mutate(year = 2023) %>%
-    mutate(month = as.integer(strftime(date, "%m"))) %>%
-    mutate(day = as.integer(strftime(date, "%d"))) %>%
-    select(id, date, year, month, day, tmin, tmax)
-
-merged_2223 <- rbind(temp_2223, data_2023) %>% "rownames<-"(NULL)
-tail(merged_2223)
-
-# Compute GDD
-best_gdd_params <- read.csv("./code/vancouver/data/M12_vancouver_gdd_best.csv")[1, ]
-best_gdd_params
-gdd_2223 <- F01_compute_gdd(merged_2223
-    , noaa_station_ids = unique(merged_2223$id)
-    ,Rc_thresh = best_gdd_params[["Rc_thresholds"]]
-    , Tc = best_gdd_params[["Tcs"]]) %>%
-    mutate(doy = as.integer(strftime(date, "%j"))) %>% 
-    merge(y = city_station_pair, by.x = "id", by.y = "station"
-    , all.x = TRUE) %>% "rownames<-"(NULL) %>%
-    filter(month %in% c(3, 4))
+# END

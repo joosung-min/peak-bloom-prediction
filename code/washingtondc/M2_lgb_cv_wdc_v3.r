@@ -5,16 +5,13 @@ library(lightgbm)
 setwd("/home/joosungm/projects/def-lelliott/joosungm/projects/peak-bloom-prediction/")
 source("./code/_shared/F01_functions.r")
 
-#cherry_gdd <- read.csv("./code/washingtondc/data/A12_wdc_temperature.csv") %>%  filter(month %in% c(3,4)) %>% filter(350 < Ca_cumsum & Ca_cumsum < 850)
-# bad performace
-
 cherry_gdd <- read.csv("./code/washingtondc/data/A12_wdc_temperature.csv") %>%  filter(month %in% c(3,4))
 
 # hist(cherry_gdd %>%filter(State == "DC") %>% filter(is_bloom == 1) %>%pull(Ca_cumsum), breaks = 10)
 colnames(cherry_gdd)
 n_fold <- 7
 
-# stratified train-test split
+# stratified train-test split with under-sampling to balance the classes.
 set.seed(42)
 cherry_isbloom <- cherry_gdd %>% filter(is_bloom == 1)
 cherry_isbloom$fold <- sample(1:n_fold, nrow(cherry_isbloom), replace = TRUE)
