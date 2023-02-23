@@ -59,39 +59,31 @@ head(accu_temp_df)
 combined_df <- noaa_temp_df %>% bind_rows(accu_temp_df) %>%
     mutate(year = as.integer(strftime(date, "%Y")))
 head(combined_df)
-
+# dim(combined_df)
 # Compute daily_Ca, daily_Cd, Ca_cumsum, and Cd_cumsum.
 target_Rc_thresh <- c(-130, -129, -130, -96)
-gdd_list <- list()
-for (i in seq_len(length(target_cities))) {
-    
-    sub_weather <- combined_df %>% filter(city == target_cities[[i]])
-    
-    sub_gdd <- F01_compute_gdd(
-        weather_df = sub_weather
-        , noaa_station_id = target_stations[i]
-        , Rc_thresh = target_Rc_thresh[i]
-        , Tc = 7
-    )    
-    gdd_list[[i]] <- sub_gdd
-}
-print("hello world")
-sub_weather <- combined_df %>% filter(city == target_cities[[1]])
-sub_gdd <- F01_compute_gdd(
-    weather_df = sub_weather
-    , noaa_station_id = target_stations[1]
+
+
+kyoto_weather <- combined_df %>% filter(city == target_cities[[1]])
+kyoto_gdd <- F01_compute_gdd(
+    weather_df = kyoto_weather
+    , noaa_station_ids = c(target_stations[1])
     , Rc_thresh = target_Rc_thresh[1]
     , Tc = 7
-)
+) %>% filter(month %in% c(3, 4))
+write.csv(kyoto_gdd, "./code/kyoto/data/A2_kyoto_gdd2023.csv", row.names = FALSE)
 
-sub_weather <- combined_df %>% filter(city == target_cities[[2]])
-sub_gdd <- F01_compute_gdd(
-    weather_df = sub_weather
-    , noaa_station_id = target_stations[2]
-    , Rc_thresh = target_Rc_thresh[2]
+van_weather <- combined_df %>% filter(city == target_cities[[4]])
+van_gdd <- F01_compute_gdd(
+    weather_df = van_weather
+    , noaa_station_ids = target_stations[4]
+    , Rc_thresh = target_Rc_thresh[4]
     , Tc = 7
-)
+) %>% filter(month %in% c(3, 4))
+write.csv(van_gdd, "./code/vancouver/data/A2_van_gdd2023.csv", row.names = FALSE)
 
+head(kyoto_gdd)
+head(van_gdd)
 
 # For washington DC, we compute AGDD differently.
 # - We compute it from 1st of January to 30th of April only.

@@ -10,7 +10,11 @@ Kyoto:
 Liestal:
 - do not have temperature info for 2022 Nov - 2023 Feb.
 - option1 : use most closely located station's temperature.
-- option2 : linear regression. year vs. bloom_doy
+    * The model's performance is not good.
+- option2 : mixed effects model.
+    * random effect : town
+    * fixed effects: year, lat, long, alt
+    * dependent variable: bloom_doy
 
 
 WashingtonDC:

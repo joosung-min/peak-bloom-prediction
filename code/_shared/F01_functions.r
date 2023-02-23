@@ -141,16 +141,16 @@ F01_compute_gdd <- function(weather_df, noaa_station_ids, Rc_thresh, Tc) {
     #  * washington = 
     #  * vancouver = (-111, 8)
     
-    weather_df = sub_weather
-    noaa_station_ids = c(sub_weather$id[1])
-    Rc_thresh = -129
-    Tc = 7
+    # weather_df = kyoto_weather
+    # noaa_station_ids = c(target_stations[1])
+    # Rc_thresh = target_Rc_thresh[1]
+    # Tc = 7
 
     ## Compute daily_Ca, daily_Cd
     Ca_Cd_list <- list()
 
     for (st in noaa_station_ids) {
-        st = noaa_station_ids[1]
+        
         temp_df <- weather_df[weather_df$id == st, ]
         temp_df$daily_Cd <- apply(temp_df, MARGIN = 1, FUN = F01_chill_days, Tc = Tc)[1, ]
         temp_df$daily_Ca <- apply(temp_df, MARGIN = 1, FUN = F01_chill_days, Tc = Tc)[2, ]
@@ -172,14 +172,9 @@ F01_compute_gdd <- function(weather_df, noaa_station_ids, Rc_thresh, Tc) {
         for (yr in years) {
             # Compute Cd_cumsum from Oct 1, yr-1 
             
-            # print(yr)
-            
-            # st = "GME00120934"
-            yr = 2023
-            
             Rc_start <- paste0(as.character(as.numeric(yr)-1), "-09-30")
             
-            sub_df <- Ca_Cd_df[Rc_start < Ca_Cd_df$date & Ca_Cd_df$date < paste0(as.character(yr), "-05-01"), ] %>%
+            sub_df <- Ca_Cd_df[Rc_start < Ca_Cd_df$date & Ca_Cd_df$date < as.Date(paste0(as.character(yr), "-05-01")), ] %>%
                 filter(id == !!(st))
             
             list_id <- paste0(st, "-", yr)
