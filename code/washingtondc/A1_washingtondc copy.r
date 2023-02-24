@@ -121,7 +121,7 @@ cherry_isbloom <- cherry_gdd %>% filter(Phenophase_Status == 1)
 cherry_nobloom <- cherry_gdd %>% filter(Phenophase_Status == 0)
 
 # combine and shuffle
-n_fold <- 10
+n_fold <- 7
 cherry_combined <- cherry_nobloom[sample(nrow(cherry_nobloom), nrow(cherry_isbloom)*1.5), ] %>% bind_rows(cherry_isbloom) %>% 
     mutate(fold = sample(1:n_fold, nrow(.), replace = TRUE))
 
@@ -153,7 +153,7 @@ n_boosting_rounds <- 500
 
 params <- list(
     objective = "binary"
-    , metric = c("auc")
+    , metric = c("binary_logloss")
     , is_enable_sparse = TRUE
     #, is_unbalance = TRUE
     , boosting = as.character(best_params[["boostings"]])
@@ -184,11 +184,11 @@ test_set$predicted <- ifelse(pred > 0.5, 1, 0)
 
 # Confusion matrix
 library(caret)
-confusionMatrix(factor(test_set$predicted), factor(test_set$is_bloom))
+confusionMatrix(factor(test_set$predicted), factor(test_set$Phenophase_Status))
 
 # ROC curve
 library(ROCR)
-roc_pred <- prediction(pred, test_set$is_bloom)
+roc_pred <- prediction(pred, test_set$Phenophase_Status)
 roc <- performance(roc_pred, "sens", "spec")
 plot(roc, main="ROC curve")
 abline(a=0, b=1)
@@ -201,15 +201,58 @@ lgb.plot.importance(lgb_imp, top_n = 10L, measure = "Gain")
 
 
 # Compute the MAE for the most recent years
-MAE <- F01_compute_MAE(
-    target_city = "DC"
-    , cherry_gdd = cherry_gdd # contains the temperature data
-    , lgb_final = lgb_final
-    , target_years = c(2011:2021) # There are only 4 years available during the test period.
-    , p_thresh = 0.85
-    , peak = FALSE
-    )
-MAE 
+
+MAE_p <- c()
+MAE_table <- data.frame(
+    year = 2013:2022
+    , actual_bloom_date = NA
+    , predicted_bloom_date = NA
+    , diff = 0
+)
+MAE_table
+
+for (p_thresh in seq(0.1, 0.9, by = 0.05)) {
+    
+    for (yr in MAE_table$year) {
+        
+        # print(paste("year:", yr, "p_thresh:", p_thresh))
+        # yr = 2012
+        actual_bloom_date <- read.csv("./data/washingtondc.csv") %>%filter(year == yr) %>% pull(bloom_date)
+        mae_set <- read.csv("./code/washingtondc/data/A13_wdc_complete.csv") %>% filter(year == yr)
+
+        mae_pred <- predict(lgb_final, data.matrix(mae_set[, feature_names]))
+        mae_set$pred_prob <- mae_pred
+        mae_set$pred_bin <- ifelse(mae_pred > 0.5, 1, 0)
+
+
+        # Prediction based on diff probability thresholds
+        predicted_bloom_date_p_thresh_idx <- which(mae_set$pred_prob > p_thresh)[1]
+        predicted_bloom_date_p_thresh <- mae_set[predicted_bloom_date_p_thresh_idx, "date"]
+        
+        diff <- abs(as.numeric(as.Date(actual_bloom_date, format = "%Y-%m-%d"))- as.numeric(as.Date(predicted_bloom_date_p_thresh, format = "%Y-%m-%d")))
+        
+        MAE_table[MAE_table$year ==yr, ]<- c(yr
+        , actual_bloom_date, predicted_bloom_date_p_thresh
+        , as.numeric(diff))
+
+
+        # Prediction based on the peak probability
+        # predicted_bloom_date_peak_idx <- which(mae_set$pred_prob == max(mae_set$pred_prob))
+        # predicted_bloom_date_peak <- mae_set[predicted_bloom_date_peak_idx, "date"]
+
+        # diff <- abs(as.numeric(as.Date(actual_bloom_date, format = "%Y-%m-%d")) - as.numeric(as.Date(predicted_bloom_date_peak, format = "%Y-%m-%d")))
+
+        # MAE_table[MAE_table$year ==yr, ]<- c(yr
+        # , actual_bloom_date, predicted_bloom_date_peak
+        # , as.numeric(diff))
+
+        # mean(as.numeric(MAE_table$diff))
+
+    }
+    MAE_p <- c(MAE_p, mean(as.numeric(MAE_table$diff), na.rm = TRUE))
+}
+MAE_p
+ 
 # - p_thresh=0.85 gives the best test MAE=0.25, 
 # - Choosing the day with the highest predicted probability(peak =TRUE) gives a worse MAE=9
 
@@ -219,10 +262,9 @@ F01_pred_plot_past(
     , cherry_gdd = cherry_gdd
     , lgb_final = lgb_final
     , target_years = c(2011:2020)
-    , p_thresh = 0.85
+    , p_thresh = 0.88
     , peak = FALSE
     )
-
 
 #######################################
 # Final prediction for 2023
@@ -232,13 +274,18 @@ F01_pred_plot_past(
 # https://www.accuweather.com/en/us/washington/20006/february-weather/327659
 final_weather <- read.csv("./code/_shared/data/city_weather_2023.csv") %>%
     filter(city == "Washingtondc") %>%
-    mutate(city = "DC") %>%
-    mutate(species = "yedoensis") %>%
+    mutate(State = "DC") %>%
+    mutate(Species = "yedoensis") %>%
     mutate(month = as.integer(strftime(date, format = "%m"))) %>%
-    mutate(day = as.integer(strftime(date, format = "%d"))) 
+    mutate(day = as.integer(strftime(date, format = "%d"))) %>%
+    rename_with(~"Latitude", lat) %>%
+    rename_with(~"Longitude", long) %>%
+    rename_with(~"Elevation_in_Meters", alt) %>%
+    rename_with(~"Tmax", tmax) %>%
+    rename_with(~"Tmin", tmin)
 
 # Compute the cumulative sum of GDD as instructed in the NPN-descriptions table.
-final_weather$daily_GDD <- apply(final_weather, MARGIN = 1, FUN = function(x) { GDD <- (as.numeric(x[["tmax"]]) + as.numeric(x[["tmin"]]))/2
+final_weather$daily_GDD <- apply(final_weather, MARGIN = 1, FUN = function(x) { GDD <- (as.numeric(x[["Tmax"]]) + as.numeric(x[["Tmin"]]))/2
     ifelse(GDD > 0, return(GDD), return(0))
     })
 # head(final_weather)
@@ -252,8 +299,8 @@ final_pred_plot1 <- F01_pred_plot_final(
     , lgb_final = lgb_final
     , target_city = "DC"
     , feature_names = feature_names
-    , p_thresh = 0.85
-    , peak = FALSE
+    , p_thresh = 0.5 # if peak = TRUE, this parameter is not used.
+    , peak = TRUE
 )
 final_pred_plot1
 # ggsave("./code/washingtondc/outputs/wdc_2023_prediction_plot.png", final_pred_plot1, width = 10, height = 6, dpi = 80)
