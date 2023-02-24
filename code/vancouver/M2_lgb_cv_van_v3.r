@@ -37,13 +37,13 @@ test_set <- test_nobloom[sample(nrow(test_nobloom), nrow(test_isbloom) * 1.5), ]
 # table(test_set$is_bloom)
 
 
-feature_names <- c("AGDD", "daily_GDD", "tmin", "tmax", "long", "lat", "alt")
+feature_names <- c("AGDD", "tmin", "tmax", "long", "lat", "alt", "month", "day")
 target_col <- "is_bloom"
 
-Rdata_name <- "./code/kyoto/data/M21_lgb_RDada_van3.RData"
-grid_result_filename <- "./code/kyoto/data/M22_lgb_grid_van3.csv"
-grid_best_filename <- "./code/kyoto/data/M23_lgb_best_score_van3.csv"
-lgb_final_name <- "./code/kyoto/data/M24_lgb_final_van3.rds"
+Rdata_name <- "./code/vancouver/data/M21_lgb_RDada_van3.RData"
+grid_result_filename <- "./code/vancouver/data/M22_lgb_grid_van3.csv"
+grid_best_filename <- "./code/vancouver/data/M23_lgb_best_score_van3.csv"
+lgb_final_name <- "./code/vancouver/data/M24_lgb_final_van3.rds"
 
 n_boosting_rounds <- 1000
 
