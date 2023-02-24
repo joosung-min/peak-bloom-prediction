@@ -103,20 +103,43 @@ save(elastic_fit, elastic_reg
 
 print(get_best_result(elastic_reg))
 
+# Fit the best model.
+load("./code/_shared/data/A11_elastic_fit.RData")
+plot(elastic_fit)
 
-# library(doMC)
-# registerDoMC(cores = detectCores() - 1)
-# elastic_cv <- cv.glmnet(
-#     x = cherry_train[, feature_names]
-#     , y = cherry_train[, target_col]
-#     , family = "binomial"
-#     # , alpha = 1
-#     , nfolds = 10
-#     , type.measure = "auc" # "class"
-#     , parallel = TRUE
-# )
-# plot(elastic_cv)
+
+elastic_final <- glmnet(
+    x = cherry_train[, feature_names]
+    , y = cherry_train[, target_col]
+    , family = "binomial"
+    , alpha = 0.1
+    , lambda = 0.002
+)
+
+elastic_final$beta
+
+# Predict the test data.
+pred <- predict(elastic_fit, newdata = data.frame(cherry_test[, c(feature_names)]))
+
+
+cherry_test[, target_col]
+
+calc_acc = function(actual, predicted) {
+  mean(actual == predicted)
+}
+
+calc_acc(actual = cherry_test[, target_col]
+, predicted = pred)
+
+
+# Final prediction for Liestal and Vancouver
+# - Compute AGDD of the cities.
+
+# liestal_df <- as.matrix(data.frame())
+# vancouver_df
 
 # Fit the best model.
+
+elastic_fit
 
 # Model evaluation.
