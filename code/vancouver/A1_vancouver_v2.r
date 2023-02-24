@@ -78,7 +78,7 @@ cherry_sub$city = str_split(cherry_sub$location, pattern = "/", simplify = TRUE)
 # city_station_pair <- city_station_pair %>% filter(dist < 2) 
 # head(city_station_pair)
 # write.csv(city_station_pair, "./code/_shared/data/A11_city_station_pair.csv", row.names = FALSE)
-city_station_pair <- read.csv("./code/_shared/data/A11_city_station_pair.csv")
+city_station_pair <- read.csv("./code/_shared/data/A11_city_station_pair.csv") %>% filter(dist < 0.9)
 
 # Get the weather data for those cities, compute AGDD.
 # - Extract months: 1-4.
@@ -101,26 +101,25 @@ cherry_temp$daily_GDD = apply(cherry_temp, MARGIN = 1
 cherry_temp <- cherry_temp %>%
     group_by(id, year) %>%
     mutate(AGDD = cumsum(daily_GDD))
-data.frame(cherry_temp)
-write.csv(cherry_temp, "./code/_shared/data/A11_cherry_temp.csv", row.names = FALSE)
 
 # Merge all the data together.
 # - Temperature, bloom_doy
-cherry_temp2 <- read.csv("./code/_shared/data/A11_cherry_temp.csv") %>%
+cherry_temp2 <- cherry_temp %>%
     merge(y = city_station_pair, by = "id", all.x = TRUE) %>%
     merge(y = cherry_sub %>% 
         select(city, bloom_doy, bloom_date)
         , by.x = c("city", "date")
         , by.y = c("city", "bloom_date"), all.x = TRUE)
-write.csv(cherry_temp2, "./code/_shared/data/A11_cherry_temp.csv", row.names = FALSE)
+# write.csv(cherry_temp2, "./code/_shared/data/A11_cherry_temp.csv", row.names = FALSE)
 
 # - lat, long, alt
 city_locs <- cherry_sub[ ,c("city", "lat", "long", "alt")] %>% distinct(.keep_all = TRUE)
 
-cherry_temp3 <- read.csv("./code/_shared/data/A11_cherry_temp.csv") %>%
+cherry_temp3 <- cherr_temp2 %>%
     merge(y = city_locs, by = "city", all.x = TRUE) %>%
     mutate(is_bloom = ifelse(!is.na(bloom_doy), "yes", "no")) %>%
     select(-id, -prcp, -idx) %>%
-    distinct(.keep_all = TRUE)
+    distinct(.keep_all = TRUE) %>%
+    filter(month %in% c(3:4))
 
 write.csv(cherry_temp3, "./code/_shared/data/A11_cherry_complete.csv", row.names = FALSE)
