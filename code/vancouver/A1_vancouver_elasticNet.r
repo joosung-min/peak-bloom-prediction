@@ -17,12 +17,12 @@ cherry_test <- cherry_temp %>% filter(year >= 2013)
 
 cherry_train_isbloom <- cherry_train %>% filter(is_bloom == "yes")
 cherry_train_nobloom <- cherry_train %>% filter(is_bloom == "no")
-cherry_train <- cherry_train_nobloom[sample(nrow(cherry_train_nobloom), nrow(cherry_train_isbloom)*1.3, replace = TRUE), ] %>% 
+cherry_train <- cherry_train_nobloom[sample(nrow(cherry_train_nobloom), nrow(cherry_train_isbloom)*1.3, replace = FALSE), ] %>% 
     bind_rows(cherry_train_isbloom)
 
 cherry_test_isbloom <- cherry_test %>% filter(is_bloom == "yes")
 cherry_test_nobloom <- cherry_test %>% filter(is_bloom == "no")
-cherry_test <- cherry_test_nobloom[sample(nrow(cherry_test_nobloom), nrow(cherry_test_isbloom)*1.3, replace = TRUE), ] %>% 
+cherry_test <- cherry_test_nobloom[sample(nrow(cherry_test_nobloom), nrow(cherry_test_isbloom)*1.3, replace = FALSE), ] %>% 
     bind_rows(cherry_test_isbloom)
 
 set.seed(42)
@@ -77,8 +77,8 @@ get_best_result = function(caret_fit) {
 print(get_best_result(elastic_fit))
 
 # Regression model
-cherry_train_reg <- cherry_train %>%filter(is_bloom == 1)
-cherry_test_reg <- cherry_test %>%filter(is_bloom == 1)
+cherry_train_reg <- cherry_train %>%filter(is_bloom == "yes")
+cherry_test_reg <- cherry_test %>%filter(is_bloom == "no")
 target_col_reg <- "bloom_doy"
 
 trainCtrl_reg <- trainControl(
