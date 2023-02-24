@@ -41,11 +41,13 @@ npn_df <- npn_stat %>%
 # Obtain temperature data from NOAA for each year on the bloom date data (data/washingtondc.csv)
 cherry_wdc <- F01_get_imp_temperature(
     city_station_pair = data.frame(city = "washingtondc", id = "USC00186350")
-    , date_min = "1952-01-01"
+    , date_min = "1900-01-01"
     , date_max = "2023-04-30")
 head(cherry_wdc)
 cherry_wdc <- cherry_wdc %>% filter(month %in% 1:4)
 dim(cherry_wdc)
+write.csv(cherry_wdc, "./code/washingtondc/data/A12_wdc_temperature.csv", row.names = FALSE)
+
 
 cherry_sub = read.csv("./data/washingtondc.csv") %>%
     mutate(id = "USC00186350") %>%
@@ -68,20 +70,24 @@ wdc_combined <- cherry_wdc %>%
 
 # Compute AGDD
 wdc_combined$daily_GDD <- apply(wdc_combined, MARGIN = 1
-    , FUN = function(x) { GDD <- (as.numeric(x[["tmax"]]) + as.numeric(x[["tmin"]]))/2
+    , FUN = function(x) { GDD <- (as.numeric(x[["Tmax"]]) + as.numeric(x[["Tmin"]]))/2
     ifelse(GDD > 0, return(GDD), return(0))
     })
-wdc_combined$AGDD <- cumsum(wdc_combined$daily_GDD)
-wdc_combined$year <- as.integer(wdc_combined$year)
-wdc_combined <- wdc_combined %>% select(-daily_GDD)
+wdc_combined <- wdc_combined %>%
+    group_by(year) %>%
+    mutate(AGDD = cumsum(daily_GDD)) %>%
+    ungroup() %>%
+    mutate(year = as.integer(year))
+
 dim(wdc_combined)
-head(wdc_combined)
+tail(data.frame(wdc_combined))
+
 
 # Merge the USA-NPN data with the NOAA data.
-npn_combined <- npn_df %>% bind_rows(wdc_combined) %>% filter(month %in% c(3,4))
+npn_combined <- npn_df %>% bind_rows(wdc_combined) %>% filter(month %in% c(3,4)) %>% select(-daily_GDD)
 head(npn_combined)
 dim(npn_combined)
-write.csv(npn_combined, "./code/washingtondc/data/A12_wdc_temperature.csv", row.names = FALSE)
+write.csv(npn_combined, "./code/washingtondc/data/A13_wdc_complete.csv", row.names = FALSE)
 
 
 #########################################################
@@ -102,11 +108,10 @@ library(lightgbm)
 best_params <- read.csv("./code/washingtondc/data/M23_lgb_best_params_wdc3.csv")
 best_params
 
-cherry_gdd <- read.csv("./code/washingtondc/data/A12_wdc_temperature.csv") 
-head(cherry_gdd)
+cherry_gdd <- read.csv("./code/washingtondc/data/A13_wdc_complete.csv") 
+tail(cherry_gdd)
 
 sort(unique(cherry_gdd$year))
-# test_years <- 2020:2021
 table(cherry_gdd$year) 
 # there are more data in later years. May not be appropriate to use the latest years as a test set.
 

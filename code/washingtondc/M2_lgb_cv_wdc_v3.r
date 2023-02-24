@@ -5,7 +5,7 @@ library(lightgbm)
 setwd("/home/joosungm/projects/def-lelliott/joosungm/projects/peak-bloom-prediction/")
 source("./code/_shared/F01_functions.r")
 
-cherry_gdd <- read.csv("./code/washingtondc/data/A12_wdc_temperature.csv") %>%  filter(month %in% c(3,4))
+cherry_gdd <- read.csv("./code/washingtondc/data/A13_wdc_complete.csv") %>%  filter(month %in% c(3,4))
 
 set.seed(42)
 # Shuffle the data.
