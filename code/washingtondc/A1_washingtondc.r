@@ -26,21 +26,12 @@ npn_stat$day <- apply(npn_stat, MARGIN = 1, FUN = function(x) {as.integer(str_sp
 # dim(npn_stat)
 # table(npn_stat$Phenophase_Status)
 
-npn_out <- npn_stat %>%
-    rename_with(~"city", State) %>%
-    rename_with(~"lat", Latitude) %>%
-    rename_with(~"long", Longitude) %>%
-    rename_with(~"alt", Elevation_in_Meters) %>%
-    rename_with(~"tmax", Tmax) %>%
-    rename_with(~"tmin", Tmin) %>%
-    rename_with(~"Ca_cumsum", AGDD) %>%
-    rename_with(~"species", Species) %>%
-    rename_with(~"is_bloom", Phenophase_Status) %>%
-    # select(all_of(c("year", feature_names, target_col))) %>%
+npn_df <- npn_stat %>%
     arrange(year, month, day) %>%
     mutate(date = as.Date(paste0(year, "-", month, "-", day))) %>%
     mutate(doy = as.integer(strftime(date, format = "%j")))
-# write.csv(npn_out, "./code/washingtondc/data/A12_wdc_temperature.csv", row.names = FALSE)
+# write.csv(npn_df, "./code/washingtondc/data/A12_wdc_temperature.csv", row.names = FALSE)
+head(npn_df)
 
 #########################################################
 # Fit lightgbm
@@ -78,9 +69,9 @@ n_fold <- 10
 cherry_combined <- cherry_nobloom[sample(nrow(cherry_nobloom), nrow(cherry_isbloom)*1.5), ] %>% bind_rows(cherry_isbloom) %>% 
     mutate(fold = sample(1:n_fold, nrow(.), replace = TRUE))
 
-feature_names <- c("lat", "long", "alt", "tmax", "tmin", "Ca_cumsum","month", "day", "species")
+feature_names <- c("Latitude", "Longitude", "Elevation_in_Meters", "Tmax", "Tmin", "AGDD","month", "day", "Species")
 
-target_col <- "is_bloom"
+target_col <- "Phenophase_Status"
 
 train_set <- cherry_combined %>% filter(fold != n_fold)
 dim(train_set)
@@ -192,10 +183,9 @@ final_weather <- read.csv("./code/_shared/data/city_weather_2023.csv") %>%
     mutate(day = as.integer(strftime(date, format = "%d"))) 
 
 # Compute the cumulative sum of GDD as instructed in the NPN-descriptions table.
-final_weather$daily_Ca <- apply(final_weather, MARGIN = 1, FUN = function(x) {
-    GDD <- (as.numeric(x[["tmax"]]) - as.numeric(x[["tmin"]]))/2
+final_weather$daily_Ca <- apply(final_weather, MARGIN = 1, FUN = function(x) { GDD <- (as.numeric(x[["tmax"]]) + as.numeric(x[["tmin"]]))/2
     ifelse(GDD > 0, return(GDD), return(0))
-})
+    })
 # head(final_weather)
 final_weather$Ca_cumsum <- cumsum(final_weather$daily_Ca)
 final_weather <- final_weather %>%filter(month %in% c(3,4))

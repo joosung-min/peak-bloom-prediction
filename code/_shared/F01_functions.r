@@ -23,22 +23,11 @@ F01_get_temperature <- function (stationid, date_min = "1950-01-01", date_max = 
 }
 
 
-F01_get_imp_temperature <- function(city_station_pair, target_country, cherry_sub, date_min = "1950-01-01", date_max = "2023-04-30", imp_method = "pmm") {
+F01_get_imp_temperature <- function(city_station_pair, date_min = "1950-01-01", date_max = "2023-04-30", imp_method = "pmm") {
 
     station_ids <- city_station_pair$id
-    cities <- city_station_pair$city
-    
-    if (length(station_ids) > 1){
-        
-        cherry_sub2 <- cherry_sub %>%
-            filter(country %in% target_country) %>%
-            filter(toupper(city) %in% toupper(cities))
-
-        cities <- unique(cherry_sub2$city)
-    }
     
     city_temp_list <- list()
-    imp_ids <- list()
 
     for (c in seq_len(length(station_ids))) {
 
