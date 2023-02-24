@@ -7,28 +7,30 @@ source("./code/_shared/F01_functions.r")
 
 cherry_gdd <- read.csv("./code/washingtondc/data/A12_wdc_temperature.csv") %>%  filter(month %in% c(3,4))
 
-# hist(cherry_gdd %>%filter(State == "DC") %>% filter(is_bloom == 1) %>%pull(Ca_cumsum), breaks = 10)
-colnames(cherry_gdd)
+set.seed(42)
+# Shuffle the data.
+cherry_gdd <- cherry_gdd[sample(nrow(cherry_gdd), nrow(cherry_gdd), replace = FALSE), ]
+
+
 n_fold <- 7
 
 # stratified train-test split with under-sampling to balance the classes.
-set.seed(42)
-cherry_isbloom <- cherry_gdd %>% filter(is_bloom == 1)
+cherry_isbloom <- cherry_gdd %>% filter(Phenophase_Status == 1)
 cherry_isbloom$fold <- sample(1:n_fold, nrow(cherry_isbloom), replace = TRUE)
 
-cherry_nobloom <- cherry_gdd %>% filter(is_bloom == 0)
+cherry_nobloom <- cherry_gdd %>% filter(Phenophase_Status == 0)
 cherry_nobloom$fold <- sample(1:n_fold, nrow(cherry_nobloom), replace = TRUE)
 
 # combine and shuffle
 cherry_combined <- cherry_isbloom %>% bind_rows(cherry_nobloom)
 total_df <- cherry_combined[sample(1:nrow(cherry_combined), replace = FALSE), ]
 
-table(cherry_combined$is_bloom)
+table(cherry_combined$Phenophase_Status)
 
 
-feature_names <- c("lat", "long", "alt", "tmax", "tmin", "Ca_cumsum","month", "day", "species")
+feature_names <- c("Latitude", "Longitude", "Elevation_in_Meters", "Tmax", "Tmin", "AGDD","month", "day", "Species")
+target_col <- "Phenophase_Status"
 
-target_col <- "is_bloom"
 
 Rdata_name <- "./code/washingtondc/data/M21_lgb_RDada_wdc3.RData"
 grid_result_filename <- "./code/washingtondc/data/M22_lgb_grid_wdc3.csv"
@@ -67,7 +69,7 @@ for (g in seq_len(nrow(grid_search))) {
         , params = list(
             max_bin = as.integer(param_grid[["max_bins"]])
         )
-        , categorical_feature = c("species")
+        , categorical_feature = c("Species")
     )
 
     params <- list(
@@ -100,7 +102,7 @@ for (g in seq_len(nrow(grid_search))) {
     dtest <- lgb.Dataset(
         data = data.matrix(test_cv[, feature_names])
         , label = test_cv[[target_col]]
-        , categorical_feature = c("species")
+        , categorical_feature = c("Species")
     )
 
     valids2 <- list(test = dtest)
@@ -126,7 +128,7 @@ for (g in seq_len(nrow(grid_search))) {
         write.csv(best_score, grid_best_filename, row.names = FALSE)
         best_score_so_far <- avg_testscore
 
-        saveRDS.lgb.Booster(lgb_test, file = lgb_final_name)
+        # saveRDS.lgb.Booster(lgb_test, file = lgb_final_name)
     }
 
 }
