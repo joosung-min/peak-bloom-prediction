@@ -1,4 +1,6 @@
 library(tidyverse)
+library(caret)
+library(glmnet)
 
 setwd("/home/joosungm/projects/def-lelliott/joosungm/projects/peak-bloom-prediction/")
 source("./code/_shared/F01_functions.r")
@@ -6,15 +8,22 @@ source("./code/_shared/F01_functions.r")
 # Train-test split.
 # - Train: 1952-2012
 # - Test: 2013-2022
-# - Shuffle the data.
+# - Perform under-sampling to balance the response, and then shuffle the data.
 cherry_temp <- read.csv("./code/_shared/data/A11_cherry_complete.csv")
 cherry_temp$is_bloom <- as.factor(cherry_temp$is_bloom)
-# head(cherry_temp)
-# hist(cherry_train %>% filter(is_bloom == "yes") %>%pull(AGDD), breaks =100)
-# hist(cherry_train %>% filter(is_bloom == "no") %>%pull(AGDD), breaks =100)
 
 cherry_train <- cherry_temp %>% filter(year < 2013)
 cherry_test <- cherry_temp %>% filter(year >= 2013)
+
+cherry_train_isbloom <- cherry_train %>% filter(is_bloom == "yes")
+cherry_train_nobloom <- cherry_train %>% filter(is_bloom == "no")
+cherry_train <- cherry_train_nobloom[sample(nrow(cherry_train_nobloom), nrow(cherry_train_isbloom)*1.3, replace = TRUE), ] %>% 
+    bind_rows(cherry_train_isbloom)
+
+cherry_test_isbloom <- cherry_test %>% filter(is_bloom == "yes")
+cherry_test_nobloom <- cherry_test %>% filter(is_bloom == "no")
+cherry_test <- cherry_test_nobloom[sample(nrow(cherry_test_nobloom), nrow(cherry_test_isbloom)*1.3, replace = TRUE), ] %>% 
+    bind_rows(cherry_test_isbloom)
 
 set.seed(42)
 cherry_train <- cherry_train[sample(nrow(cherry_train)), ]
@@ -66,8 +75,6 @@ get_best_result = function(caret_fit) {
 
 }
 print(get_best_result(elastic_fit))
-
-
 
 # Regression model
 cherry_train_reg <- cherry_train %>%filter(is_bloom == 1)
