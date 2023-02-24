@@ -106,7 +106,7 @@ write.csv(cherry_temp, "./code/_shared/data/A11_cherry_temp.csv", row.names = FA
 
 # Merge all the data together.
 # - Temperature, bloom_doy
-cherry_temp2 <- read.csv("./code/_shared/data/A11_cherry_temp.csv") %>%
+cherry_temp2 <- read.csv("./code/_shared/data/A11_cherry_temp2.csv") %>%
     merge(y = city_station_pair, by = "id", all.x = TRUE) %>%
     merge(y = cherry_sub %>% 
         select(city, bloom_doy, bloom_date)
