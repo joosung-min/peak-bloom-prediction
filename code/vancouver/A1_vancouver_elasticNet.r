@@ -8,8 +8,8 @@ source("./code/_shared/F01_functions.r")
 # - Test: 2013-2022
 # - Shuffle the data.
 cherry_temp <- read.csv("./code/_shared/data/A11_cherry_complete.csv")
-
-head(cherry_temp)
+cherry_temp$is_bloom <- as.factor(cherry_temp$is_bloom)
+# head(cherry_temp)
 # hist(cherry_train %>% filter(is_bloom == "yes") %>%pull(AGDD), breaks =100)
 # hist(cherry_train %>% filter(is_bloom == "no") %>%pull(AGDD), breaks =100)
 
