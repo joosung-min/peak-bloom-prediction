@@ -36,7 +36,7 @@ table(cherry_train$is_bloom)
 # # - Features: AGDD, daily_GDD, tmin, tmax, long, lat, alt
 # # - Perform 10-fold cross-validation.
 # # - Parameters for Elastic net: alpha, lambda
-feature_names <- c("AGDD", "daily_GDD", "tmin", "tmax", "long", "lat", "alt")
+feature_names <- c("AGDD", "daily_GDD", "tmin", "tmax", "long", "lat", "alt", "month", "day")
 target_col <- "is_bloom"
 
 library(glmnet)
@@ -57,8 +57,8 @@ elastic_fit <- train(
     , trControl = trainCtrl
     # , tuneLength = 30
     , tuneGrid =expand.grid(
-        alpha=seq(0, 1, length = 10)
-        , lambda = seq(exp(-6), exp(-2),length = 10))
+        alpha=seq(0, 1, by = 0.1)
+        , lambda = seq(exp(-6), exp(-2), length = 10))
     , family = "binomial"
     , preProcess = c("scale")
 )
@@ -74,72 +74,73 @@ get_best_result = function(caret_fit) {
     return(best_result)
 
 }
-print(get_best_result(elastic_fit))
+# print(get_best_result(elastic_fit))
 
-# Regression model
-cherry_train_reg <- cherry_train %>%filter(is_bloom == "yes")
-cherry_test_reg <- cherry_test %>%filter(is_bloom == "no")
-target_col_reg <- "bloom_doy"
+# # Regression model
+# cherry_train_reg <- cherry_train %>%filter(is_bloom == "yes")
+# cherry_test_reg <- cherry_test %>%filter(is_bloom == "yes")
+# target_col_reg <- "bloom_doy"
 
-trainCtrl_reg <- trainControl(
-    method = "repeatedcv"
-    , number = 10
-    , repeats = 5
-    )
+# trainCtrl_reg <- trainControl(
+#     method = "repeatedcv"
+#     , number = 10
+#     , repeats = 5
+#     )
 
-elastic_reg <- train(
-    x = cherry_train[, feature_names]
-    , y = cherry_train[, target_col_reg]
-    , method = "glmnet"
-    , trControl = trainCtrl_reg
-    , tuneGrid =expand.grid(
-        alpha=seq(0, 1, length = 10)
-        , lambda = seq(exp(-6), exp(-2),length = 10))
-    , family = "gaussian"
-    , preProcess = c("scale")
-)
-save(elastic_fit, elastic_reg
-    , file = "./code/_shared/data/A11_elastic_fitreg.RData")
+# elastic_reg <- train(
+#     x = cherry_train_reg[, feature_names]
+#     , y = cherry_train_reg[, target_col_reg]
+#     , method = "glmnet"
+#     , trControl = trainCtrl_reg
+#     , tuneGrid =expand.grid(
+#         alpha = seq(0.1, 1, by = 0.1)
+#         , lambda = seq(0.001, 0.20, by = 0.001))
+#     , family = "gaussian"
+#     , preProcess = c("scale")
+# )
+# save(elastic_reg
+#     , file = "./code/_shared/data/A11_elastic_fitreg.RData")
 
-print(get_best_result(elastic_reg))
+# print(elastic_reg) # alpha = 0.1, lambda = 0.017
 
-# Fit the best model.
-load("./code/_shared/data/A11_elastic_fit.RData")
-plot(elastic_fit)
+# # Fit the best model.
+# load("./code/_shared/data/A11_elastic_fitreg.RData")
+# # plot(elastic_reg)
 
 
-elastic_final <- glmnet(
-    x = cherry_train[, feature_names]
-    , y = cherry_train[, target_col]
-    , family = "binomial"
-    , alpha = 0.1
-    , lambda = 0.002
-)
+# elastic_final <- glmnet(
+#     x = cherry_train_reg[, feature_names]
+#     , y = cherry_train_reg[, target_col_reg]
+#     , family = "gaussian"
+#     , alpha = 0.1
+#     , lambda = 0.017
+# )
 
 elastic_final$beta
 
 # Predict the test data.
-pred <- predict(elastic_fit, newdata = data.frame(cherry_test[, c(feature_names)]))
+newdata <- data.frame(AGDD = )
+pred <- predict(elastic_reg, newdata = data.frame(cherry_test_reg[, c(feature_names)]))
+pred
+
+# cherry_test[, target_col]
+
+# calc_acc = function(actual, predicted) {
+#   mean(actual == predicted)
+# }
+
+# calc_acc(actual = cherry_test[, target_col]
+# , predicted = pred)
 
 
-cherry_test[, target_col]
+# # Final prediction for Liestal and Vancouver
+# # - Compute AGDD of the cities.
 
-calc_acc = function(actual, predicted) {
-  mean(actual == predicted)
-}
+# # liestal_df <- as.matrix(data.frame())
+# # vancouver_df
 
-calc_acc(actual = cherry_test[, target_col]
-, predicted = pred)
+# # Fit the best model.
 
+# elastic_fit
 
-# Final prediction for Liestal and Vancouver
-# - Compute AGDD of the cities.
-
-# liestal_df <- as.matrix(data.frame())
-# vancouver_df
-
-# Fit the best model.
-
-elastic_fit
-
-# Model evaluation.
+# # Model evaluation.
