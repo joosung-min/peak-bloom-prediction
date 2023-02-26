@@ -181,7 +181,7 @@ for (p_thresh in seq(0.1, 0.9, by = 0.05)) {
         # p_thresh = 0.5    
         # print(paste("year:", yr, "p_thresh:", p_thresh))
         # yr = 2012
-        actual_bloom_date <- read.csv("./data/liestal.csv") %>%filter(year == yr) %>% pull(bloom_date)
+        actual_bloom_date <- read.csv("./competition_rules/data/liestal.csv") %>%filter(year == yr) %>% pull(bloom_date)
         mae_set <- cherry_complete %>% filter(year == yr)
 
         mae_pred <- predict(lgb_final, data.matrix(mae_set[, feature_names]))

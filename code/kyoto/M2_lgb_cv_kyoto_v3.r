@@ -4,7 +4,6 @@ library(lightgbm)
 # v3: try using data from other cities as well, and under-sampling
 
 # load gdd data
-setwd("/home/joosungm/projects/def-lelliott/joosungm/projects/peak-bloom-prediction/")
 source("./code/_shared/F01_functions.r")
 cherry_gdd <- read.csv("./code/kyoto/data/A14_kyoto_temp_gdd.csv") %>%
     filter(month %in% c(3, 4))

@@ -4,7 +4,7 @@ source("./code/_shared/F01_functions.r")
 
 # Find cities that had very similar bloom_doy as vancouver in 2022.
 
-van_bloom_df <- read.csv("./data/vancouver.csv")  %>% # bloom_doy = 86
+van_bloom_df <- read.csv("./competition_rules/data/vancouver.csv")  %>% # bloom_doy = 86
     mutate(city = str_to_title(location)) 
 bloom_doys <- 84:88
 

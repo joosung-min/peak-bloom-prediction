@@ -1,6 +1,4 @@
 library(tidyverse)
-
-setwd("/home/joosungm/projects/def-lelliott/joosungm/projects/peak-bloom-prediction/")
 source("./code/_shared/F01_functions.r")
 
 # CAUTION: it takes a long time to run the below code.
@@ -11,9 +9,9 @@ source("./code/_shared/F01_functions.r")
 
 
 # Step 1
-cherry_sub <- read.csv("./data/japan.csv") %>% 
-    bind_rows(read.csv("./data/south_korea.csv")) %>% 
-    bind_rows(read.csv("./data/meteoswiss.csv"))
+cherry_sub <- read.csv("./competition_rules/data/japan.csv") %>% 
+    bind_rows(read.csv("./competition_rules/data/south_korea.csv")) %>% 
+    bind_rows(read.csv("./competition_rules/data/meteoswiss.csv"))
 cherry_sub$country = str_split(cherry_sub$location, pattern = "/", simplify = TRUE)[, 1] 
 cherry_sub$city = str_split(cherry_sub$location, pattern = "/", simplify = TRUE)[, 2]
 head(cherry_sub)
