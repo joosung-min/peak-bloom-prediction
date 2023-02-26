@@ -13,3 +13,4 @@ test-project
 *Rplots.pdf
 *lightgbm.model
 .devcontainer
+.gitattributes
