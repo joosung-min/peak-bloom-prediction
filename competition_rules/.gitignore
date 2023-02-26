@@ -1,0 +1,14 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+*.Rproj
+*.out
+*.devcontainer
+test-project
+*.npmignore
+*.sh
+*.swp
+*z_dump
+*Rplots.pdf
+*lightgbm.model

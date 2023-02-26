@@ -5,7 +5,7 @@ library(tidyverse)
 # Therefore, we try another method to make the forecasts.
 
 # Kyoto
-kyoto_blooms <- read.csv("./data/kyoto.csv")
+kyoto_blooms <- read.csv("./competition_rules/data/kyoto.csv")
 
 # Take the last 200 years
 go_back <- 200
