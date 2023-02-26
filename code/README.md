@@ -28,7 +28,7 @@ Nonetheless, our methods provide a flexible way to present peak cherry blossom p
 
 The predictions from our models are as follows:
 
-![~/code/_shared/figs/final_predictions.png)
+![](./_shared/figs/final_predictions.png)
 
 If the mean is not an integer for the ensemble means, we put more weights on the LightGBM’s outputs.
 
