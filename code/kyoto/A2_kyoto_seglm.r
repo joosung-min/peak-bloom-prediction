@@ -55,10 +55,8 @@ p
 # - We can see that the slope of the line changes dramatically after 1928, and 2012.
 
 # Make final prediction for the next 10 years
-pred <- round(predict(kyoto_seg, newdata = data.frame(year = 2023:2032)))
+pred <- round(predict(kyoto_seg2, newdata = data.frame(year = 2023:2032)))
 
-# We replace the first element (year 2023) with the prediction from the lightgbm model (doy 91 which is 1 April)
-pred[1] <- 91
-pred # 91 89 88 88 87 86 86 85 85 84
+pred # 89 89 88 88 87 86 86 85 85 84
 
 # END

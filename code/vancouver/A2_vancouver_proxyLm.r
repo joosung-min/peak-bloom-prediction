@@ -3,21 +3,20 @@ library(tidyverse)
 source("./code/_shared/F01_functions.r")
 
 # Find cities that had very similar bloom_doy as vancouver in 2022.
-van_bloom_df <- read.csv("./data/vancouver.csv")  %>% # bloom_doy = 86
-    mutate(city = str_to_title(location)) %>% 
-    select(lat, long, alt, year, bloom_date, bloom_doy, city)
 
+van_bloom_df <- read.csv("./data/vancouver.csv")  %>% # bloom_doy = 86
+    mutate(city = str_to_title(location)) 
 bloom_doys <- 84:88
+
 van_proxy <- read.csv("./code/_shared/data/A11_cherry_sub.csv") %>%
     filter(year == 2022 & bloom_doy %in% bloom_doys) %>%
-    select(-country)
+    dplyr::select(-country)
 # van_proxy[nrow(van_proxy)+1, ] <- c(van_bloom_df)
 # van_proxy
 # - We use these cities as proxies for vancouver.
 
 
 # Here, We fit a linear regression using proxy cities' bloom_doy as the response variable, and year as the predictor variable.
-cherry_sub <- read.csv("./code/_shared/data/A11_cherry_sub.csv")
 proxy_blooms <- cherry_sub %>% filter(city %in% van_proxy$city)
 
 ggplot(aes(x = year, y = bloom_doy), data = proxy_blooms %>%filter(city %in% van_proxy$city)) +
@@ -44,13 +43,14 @@ van_proxy_test <- van_proxy3 %>% filter(year >= 2018)
 van_train_lm <- lm(bloom_doy ~ year, data = van_proxy_train)
 summary(van_train_lm)
 
+
 plot(van_train_lm)
 qqnorm(residuals(van_train_lm))
 qqline(residuals(van_train_lm))
 # - The residual plots look okay although the qqplot shows some outliers.
 
 # Make predictions using the test set.
-van_test_pred <- predict(van_train_lm, data.frame(year = van_proxy_test$year))
+van_test_pred <- predict(van_train_lm, data.frame(year = van_proxy_test$year, long = van_proxy_test$long))
 van_proxy_test$pred <- van_test_pred
 van_proxy_test$diff <- van_proxy_test$pred - van_proxy_test$bloom_doy
 van_proxy_test$abs_diff <- abs(van_proxy_test$diff)
@@ -68,6 +68,7 @@ ggplot(aes(x = year, y = diff), data = van_proxy_test) +
 van_proxy_lm <- lm(bloom_doy ~ year, data = van_proxy3)
 summary(van_proxy_lm)
 
+
 # Make the final prediction for Vancouver 2023:2032 using the model.
 pred <- as.integer(predict(van_proxy_lm, data.frame(year = 2023:2032)))
 pred # 93
@@ -75,7 +76,7 @@ pred # 93
 # - However, since the model's prediction seems to be later than the (proxy) actual bloom_doy. 
 # - Therefore, we finalize our forecasts by subtracting 4 days (~ceiling(6.9/2)) from the predictions, which makes the prediction for 2023 **89** (March 30th, 2023)
 final_pred <- pred - ceiling(MAE/2)
-final_pred
+final_pred # 89 88 88 87 87 87 86 86 86 85
 
 # END
 

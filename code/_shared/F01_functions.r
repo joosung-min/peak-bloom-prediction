@@ -7,10 +7,14 @@ library(lightgbm)
 
 F01_get_temperature <- function (stationid, date_min = "1950-01-01", date_max = "2023-04-30") {
 
+    # date_min = "2022-01-01"
+    # date_max = "2022-04-30"
+    # stationid <-"CA001108395" 
+
     dat <- ghcnd_search(stationid = stationid, var = c("TMAX", "TMIN", "PRCP"), 
                date_min = date_min, date_max = date_max) %>%
                purrr::reduce(left_join, by = "date") %>%
-               select(id.x, date, tmax, tmin, prcp) %>%
+               dplyr::select(id.x, date, tmax, tmin, prcp) %>%
                rename_with(~ "id", id.x) %>%
                mutate(tmax = tmax/10) %>%      # in C
                mutate(tmin = tmin/10) %>%      # in C
@@ -31,11 +35,12 @@ F01_get_imp_temperature <- function(city_station_pair, date_min = "1950-01-01", 
 
     for (c in seq_len(length(station_ids))) {
 
-        # print(cities[c])
-
         skip_to_next <- 0
         
-        temp_df <- tryCatch(F01_get_temperature(station_ids[c], date_min = date_min, date_max = date_max), error = function(x) skip_to_next <<-1 )
+        temp_df <- tryCatch(F01_get_temperature(station_ids[c]
+        , date_min = date_min
+        , date_max = date_max)
+        , error = function(x) skip_to_next <<-1 )
         
         if (skip_to_next == 1 ){
             next

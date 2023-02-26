@@ -19,8 +19,8 @@ cherry_sub <- read.csv("./data/japan.csv") %>%
 
 cherry_sub$country = str_split(cherry_sub$location, pattern = "/", simplify = TRUE)[, 1] 
 cherry_sub$city = str_split(cherry_sub$location, pattern = "/", simplify = TRUE)[, 2]
-# write.csv(cherry_sub, "./code/_shared/data/A11_cherry_sub.csv", row.names = FALSE)
-
+write.csv(cherry_sub, "./code/_shared/data/A11_cherry_sub.csv", row.names = FALSE)
+head(cherry_sub)
 # Pull the list of weather stations.
 weather_stations <- ghcnd_stations() %>%
     filter(last_year %in% c(2022,2023)) %>%

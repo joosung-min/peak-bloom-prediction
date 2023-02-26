@@ -33,8 +33,9 @@ test_nobloom <- test_df %>% filter(is_bloom == 0)
 test_set <- test_nobloom[sample(nrow(test_nobloom), nrow(test_isbloom) * 1.5), ] %>%
     bind_rows(test_isbloom)
 # table(test_set$is_bloom)
-
-
+total_df <- train_val_set %>% bind_rows(test_set)
+dim(total_df)
+table(total_df$is_bloom)
 # feature_names <- c("month","day", "Cd_cumsum", "Ca_cumsum", "lat", "long", "alt", "daily_Ca", "daily_Cd", "tmax", "tmin")
 feature_names <- c("doy", "Cd_cumsum", "Ca_cumsum", "lat", "long", "alt", "daily_Ca", "daily_Cd", "tmax", "tmin")
 

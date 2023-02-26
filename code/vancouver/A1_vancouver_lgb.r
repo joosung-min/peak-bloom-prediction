@@ -36,9 +36,7 @@ feature_names <- c("AGDD", "tmin", "tmax", "long", "lat", "alt", "month", "day")
 target_col <- "is_bloom"
 
 # Load the best params from lightgbm grid search.
-best_params <- read.csv("./code/vancouver/data/M23_lgb_best_score_van3.csv") %>%
-    select(-val_score, -test_score) %>%
-    as.list()
+best_params <- read.csv("./code/vancouver/data/M23_lgb_best_score_van3.csv")
 best_params
 
 # Train the model.
@@ -96,6 +94,7 @@ confusionMatrix(factor(test_set$predicted), factor(test_set$is_bloom))
 library(ROCR)
 roc_pred <- prediction(pred, test_set$is_bloom)
 roc <- performance(roc_pred, "sens", "spec")
+roc
 plot(roc, main="ROC curve")
 abline(a=0, b=1)
 
@@ -110,11 +109,18 @@ lgb.plot.importance(lgb_imp, top_n = 5L, measure = "Gain")
 # Since Vancouver has only one historic bloom day (2022), we can only have one test score.
 
 # Load 2022 weather data for vancouver.
+city_station_pair <- read.csv("./code/_shared/data/A11_city_station_pair.csv") %>% filter(city == "Vancouver")
+
+temp_2022 <- F01_get_imp_temperature(
+    city_station_pair = city_station_pair
+    , date_min = "2022-01-01"
+    , date_max = "2022-04-30") 
+
 temp_2022 <- F01_get_imp_temperature(
     city_station_pair = city_station_pair
     , date_min = "2022-01-01", date_max = "2022-04-30") %>% 
     mutate(year = as.integer(strftime(date, format = "%Y"))) %>%
-    select(id, date, year, month, day, tmin, tmax) %>% "rownames<-"(NULL)
+    dplyr::select(id, date, year, month, day, tmin, tmax) %>% "rownames<-"(NULL)
 
 # Compute GDD
 temp_2022$daily_GDD <- apply(temp_2022, MARGIN = 1
@@ -163,7 +169,7 @@ temp_2023 <- F01_get_imp_temperature(
     city_station_pair = city_station_pair
     , date_min = "2023-01-01", date_max = "2023-04-30") %>% 
     mutate(year = as.integer(strftime(date, format = "%Y"))) %>%
-    select(id, date, year, month, day, tmin, tmax) %>% "rownames<-"(NULL)
+    dplyr::select(id, date, year, month, day, tmin, tmax) %>% "rownames<-"(NULL)
 head(temp_2023)
 # Get weather data from 1 Mar to 30 Apr 2023
 # - Obtained from AccuWeather.
