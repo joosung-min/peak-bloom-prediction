@@ -78,7 +78,7 @@ lgb_final <- lgb.train(
     , verbose = -1
 )
 
-lgb_final
+lgb_final$best_score # best test auc = 0.86
 
 # Plot the feature importance.
 pred <- predict(lgb_final, as.matrix(test_set[, feature_names]))
@@ -94,13 +94,13 @@ confusionMatrix(factor(test_set$predicted), factor(test_set$is_bloom))
 library(ROCR)
 roc_pred <- prediction(pred, test_set$is_bloom)
 roc <- performance(roc_pred, "sens", "spec")
-roc
-plot(roc, main="ROC curve")
+# plot(roc, main="ROC curve")
 abline(a=0, b=1)
 
 lgb_imp <- lgb.importance(lgb_final)
 lgb_imp
-lgb.plot.importance(lgb_imp, top_n = 5L, measure = "Gain")
+# lgb.plot.importance(lgb_imp, top_n = 5L, measure = "Gain")
+
 
 ########################################
 # Test performance
@@ -109,34 +109,31 @@ lgb.plot.importance(lgb_imp, top_n = 5L, measure = "Gain")
 # Since Vancouver has only one historic bloom day (2022), we can only have one test score.
 
 # Load 2022 weather data for vancouver.
-city_station_pair <- read.csv("./code/_shared/data/A11_city_station_pair.csv") %>% filter(city == "Vancouver")
+# city_station_pair <- read.csv("./code/_shared/data/A11_city_station_pair.csv") %>% filter(city == "Vancouver")
 
-temp_2022 <- F01_get_imp_temperature(
-    city_station_pair = city_station_pair
-    , date_min = "2022-01-01"
-    , date_max = "2022-04-30") 
+# temp_2022 <- F01_get_imp_temperature(
+#     city_station_pair = city_station_pair
+#     , date_min = "2022-01-01", date_max = "2022-04-30") %>% 
+#     mutate(year = as.integer(strftime(date, format = "%Y"))) %>%
+#     dplyr::select(id, date, year, month, day, tmin, tmax) %>% "rownames<-"(NULL)
 
-temp_2022 <- F01_get_imp_temperature(
-    city_station_pair = city_station_pair
-    , date_min = "2022-01-01", date_max = "2022-04-30") %>% 
-    mutate(year = as.integer(strftime(date, format = "%Y"))) %>%
-    dplyr::select(id, date, year, month, day, tmin, tmax) %>% "rownames<-"(NULL)
-
-# Compute GDD
-temp_2022$daily_GDD <- apply(temp_2022, MARGIN = 1
-    , FUN = function(x){
-        meanTemp <- as.numeric(x[["tmax"]]) + as.numeric(x[["tmin"]]) / 2
-        if (meanTemp < 0) {
-            return(0)
-        } else {
-            return(meanTemp)
-        }
-    })
-temp_2022$AGDD <- cumsum(temp_2022$daily_GDD)
-temp_2022$lat <- 49.2237
-temp_2022$long <- -123.1636
-temp_2022$alt <- 24
-head(temp_2022)
+# # Compute GDD
+# temp_2022$daily_GDD <- apply(temp_2022, MARGIN = 1
+#     , FUN = function(x){
+#         meanTemp <- as.numeric(x[["tmax"]]) + as.numeric(x[["tmin"]]) / 2
+#         if (meanTemp < 0) {
+#             return(0)
+#         } else {
+#             return(meanTemp)
+#         }
+#     })
+# temp_2022$AGDD <- cumsum(temp_2022$daily_GDD)
+# temp_2022$lat <- 49.2237
+# temp_2022$long <- -123.1636
+# temp_2022$alt <- 24
+# head(temp_2022)
+# write.csv(temp_2022, "./code/vancouver/data/A18_temp_2022_van.csv", row.names = FALSE)
+temp_2022 <- read.csv("./code/vancouver/data/A17_temp_2022_van.csv")
 
 test_pred <- predict(lgb_final, as.matrix(temp_2022[, feature_names]))
 temp_2022$pred_prob <- test_pred
@@ -150,8 +147,8 @@ pred_date2 <- temp_2022[which(temp_2022$pred_prob == max(temp_2022$pred_prob))[1
 pred_date2
 
 test_diff <- as.numeric(as.Date(pred_date2) - as.Date(actual_date))
-test_diff
-# - The difference between the two dates is 2 days (The prediction is 2 days later)
+test_diff = -1
+# - The difference between the two dates is 2 days (The prediction is 1 day early)
 
 
 ########################################
@@ -161,67 +158,69 @@ test_diff
 # Load 2023 weather data.
 library(tidyverse)
 library(rnoaa)
+# city_station_pair <- data.frame(city = "Vancouver", id = "CA001108395")
 
-city_station_pair <- data.frame(city = "Vancouver", id = "CA001108395")
+# # Get weather data upto 28 Feb 2022.
+# temp_2023 <- F01_get_imp_temperature(
+#     city_station_pair = city_station_pair
+#     , date_min = "2023-01-01", date_max = "2023-04-30") %>% 
+#     mutate(year = as.integer(strftime(date, format = "%Y"))) %>%
+#     dplyr::select(id, date, year, month, day, tmin, tmax) %>% "rownames<-"(NULL)
+# head(temp_2023)
+# # Get weather data from 1 Mar to 30 Apr 2023
+# # - Obtained from AccuWeather.
+# weather_2023 <- read.csv("./code/_shared/data/city_weather_2023.csv") %>%
+#     filter(city == "Vancouver") %>%
+#     mutate(date = as.Date(date, format = "%Y-%m-%d")) %>%
+#     mutate(year = 2023) %>%
+#     mutate(month = as.integer(strftime(date, format = "%m"))) %>%
+#     mutate(day = as.integer(strftime(date, format = "%d"))) %>%
+#     filter(month %in% c(3,4))
+# dim(weather_2023)
 
-# Get weather data upto 28 Feb 2022.
-temp_2023 <- F01_get_imp_temperature(
-    city_station_pair = city_station_pair
-    , date_min = "2023-01-01", date_max = "2023-04-30") %>% 
-    mutate(year = as.integer(strftime(date, format = "%Y"))) %>%
-    dplyr::select(id, date, year, month, day, tmin, tmax) %>% "rownames<-"(NULL)
-head(temp_2023)
-# Get weather data from 1 Mar to 30 Apr 2023
-# - Obtained from AccuWeather.
-weather_2023 <- read.csv("./code/_shared/data/city_weather_2023.csv") %>%
-    filter(city == "Vancouver") %>%
-    mutate(date = as.Date(date, format = "%Y-%m-%d")) %>%
-    mutate(year = 2023) %>%
-    mutate(month = as.integer(strftime(date, format = "%m"))) %>%
-    mutate(day = as.integer(strftime(date, format = "%d"))) %>%
-    filter(month %in% c(3,4))
-dim(weather_2023)
+# merged_2023 <- temp_2023 %>%
+#     mutate(city = "Vancouver"
+#     , lat = unique(weather_2023$lat)
+#     , long = unique(weather_2023$long)
+#     , alt = unique(weather_2023$alt)) %>%
+#     bind_rows(weather_2023)
 
-merged_2023 <- temp_2023 %>%
-    mutate(city = "Vancouver"
-    , lat = unique(weather_2023$lat)
-    , long = unique(weather_2023$long)
-    , alt = unique(weather_2023$alt)) %>%
-    bind_rows(weather_2023)
+# # Compute GDD.
+# merged_2023$daily_GDD <- apply(merged_2023, MARGIN = 1
+#     , FUN = function(x){
+#         meanTemp <- as.numeric(x[["tmax"]]) + as.numeric(x[["tmin"]]) / 2
+#         if (meanTemp < 0) {
+#             return(0)
+#         } else {
+#             return(meanTemp)
+#         }
+#     })
 
-# Compute GDD.
-merged_2023$daily_GDD <- apply(merged_2023, MARGIN = 1
-    , FUN = function(x){
-        meanTemp <- as.numeric(x[["tmax"]]) + as.numeric(x[["tmin"]]) / 2
-        if (meanTemp < 0) {
-            return(0)
-        } else {
-            return(meanTemp)
-        }
-    })
+# merged_2023$AGDD <- cumsum(merged_2023$daily_GDD)
+# write.csv(merged_2023, "./code/vancouver/data/A19_merged_2023_van.csv", row.names = FALSE)
 
-merged_2023$AGDD <- cumsum(merged_2023$daily_GDD)
+merged_2023 <- read.csv("./code/vancouver/data/A18_merged_2023_van.csv")
 
 final_pred <- predict(lgb_final, as.matrix(merged_2023[, feature_names]))
 merged_2023$pred_prob <- final_pred
 merged_2023$pred_bin <- ifelse(final_pred > 0.5, 1, 0)
+final_pred_day <- merged_2023[which(merged_2023$pred_prob == max(merged_2023$pred_prob))[1], "date"] 
+final_pred_day # 2023-03-31
 
-# Plot the prediction.
-final_pred_plot1 <- F01_pred_plot_final(
-    year_data = merged_2023
-    , lgb_final = lgb_final
-    , target_city = "Vancouver"
-    , feature_names = feature_names
-    , p_thresh = 0.5 # if peak = TRUE, this parameter is not used.
-    , peak = TRUE
-)
-final_pred_plot1 # March 29th is the peak.
-# ggsave(file = "./code/vancouver/outputs/vancouver_2023_prediction_plot.jpg", plot = final_pred_plot1, bg = "white", width = 10, height = 6, dpi = 100)
+final_bloom_doy <- as.numeric(as.Date(final_pred_day) - as.Date("2023-01-01")) + 1
+final_bloom_doy
 
-# - Since we see that our test result is 2 days later than the actual date, we subtract 2 days from the prediction date.
-# - Therefore, the final prediction date for 2023 from this model is March 27th.
+final_pred_df <- data.frame(city = "Vancouver", method = "ML", bloom_doy = final_bloom_doy - 1)
+final_pred_probs <- data.frame(city = "Vancouver", date = merged_2023[, "date"], pred_probs = final_pred)
+# - Since we see that our test result is 2 days later than the actual date, we subtract 1 days from the prediction date.
+# - Therefore, the final prediction date for 2023 from this model is March 30th.
 # - However, this model's performance is very week because it does not have Vancouver's data. 
 # - We fit another model and then average the predictions to make our final prediction for Vancouver.
+
+write.csv(final_pred_df, "./code/vancouver/data/A19_final_lgb_predDay_van.csv", row.names = FALSE)
+write.csv(final_pred_probs, "./code/vancouver/data/A19_final_predProbs_van.csv", row.names = FALSE)
+
+
 
 
 # END

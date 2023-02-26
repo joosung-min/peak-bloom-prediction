@@ -9,7 +9,10 @@ F01_get_temperature <- function (stationid, date_min = "1950-01-01", date_max = 
 
     # date_min = "2022-01-01"
     # date_max = "2022-04-30"
-    # stationid <-"CA001108395" 
+    # stationid <- "GME00127786"
+
+    # dat <- ghcnd_search(stationid = stationid, var = c("TMAX", "TMIN", "PRCP"), 
+    #         date_min = date_min, date_max = date_max)
 
     dat <- ghcnd_search(stationid = stationid, var = c("TMAX", "TMIN", "PRCP"), 
                date_min = date_min, date_max = date_max) %>%
