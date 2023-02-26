@@ -28,7 +28,7 @@ Nonetheless, our methods provide a flexible way to present peak cherry blossom p
 
 The predictions from our models are as follows:
 
-![Screenshot 2023-02-26 at 1.09.19 AM.png](Cherry%20blossom%20prediction%208addccba315b44928ffe9a5a327d6124/Screenshot_2023-02-26_at_1.09.19_AM.png)
+![~/code/_shared/figs/final_predictions.png)
 
 If the mean is not an integer for the ensemble means, we put more weights on the LightGBM’s outputs.
 
