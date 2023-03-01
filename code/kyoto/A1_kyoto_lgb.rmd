@@ -311,32 +311,46 @@ MAE_table <- data.frame(
     , diff = 0
 )
 
+actual_bloom_dates <- read.csv("/workspaces/peak-bloom-prediction/competition_rules/data/kyoto.csv")
+kyoto_gdd <- read.csv("/workspaces/peak-bloom-prediction/code/kyoto/data/A14_kyoto_gdd.csv")
+
 target_p_thresh <- seq(0.4, 0.7, by = 0.05)
+current_MAE_p <- 999
 for (p_thresh in target_p_thresh) {
     
     for (yr in MAE_table$year) {
-        
-        actual_bloom_date <- read.csv("/workspaces/peak-bloom-prediction/competition_rules/data/kyoto.csv") %>%filter(year == yr) %>% pull(bloom_date)
-        mae_set <- read.csv("/workspaces/peak-bloom-prediction/code/kyoto/data/A14_kyoto_gdd.csv") %>% filter(year == yr)
+        # p_thresh = 0.4        
+        actual_bloom_date <- actual_bloom_dates %>%filter(year == yr) %>% pull(bloom_date)
+        mae_set <- kyoto_gdd %>% filter(year == yr)
 
         mae_pred <- predict(lgb_final, data.matrix(mae_set[, feature_names]))
         mae_set$pred_prob <- mae_pred
-        mae_set$pred_bin <- ifelse(mae_pred > 0.5, 1, 0)
+        mae_set$pred_bin <- ifelse(mae_pred > p_thresh, 1, 0)
 
         # Prediction based on diff probability thresholds
         predicted_bloom_date_p_thresh_idx <- which(mae_set$pred_prob > p_thresh)[1]
         predicted_bloom_date_p_thresh <- mae_set[predicted_bloom_date_p_thresh_idx, "date"]
         
-        diff <- abs(as.numeric(as.Date(actual_bloom_date, format = "%Y-%m-%d"))- as.numeric(as.Date(predicted_bloom_date_p_thresh, format = "%Y-%m-%d")))
+        diff <- as.numeric(as.Date(actual_bloom_date, format = "%Y-%m-%d"))- as.numeric(as.Date(predicted_bloom_date_p_thresh, format = "%Y-%m-%d"))
         
         MAE_table[MAE_table$year ==yr, ]<- c(yr
         , actual_bloom_date, predicted_bloom_date_p_thresh
         , as.numeric(diff))
 
     }
-    MAE_p <- c(MAE_p, mean(as.numeric(MAE_table$diff), na.rm = TRUE))
+    yr_MAE <- mean(abs(as.numeric(MAE_table$diff)))
+    MAE_p <- c(MAE_p, yr_MAE, na.rm = TRUE)
+    
+    if (yr_MAE < current_MAE_p) {
+        best_MAE_table <- MAE_table
+        current_MAE_p <- yr_MAE
+    }
 }
 # write.csv(data.frame(MAE_p = MAE_p, target_p_thresh = target_p_thresh), file = "/workspaces/peak-bloom-prediction/code/kyoto/data/A15_kyoto_MAE_p.csv", row.names = FALSE)
+```
+
+```{r}
+ggplot(data = best_MAE_table, aes(x = year, y = diff)) + geom_point(size = 2)
 ```
 
 ```{r task422, echo=FALSE}
@@ -345,7 +359,10 @@ target_p_thresh <- MAE_p_df[["target_p_thresh"]]
 best_p_thresh <- target_p_thresh[which.min(MAE_p_df[["MAE_p"]])]
 MAE_p <- MAE_p_df[["MAE_p"]]
 ```
-It seems that the best p_thresh is `r {best_p_thresh}`, which gives the lowest MAE of `r {min(MAE_p)}`.
+* It seems that the best p_thresh is `r {best_p_thresh}`, which gives the lowest MAE of `r {min(MAE_p)}`.
+* Most recent years show MAE above 0. Therefore, we subtract ceilding(MAE/2)=`r ceiling(min(MAE_p)/2)` from the final predicted doy later on.
+
+```{r task423, echo=FALSE}
 
 ##### 4.3 Model interpretation
 ```{r task43, message=FALSE, warning=FALSE}
@@ -404,17 +421,16 @@ final_pred_date <- gdd_2223[which(final_pred > best_p_thresh)[1], "date"]
 # Compute doy
 final_doy <- as.integer(strftime(final_pred_date, "%j"))
 
-
-p_final_pred <- F01_pred_plot_final(target_city = "Kyoto"
-    , year_data = gdd_2223
-    , feature_names = feature_names
-    , lgb_final = lgb_final
-    , p_thresh = best_p_thresh
-    , peak = FALSE)
-p_final_pred
-
-# ggsave("./code/kyoto/outputs/kyoto_2023_prediction_plot.png", p_final_pred
-#     , width = 10, height = 6, units = "in", dpi = 80)
 ```
 
-The final predicted cherry blossom date for Kyoto 2023 is `r {final_pred_date}`, which corresponds to doy = `r {final_doy}`.
+* The final predicted cherry blossom date for Kyoto 2023 is `r {final_pred_date}`, which corresponds to doy = `r {final_doy}`.
+* However, since the MAE from above is `r {min(MAE_p)}`, we subtract `r {ceiling(min(MAE_p))}` to the doy to get the final predicted doy, which is `r {final_doy - ceiling(min(MAE_p))}`.
+* Since this model looks weak, we train a non-temperature-based model and average the final results from the two models to get the final prediction.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+final_pred_df <- data.frame(city = "Kyoto", method = "ML", bloom_doy = final_doy - ceiling(min(MAE_p)))
+final_pred_probs <- data.frame(city = "Kyoto", date = gdd2223[, "date"], pred_probs = final_pred)
+
+# write.csv(final_pred_df, "/workspaces/peak-bloom-prediction/code/kyoto/data/A19_final_lgb_predDay_kyoto.csv", row.names = FALSE)
+# write.csv(final_pred_probs, "/workspaces/peak-bloom-prediction/code/kyoto/data/A19_final_predProbs_kyoto.csv", row.names = FALSE)
+```

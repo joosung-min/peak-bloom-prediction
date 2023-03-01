@@ -3,6 +3,8 @@ library(tidyverse)
 source("./code/_shared/F01_functions.r")
 
 # Load data.
+# - cherry_gdd includes the temperature and GDD data from over a 100 cities across South Korea, Japan, and Switzerland.
+# - daily_GDD and AGDD were computed using the same method as in the USA-NPN data.
 cherry_gdd <- read.csv("./code/_shared/data/A11_cherry_complete.csv") %>%
     filter(month %in% c(3, 4)) %>%
     mutate(is_bloom = ifelse(is_bloom == "yes", 1, 0))
@@ -11,7 +13,7 @@ dim(cherry_gdd)
 table(cherry_gdd$is_bloom)
 
 # Perform under-sampling to balance the data.
-test_years <- 2013:2022
+test_years <- 2015:2022
 
 train_val_df <- cherry_gdd %>%
     filter(!(year %in% test_years))
@@ -81,25 +83,10 @@ lgb_final <- lgb.train(
 lgb_final$best_score # best test auc = 0.86
 
 # Plot the feature importance.
-pred <- predict(lgb_final, as.matrix(test_set[, feature_names]))
-hist(pred, breaks =100)
-test_set$predicted <- ifelse(pred > 0.5, 1, 0)
-tail(sort(pred))
-
-# Confusion matrix
-library(caret)
-confusionMatrix(factor(test_set$predicted), factor(test_set$is_bloom))
-
-# ROC curve
-library(ROCR)
-roc_pred <- prediction(pred, test_set$is_bloom)
-roc <- performance(roc_pred, "sens", "spec")
-# plot(roc, main="ROC curve")
-abline(a=0, b=1)
-
 lgb_imp <- lgb.importance(lgb_final)
 lgb_imp
-# lgb.plot.importance(lgb_imp, top_n = 5L, measure = "Gain")
+lgb.plot.importance(lgb_imp, top_n = 5L, measure = "Gain")
+# - AGDD is the most important feature.
 
 
 ########################################
@@ -139,7 +126,7 @@ test_pred <- predict(lgb_final, as.matrix(temp_2022[, feature_names]))
 temp_2022$pred_prob <- test_pred
 temp_2022$pred_bin <- ifelse(test_pred > 0.5, 1, 0)
 
-actual_date <- read.csv("./data/vancouver.csv")[1, "bloom_date"]
+actual_date <- read.csv("./competition_rules/data/vancouver.csv")[1, "bloom_date"]
 actual_date
 # pred_date1 <- temp_2022[which(temp_2022$pred_bin == 1)[1], "date"]
 # pred_date1
@@ -147,8 +134,7 @@ pred_date2 <- temp_2022[which(temp_2022$pred_prob == max(temp_2022$pred_prob))[1
 pred_date2
 
 test_diff <- as.numeric(as.Date(pred_date2) - as.Date(actual_date))
-test_diff = -1
-# - The difference between the two dates is 2 days (The prediction is 1 day early)
+test_diff
 
 
 ########################################
@@ -210,17 +196,13 @@ final_pred_day # 2023-03-31
 final_bloom_doy <- as.numeric(as.Date(final_pred_day) - as.Date("2023-01-01")) + 1
 final_bloom_doy
 
-final_pred_df <- data.frame(city = "Vancouver", method = "ML", bloom_doy = final_bloom_doy - 1)
+final_pred_df <- data.frame(city = "Vancouver", method = "ML", bloom_doy = final_bloom_doy)
 final_pred_probs <- data.frame(city = "Vancouver", date = merged_2023[, "date"], pred_probs = final_pred)
-# - Since we see that our test result is 2 days later than the actual date, we subtract 1 days from the prediction date.
-# - Therefore, the final prediction date for 2023 from this model is March 30th.
 # - However, this model's performance is very week because it does not have Vancouver's data. 
-# - We fit another model and then average the predictions to make our final prediction for Vancouver.
+# - We fit another model that do not depend on the temperatures and then average the predictions to make our final prediction for Vancouver.
 
 write.csv(final_pred_df, "./code/vancouver/data/A19_final_lgb_predDay_van.csv", row.names = FALSE)
 write.csv(final_pred_probs, "./code/vancouver/data/A19_final_predProbs_van.csv", row.names = FALSE)
-
-
 
 
 # END
