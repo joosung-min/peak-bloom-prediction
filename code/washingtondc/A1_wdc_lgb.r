@@ -200,8 +200,7 @@ lgb.plot.importance(lgb_imp, top_n = 10L, measure = "Gain")
 # - Accumulated GDD (Ca_cumsum) is the most important feature, followed by tmax,long, and  alt
 
 
-# Compute the MAE for the most recent years
-
+# Compute the MAE for the most recent years, and choose p_thresh that minimizes the MAE.
 MAE_p <- c()
 MAE_table <- data.frame(
     year = 2013:2022

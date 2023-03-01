@@ -66,14 +66,18 @@ In this document, we perform LightGBM using the weather data from the closest ci
 
     - Use the final LightGBM model to make the final prediction for the year 2023 in Kyoto.
 
+* Many code lines are commented out to reduce the runtime of the document. Uncomment the lines to run the code.
+
+
 \newpage
 
 #### 1. Select 10 most closest cities to Kyoto to increase our sample size.
-```{r}
+```{r task1, message=FALSE}
 # Load libraries and functions.
 library(tidyverse)
 source("/workspaces/peak-bloom-prediction/code/_shared/F01_functions.r")
-
+```
+```{r}
 # cherry_sub contains bloom_doy of cities in Japan, Switzerland, and South Korea.
 cherry_sub <- read.csv("/workspaces/peak-bloom-prediction/code/_shared/data/A11_cherry_sub.csv") %>%
     distinct(city, bloom_date, .keep_all = TRUE)
@@ -122,7 +126,7 @@ The top 10 closest cities to Kyoto in terms of their geographical locations (lat
 \newpage
 
 #### 2. Compute the accumulated chill days and anti-chill days (Cd_cumsum, Ca_cumsum)
-```{r}
+```{r task2, warning=FALSE, message=FALSE, eval=FALSE}
 library(rnoaa)
 
 # Pull weather stations ids for the stations in Japan.
@@ -142,20 +146,21 @@ city_station_pair <- weather_stations %>%
     rename_with(~"lat", latitude) %>%
     rename_with(~"long", longitude) %>%
     rename_with(~"alt", elevation)
-# # write.csv(city_station_pair, "./code/kyoto/data/A11_city_station_pairs.csv", row.names = FALSE)
+# write.csv(city_station_pair, "./code/kyoto/data/A11_city_station_pairs.csv", row.names = FALSE)
+# city_station_pair <- read.csv("/workspaces/peak-bloom-prediction/code/kyoto/data/A11_city_station_pairs.csv")
 
 # Get temperature data for the target cities.
 # - get_imp_temperature() is a function downloads the temperature data, and impute any missing values using the predictive mean matching method.
 kyoto_weather <- F01_get_imp_temperature(
     city_station_pair = city_station_pair
     )
-# # write.csv(kyoto_weather, "./code/kyoto/data/A12_kyoto_temperature.csv", row.names = FALSE)
-# kyoto_weather <- read.csv("./code/kyoto/data/A12_kyoto_temperature.csv")
+# write.csv(kyoto_weather, "./code/kyoto/data/A12_kyoto_temperature.csv", row.names = FALSE)
+# kyoto_weather <- read.csv("/workspaces/peak-bloom-prediction/code/kyoto/data/A12_kyoto_temperature.csv")
 
 # Find optimal Rc_thresh and Tc using the chill-day model
 # - CAUTION: running the code below may require a high computational power.
-# source("./code/kyoto/M1_gdd_cv_kyoto.r")
-best_gdd_params <- read.csv("/workspaces/peak-bloom-prediction/code/kyoto/data/M12_Kyoto_gdd_best.csv")[1, ]
+source("/workspaces/peak-bloom-prediction/code/kyoto/M1_gdd_cv_kyoto.r")
+# best_gdd_params <- read.csv("/workspaces/peak-bloom-prediction/code/kyoto/data/M12_Kyoto_gdd_best.csv")[1, ]
 
 # Compute daily_Ca, daily_Cd, Ca_cumsum(=AGDD), Cd_cumsum 
 # - compute_gdd computes daily_Cd, daily_Ca, Cd_cumsum, and Ca_cumsum based on Cesaraccio et al., 2014
@@ -166,7 +171,6 @@ kyoto_gdd <- F01_compute_gdd(
     , Tc = best_gdd_params[["Tcs"]])
 
 # Merge the data with city names and their lat, long, alt
-city_station_pair <- read.csv("/workspaces/peak-bloom-prediction/code/kyoto/data/A11_city_station_pairs.csv")
 kyoto_group <- city_station_pair$city
 cherry_city_blooms <- cherry_sub %>%
     filter(city %in% kyoto_group) %>%
@@ -180,12 +184,16 @@ kyoto_gdd2 <- kyoto_gdd %>%
     , by.y = c("city", "bloom_date"), all.x = TRUE) %>%
     mutate(doy = as.integer(strftime(date, format = "%j"))) %>%
     mutate(is_bloom = ifelse(!is.na(bloom_doy), 1, 0))
-write.csv(kyoto_gdd2, "/workspaces/peak-bloom-prediction/code/kyoto/data/A14_kyoto_temp_gdd.csv", row.names = FALSE)
-# kyoto_gdd2 <- read.csv("./code/kyoto/data/A14_kyoto_temp_gdd.csv")
-head(kyoto_gdd2)
+# write.csv(kyoto_gdd2, "/workspaces/peak-bloom-prediction/code/kyoto/data/A14_kyoto_gdd.csv", row.names = FALSE)
+# kyoto_gdd2 <- read.csv("/workspaces/peak-bloom-prediction/code/kyoto/data/A14_kyoto_gdd.csv")
+# head(kyoto_gdd2)
 ```
 
-```{r}
+```{r task22, message=FALSE, warning=FALSE}
+
+best_gdd_params <- read.csv("/workspaces/peak-bloom-prediction/code/kyoto/data/M12_Kyoto_gdd_best.csv")[1, ]
+kyoto_gdd2 <- read.csv("/workspaces/peak-bloom-prediction/code/kyoto/data/A14_kyoto_gdd.csv")
+
 # Check the distribution of Ca_cumsum of those is_bloom = 1
 # hist(kyoto_gdd2 %>% filter(is_bloom == 1) %>% pull(Ca_cumsum), breaks = 30)  # for all target cities
 # hist(kyoto_gdd2 %>% filter(is_bloom == 1) %>% filter(city =="Kyoto") %>% pull(Ca_cumsum), breaks =30) # for Kyoto
@@ -205,172 +213,208 @@ Here we can see that Ca_cumsum alone may not be sufficient to explain the bloom_
 \newpage
 
 #### 3. Train a classification model using LightGBM
-```{r}
+```{r task3}
 # Perform 8-fold cross-validation to find the best set of parameters.
 # * CAUTION: running the code below may require a high computational power.
 # source(./code/kyoto/M2_lgb_cv_kyoto.r)
 ```
 
 #### 4. Model evaluation and interpretation
-```{r}
+
+##### 4.1 Final Model training
+```{r task41, warning=FALSE, message=FALSE}
 library(lightgbm)
 
 # Load the best parameter set
-best_params <- read.csv("./code/kyoto/data/M23_lgb_best_score_kyoto3.csv")
-best_params
-# best_params <- read.csv("./code/kyoto/data/archive/best1/M23_lgb_best_score_kyoto3.csv")
+best_params <- read.csv("/workspaces/peak-bloom-prediction/code/kyoto/data/M23_lgb_best_score_kyoto3.csv")
 # best_params
 
-# # contains actual bloom dates + past gdd info
-# cherry_gdd <- read.csv("./code/kyoto/data/A14_kyoto_temp_gdd.csv") %>%
-#     filter(month %in% c(3, 4))  
+# Load data
+cherry_gdd <- read.csv("/workspaces/peak-bloom-prediction/code/kyoto/data/A14_kyoto_gdd.csv") %>%
+    filter(month %in% c(3, 4))  
 
-# feature_names <- c("tmax", "tmin", "daily_Ca", "daily_Cd", "Cd_cumsum", "Ca_cumsum", "lat", "long", "alt", "month", "day")
-# # feature_names <- c("tmax", "tmin", "daily_Ca", "daily_Cd", "Cd_cumsum", "Ca_cumsum", "lat", "long", "alt", "doy")
-# target_col <- "is_bloom"
+feature_names <- c("tmax", "tmin", "daily_Ca", "daily_Cd", "Cd_cumsum", "Ca_cumsum", "lat", "long", "alt", "month", "day")
+target_col <- "is_bloom"
 
-# # Make prediction on the last 4 years
-# target_years <- 2013:2022
+# Make prediction on the last 10 years
+target_years <- 2015:2022
 
-# train_set <- cherry_gdd %>% filter(!(year %in% target_years))
+train_set <- cherry_gdd %>% filter(!(year %in% target_years))
 
-# # stratified under-sampling from train_set to balance the number of is_bloom = 1 and 0
-# train_isbloom <- train_set %>% filter(is_bloom == 1)
-# train_nobloom <- train_set %>% filter(is_bloom == 0)
-# train_sample <- train_nobloom[sample(nrow(train_nobloom), nrow(train_isbloom) *1.5), ] %>% bind_rows(train_isbloom)
+# Perform stratified under-sampling from train_set to balance the number of is_bloom = 1 and 0
+set.seed(42)
+train_isbloom <- train_set %>% filter(is_bloom == 1)
+train_nobloom <- train_set %>% filter(is_bloom == 0)
+train_sample <- train_nobloom[sample(nrow(train_nobloom), nrow(train_isbloom) *1.5), ] %>% bind_rows(train_isbloom)
 
-# test_set <- cherry_gdd %>%filter(year %in% target_years)
-# test_isbloom <- test_set %>% filter(is_bloom == 1)
-# test_nobloom <- test_set %>% filter(is_bloom == 0)
-# test_sample <- test_nobloom[sample(nrow(test_nobloom), nrow(test_isbloom) *1.5), ] %>% bind_rows(test_isbloom)
+test_set <- cherry_gdd %>%filter(year %in% target_years)
+test_isbloom <- test_set %>% filter(is_bloom == 1)
+test_nobloom <- test_set %>% filter(is_bloom == 0)
+test_sample <- test_nobloom[sample(nrow(test_nobloom), nrow(test_isbloom) *1.5), ] %>% bind_rows(test_isbloom)
 # table(test_sample$is_bloom)
 
-# dtrain <- lgb.Dataset(
-#     data = data.matrix(train_sample[, feature_names])
-#     , label = train_sample[, target_col]
-#     , params = list(
-#         max_bin = best_params$max_bins
-#     )
-# )
+# Train the final model using the best parameter set and the training set.
+dtrain <- lgb.Dataset(
+    data = data.matrix(train_sample[, feature_names])
+    , label = train_sample[, target_col]
+    , params = list(
+        max_bin = best_params$max_bins
+    )
+)
 
-# dtest <- lgb.Dataset(
-#     data = data.matrix(test_set[, feature_names])
-#     , label = test_set[, target_col]
-# )
+dtest <- lgb.Dataset(
+    data = data.matrix(test_set[, feature_names])
+    , label = test_set[, target_col]
+)
 
-# valids <- list(test = dtest)
+valids <- list(test = dtest)
 
-# n_boosting_rounds <- 1000
+n_boosting_rounds <- 1000
 
-# params <- list(
-#     objective = "binary"
-#     , metric = c("binary_logloss")
-#     , is_enable_sparse = TRUE
-#     , boosting = as.character(best_params[["boostings"]])
-#     , learning_rate = as.numeric(best_params[["learning_rates"]])
-#     , min_data_in_leaf = as.numeric(best_params[["min_data_in_leaf"]])
-#     , max_depth = as.numeric(best_params[["max_depth"]])
-#     , feature_fraction = as.numeric(best_params[["feature_fractions"]])
-#     , bagging_fraction = as.numeric(best_params[["bagging_fractions"]])
-#     , bagging_freq = as.numeric(best_params[["bagging_freqs"]])
-#     , lambda_l2 = as.numeric(best_params[["lambda_l2s"]])
-#     , early_stopping_rounds = as.integer(n_boosting_rounds * 0.1)
-#     , seed = 42L
-# )
+params <- list(
+    objective = "binary"
+    , metric = c("AUC")  
+    , is_enable_sparse = TRUE
+    , boosting = as.character(best_params[["boostings"]])
+    , learning_rate = as.numeric(best_params[["learning_rates"]])
+    , min_data_in_leaf = as.numeric(best_params[["min_data_in_leaf"]])
+    , max_depth = as.numeric(best_params[["max_depth"]])
+    , feature_fraction = as.numeric(best_params[["feature_fractions"]])
+    , bagging_fraction = as.numeric(best_params[["bagging_fractions"]])
+    , bagging_freq = as.numeric(best_params[["bagging_freqs"]])
+    , lambda_l2 = as.numeric(best_params[["lambda_l2s"]])
+    , early_stopping_rounds = as.integer(n_boosting_rounds * 0.1)
+    , seed = 42L
+)
 
-# lgb_final <- lgb.train(
-#     data = dtrain
-#     , params = params
-#     , valids = valids
-# )
+lgb_final <- lgb.train(
+    data = dtrain
+    , params = params
+    , valids = valids
+)
 
-# pred <- predict(lgb_final, as.matrix(test_set[, feature_names]))
-# hist(pred, breaks =100)
-# test_set$predicted <- ifelse(pred > 0.5, 1, 0)
-# tail(sort(pred))
+best_score <- lgb_final$best_score
+```
 
-# # Confusion matrix
-# library(caret)
-# confusionMatrix(factor(test_set$predicted), factor(test_set$is_bloom))
+The final model's test AUC is `r {best_score}`
 
-# # ROC curve
-# library(ROCR)
-# roc_pred <- prediction(pred, test_set$is_bloom)
-# roc <- performance(roc_pred, "sens", "spec")
-# plot(roc, main="ROC curve")
-# abline(a=0, b=1)
+##### 4.2 Model evaluation
 
-# # Feature importance
-# lgb_imp <- lgb.importance(lgb_final)
-# lgb_imp
-# lgb.plot.importance(lgb_imp, top_n = 10L, measure = "Gain")
+```{r task42, message=FALSE, warning=FALSE, eval=FALSE}
+library(tidyverse)
+# Here we try different values of p_thresh and choose the one that returns the best MAE over the last 8 years.
+MAE_p <- c()
+MAE_table <- data.frame(
+    year = 2015:2022
+    , actual_bloom_date = NA
+    , predicted_bloom_date = NA
+    , diff = 0
+)
 
-# # Compute the MAE for the most recent years
-# mae <- F01_compute_MAE(target_city = "Kyoto", cherry_gdd = cherry_gdd, lgb_final = lgb_final, target_years = c(2012:2022), p_thresh = 0.5, peak = TRUE)
-# mae
+target_p_thresh <- seq(0.4, 0.7, by = 0.05)
+for (p_thresh in target_p_thresh) {
+    
+    for (yr in MAE_table$year) {
+        
+        actual_bloom_date <- read.csv("/workspaces/peak-bloom-prediction/competition_rules/data/kyoto.csv") %>%filter(year == yr) %>% pull(bloom_date)
+        mae_set <- read.csv("/workspaces/peak-bloom-prediction/code/kyoto/data/A14_kyoto_gdd.csv") %>% filter(year == yr)
 
-# # Generate and save the prediction plot for the most recent years
-# F01_pred_plot_past(target_city = "Kyoto", cherry_gdd = cherry_gdd, lgb_final = lgb_final, target_years = c(2019:2022), p_thresh = 0.5, peak = TRUE)
+        mae_pred <- predict(lgb_final, data.matrix(mae_set[, feature_names]))
+        mae_set$pred_prob <- mae_pred
+        mae_set$pred_bin <- ifelse(mae_pred > 0.5, 1, 0)
+
+        # Prediction based on diff probability thresholds
+        predicted_bloom_date_p_thresh_idx <- which(mae_set$pred_prob > p_thresh)[1]
+        predicted_bloom_date_p_thresh <- mae_set[predicted_bloom_date_p_thresh_idx, "date"]
+        
+        diff <- abs(as.numeric(as.Date(actual_bloom_date, format = "%Y-%m-%d"))- as.numeric(as.Date(predicted_bloom_date_p_thresh, format = "%Y-%m-%d")))
+        
+        MAE_table[MAE_table$year ==yr, ]<- c(yr
+        , actual_bloom_date, predicted_bloom_date_p_thresh
+        , as.numeric(diff))
+
+    }
+    MAE_p <- c(MAE_p, mean(as.numeric(MAE_table$diff), na.rm = TRUE))
+}
+# write.csv(data.frame(MAE_p = MAE_p, target_p_thresh = target_p_thresh), file = "/workspaces/peak-bloom-prediction/code/kyoto/data/A15_kyoto_MAE_p.csv", row.names = FALSE)
+```
+
+```{r task422, echo=FALSE}
+MAE_p_df <- read.csv("/workspaces/peak-bloom-prediction/code/kyoto/data/A15_kyoto_MAE_p.csv")
+target_p_thresh <- MAE_p_df[["target_p_thresh"]]
+best_p_thresh <- target_p_thresh[which.min(MAE_p_df[["MAE_p"]])]
+MAE_p <- MAE_p_df[["MAE_p"]]
+```
+It seems that the best p_thresh is `r {best_p_thresh}`, which gives the lowest MAE of `r {min(MAE_p)}`.
+
+##### 4.3 Model interpretation
+```{r task43, message=FALSE, warning=FALSE}
+# Interpret the model using the feature importance plot
+lgb_imp <- lgb.importance(lgb_final)
+lgb.plot.importance(lgb_imp, top_n = 5L, measure = "Gain")
+```
+
+\newpage
+
+#### 5. Final prediction for the year 2023
+```{r task5, message=FALSE, warning=FALSE, eval=FALSE}
+# Weather data for Oct 2022 to Feb 2023 downloaded from NOAA, 2023 March and April obtained from AccuWeather
+# https://www.accuweather.com/en/jp/kyoto-shi/224436/weather-forecast/224436
+
+city_station_pair <- read.csv("/workspaces/peak-bloom-prediction/code/kyoto/data/A11_city_station_pairs.csv") %>% filter(city == "Kyoto")
+
+temp_2223 <- F01_get_imp_temperature(
+    city_station_pair = city_station_pair
+    , date_min = "2022-10-01", date_max = "2023-04-30") %>% 
+    mutate(year = as.integer(strftime(date, format = "%Y"))) %>%
+    filter(year %in% c(2022, 2023)) %>%
+    select(id, date, year, month, day, tmin, tmax) %>% "rownames<-"(NULL)
+
+data_2023 <- read.csv("/workspaces/peak-bloom-prediction/code/_shared/data/city_weather_2023.csv") %>%
+    filter(city == "Kyoto") %>%
+    mutate(year = 2023) %>%
+    mutate(month = as.integer(strftime(date, "%m"))) %>%
+    mutate(day = as.integer(strftime(date, "%d"))) %>%
+    select(id, date, year, month, day, tmin, tmax)
+
+merged_2223 <- rbind(temp_2223, data_2023) %>% "rownames<-"(NULL)
+# write.csv(merged_2223, "./code/kyoto/data/A16_kyoto_weather_2023.csv", row.names = FALSE)
+```
+
+```{r}
+city_station_pair <- read.csv("/workspaces/peak-bloom-prediction/code/kyoto/data/A11_city_station_pairs.csv") %>% filter(city == "Kyoto")
+merged_2223 <- read.csv("/workspaces/peak-bloom-prediction/code/kyoto/data/A16_kyoto_weather_2023.csv")
+
+# Compute the chill days and anti-chill days
+best_gdd_params <- read.csv("/workspaces/peak-bloom-prediction/code/kyoto/data/M12_Kyoto_gdd_best.csv")[1, ]
+gdd_2223 <- F01_compute_gdd(merged_2223
+        , noaa_station_ids = unique(merged_2223$id)
+        , Rc_thresh = best_gdd_params[["Rc_thresholds"]]
+        , Tc = best_gdd_params[["Tcs"]]) %>%
+    mutate(doy = as.integer(strftime(date, "%j"))) %>% 
+    merge(y = city_station_pair, by = "id"
+        , all.x = TRUE) %>% "rownames<-"(NULL) %>%
+    filter(month %in% c(3, 4))
+# write.csv(gdd_2223, "./code/kyoto/data/A17_kyoto_gdd_2023.csv", row.names = FALSE)
+gdd_2223 <- read.csv("/workspaces/peak-bloom-prediction/code/kyoto/data/A17_kyoto_gdd_2023.csv")
+
+# Make final prediction for 2023 Kyoto
+final_pred <- predict(lgb_final, as.matrix(gdd_2223[, feature_names]))
+final_pred_date <- gdd_2223[which(final_pred > best_p_thresh)[1], "date"]
+# Compute doy
+final_doy <- as.integer(strftime(final_pred_date, "%j"))
 
 
-# #######################################
-# # Final prediction for 2023
-# #######################################
-
-# # Weather data for 2023 march and april obtained from 
-
-# # city_station_pair <- read.csv("./code/kyoto/data/A11_city_station_pairs.csv") %>% filter(city == "Kyoto")
-
-# # temp_2223 <- F01_get_imp_temperature(
-# #     city_station_pair = city_station_pair
-# #     , target_country = c("Japan")
-# #     , date_min = "2022-10-01", date_max = "2023-04-30") %>% 
-# #     mutate(year = as.integer(strftime(date, format = "%Y"))) %>%
-# #     filter(year %in% c(2022, 2023)) %>%
-# #     select(id, date, year, month, day, tmin, tmax) %>% "rownames<-"(NULL)
-# # head(temp_2223)
-# # tail(temp_2223)
-
-# # data_2023 <- read.csv("./code/_shared/data/city_weather_2023.csv") %>%
-# #     filter(city == "Kyoto") %>%
-# #     mutate(year = 2023) %>%
-# #     mutate(month = as.integer(strftime(date, "%m"))) %>%
-# #     mutate(day = as.integer(strftime(date, "%d"))) %>%
-# #     select(id, date, year, month, day, tmin, tmax)
-
-# # merged_2223 <- rbind(temp_2223, data_2023) %>% "rownames<-"(NULL)
-# # tail(merged_2223)
-# # write.csv(merged_2223, "./code/kyoto/data/A16_kyoto_weather_2023.csv", row.names = FALSE)
-# merged_2223 <- read.csv("./code/kyoto/data/A16_kyoto_weather_2023.csv")
-
-# # Compute GDD
-# # best_gdd_params <- read.csv("./code/kyoto/data/M12_Kyoto_gdd_best.csv")[1, ]
-# # best_gdd_params
-# # gdd_2223 <- F01_compute_gdd(merged_2223
-# #     , noaa_station_ids = unique(merged_2223$id)
-# #     ,Rc_thresh = best_gdd_params[["Rc_thresholds"]]
-# #     , Tc = best_gdd_params[["Tcs"]]) %>%
-# #     mutate(doy = as.integer(strftime(date, "%j"))) %>% 
-# #     merge(y = city_station_pair, by = "id"
-# #     , all.x = TRUE) %>% "rownames<-"(NULL) %>%
-# #     filter(month %in% c(3, 4))
-# # dim(gdd_2223)    
-# # head(gdd_2223)
-# # tail(gdd_2223)
-# # write.csv(gdd_2223, "./code/kyoto/data/A17_kyoto_gdd_2023.csv", row.names = FALSE)
-# gdd_2223 <- read.csv("./code/kyoto/data/A17_kyoto_gdd_2023.csv")
-
-# # Make final prediction for 2023 Kyoto
-# final_pred <- predict(lgb_final, as.matrix(gdd_2223[, feature_names]))
-
-# p_final_pred <- F01_pred_plot_final(target_city = "Kyoto"
-#     , year_data = gdd_2223
-#     , feature_names = feature_names
-#     , lgb_final = lgb_final
-#     , p_thresh = 0.5
-#     , peak = FALSE)
-# p_final_pred
+p_final_pred <- F01_pred_plot_final(target_city = "Kyoto"
+    , year_data = gdd_2223
+    , feature_names = feature_names
+    , lgb_final = lgb_final
+    , p_thresh = best_p_thresh
+    , peak = FALSE)
+p_final_pred
 
 # ggsave("./code/kyoto/outputs/kyoto_2023_prediction_plot.png", p_final_pred
 #     , width = 10, height = 6, units = "in", dpi = 80)
 ```
+
+The final predicted cherry blossom date for Kyoto 2023 is `r {final_pred_date}`, which corresponds to doy = `r {final_doy}`.

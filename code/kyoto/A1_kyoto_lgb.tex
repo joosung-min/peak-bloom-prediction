@@ -1,0 +1,859 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{lmodern}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\usepackage[margin=1in]{geometry}
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.77,0.63,0.00}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\ifLuaTeX
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same} % disable monospaced font for URLs
+\hypersetup{
+  pdftitle={Peak Cherry Blossom Prediction in Kyoto 2023},
+  pdfauthor={Joosung (Sonny) Min},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\title{Peak Cherry Blossom Prediction in Kyoto 2023}
+\author{Joosung (Sonny) Min}
+\date{}
+
+\begin{document}
+\maketitle
+
+In this document, we perform LightGBM using the weather data from the
+closest cities to Kyoto, Japan.
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  Select 10 most closest cities to Kyoto to increase our sample size.
+
+  \begin{itemize}
+  \item
+    We use 5 most recent bloom\_doy along with the geographical location
+    (lat, long, alt) of all cities listed in Japan on data/japan.csv.
+  \item
+    Perform PCA and compute the Euclidean distances between the cities,
+    and select top 10 cities with the smallest distance to Kyoto.
+  \end{itemize}
+\item
+  Compute the accumulated chill days and anti-chill days (Cd\_cumsum,
+  Ca\_cumsum)
+
+  \begin{itemize}
+  \item
+    The weather data is obtained from NOAA GHCN-Daily dataset.
+  \item
+    Chill-day model here refers to the original method discussed by
+    \emph{Cesaraccio et al., 2014}.
+  \item
+    Computation starts from Oct 1st of the previous year and ends on Apr
+    30th of the target year, using the optimal set of paramters
+    (\textbf{M1\_gdd\_cv\_kyoto.r})
+
+    \begin{itemize}
+    \item
+      \emph{Tc}: Base temperature required to compute chill days.
+    \item
+      \emph{Rc\_thresh}: Accumulated chill day threshold to start
+      accumulating anti-chill days.
+    \end{itemize}
+  \end{itemize}
+\item
+  Train a classification model using LightGBM (\emph{Ke et al., 2017})
+
+  \begin{itemize}
+  \item
+    The tree-based gradient-boosted classification model is suitable in
+    this case.
+
+    \begin{itemize}
+    \item
+      Can model non-linear relationships between the predictors and
+      presponse
+    \item
+      Innately handles possible interactions between the predictors.
+    \item
+      LightGBM is a fast and efficient implementation of
+      gradient-boosted decision trees.
+    \end{itemize}
+  \item
+    Response: is\_bloom (1: bloom, 0: no bloom)
+  \item
+    Predictors: Cd\_cumsum, Ca\_cumsum, daily\_Ca, daily\_Cd, tmax,
+    tmin, lat, long, alt, month, day
+  \item
+    Split the data into 80\% training and 20\% test set.
+
+    \begin{itemize}
+    \item
+      Training set: All data before the year 2015.
+    \item
+      Test set: All data including and after the year 2015.
+    \end{itemize}
+  \item
+    Performed an 8-fold cross-validation using the training set to
+    fine-tune the hyperparameters. (\textbf{M2\_lgb\_cv\_kyoto.r})
+
+    \begin{itemize}
+    \tightlist
+    \item
+      \emph{boosting}: boosting methods.
+    \item
+      \emph{learning\_rate}: learning rate used at each boosting
+      early\_stopping\_rounds.
+    \item
+      \emph{max\_bin}: maximum number of bins used. Maximum number of
+      bins used for LightGBM. Larger number of bins may cause
+      overfitting.
+    \item
+      \emph{min\_data\_in\_leaf}: Number of minimum samples in leaves.
+      Smaller numbers may cause overfitting.
+    \item
+      \emph{max\_depth}: Maximum depth of trees. Deeper trees may cause
+      overfitting.
+    \item
+      \emph{feature\_fraction}: Fraction of features used for each
+      split. Higher fractions may cause slower learning speed.
+    \item
+      \emph{bagging\_fraction}: Sample fraction used for every n stage
+      determined by bagging\_freq. May help mitigate overfitting.
+    \item
+      \emph{bagging\_freq}: Sample bagging frequency.
+    \item
+      \emph{lambda\_l2}: Regularization term for L2 regularization.
+    \end{itemize}
+  \end{itemize}
+\item
+  Model evaluation and interpretation
+
+  \begin{itemize}
+  \item
+    Evaluate the model using MAE on the past blooming dates on the test
+    set (year 2015 to 2022)
+  \item
+    Interprete the importance of the predictors using the feature
+    importance plot.
+  \end{itemize}
+\item
+  Final prediction for the year 2023
+
+  \begin{itemize}
+  \tightlist
+  \item
+    Use the final LightGBM model to make the final prediction for the
+    year 2023 in Kyoto.
+  \end{itemize}
+\end{enumerate}
+
+\begin{itemize}
+\tightlist
+\item
+  Many code lines are commented out to reduce the runtime of the
+  document. Uncomment the lines to run the code.
+\end{itemize}
+
+\newpage
+
+\hypertarget{select-10-most-closest-cities-to-kyoto-to-increase-our-sample-size.}{%
+\paragraph{1. Select 10 most closest cities to Kyoto to increase our
+sample
+size.}\label{select-10-most-closest-cities-to-kyoto-to-increase-our-sample-size.}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Load libraries and functions.}
+\FunctionTok{library}\NormalTok{(tidyverse)}
+\FunctionTok{source}\NormalTok{(}\StringTok{"/workspaces/peak{-}bloom{-}prediction/code/\_shared/F01\_functions.r"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# cherry\_sub contains bloom\_doy of cities in Japan, Switzerland, and South Korea.}
+\NormalTok{cherry\_sub }\OtherTok{\textless{}{-}} \FunctionTok{read.csv}\NormalTok{(}\StringTok{"/workspaces/peak{-}bloom{-}prediction/code/\_shared/data/A11\_cherry\_sub.csv"}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{distinct}\NormalTok{(city, bloom\_date, }\AttributeTok{.keep\_all =} \ConstantTok{TRUE}\NormalTok{)}
+
+\CommentTok{\# Filter out cities in Japan.}
+\NormalTok{cherry\_pca }\OtherTok{\textless{}{-}}\NormalTok{ cherry\_sub }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{filter}\NormalTok{(country }\SpecialCharTok{==} \StringTok{"Japan"}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{filter}\NormalTok{(year }\SpecialCharTok{==} \DecValTok{2021}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
+\NormalTok{    dplyr}\SpecialCharTok{::}\FunctionTok{select}\NormalTok{(city, lat, long, alt, bloom\_doy) }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{distinct}\NormalTok{(city, }\AttributeTok{.keep\_all =} \ConstantTok{TRUE}\NormalTok{)}
+\FunctionTok{rownames}\NormalTok{(cherry\_pca) }\OtherTok{\textless{}{-}}\NormalTok{ cherry\_pca}\SpecialCharTok{$}\NormalTok{city}
+\FunctionTok{colnames}\NormalTok{(cherry\_pca)[}\DecValTok{5}\NormalTok{] }\OtherTok{\textless{}{-}} \StringTok{"2021\_bloom\_doy"}
+
+\CommentTok{\# Extract the most recent 5 years of bloom\_doy for each city in Japan from cherry\_sub.}
+\NormalTok{years }\OtherTok{\textless{}{-}} \DecValTok{2017}\SpecialCharTok{:}\DecValTok{2020}
+\ControlFlowTok{for}\NormalTok{ (yr }\ControlFlowTok{in}\NormalTok{ years) \{}
+\NormalTok{    temp\_data }\OtherTok{\textless{}{-}}\NormalTok{ cherry\_sub }\SpecialCharTok{\%\textgreater{}\%}
+        \FunctionTok{filter}\NormalTok{(country }\SpecialCharTok{==} \StringTok{"Japan"}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
+        \FunctionTok{filter}\NormalTok{(year }\SpecialCharTok{==}\NormalTok{ yr) }\SpecialCharTok{\%\textgreater{}\%}
+\NormalTok{        dplyr}\SpecialCharTok{::}\FunctionTok{select}\NormalTok{(city, bloom\_doy) }\SpecialCharTok{\%\textgreater{}\%}
+        \FunctionTok{distinct}\NormalTok{(city, }\AttributeTok{.keep\_all =} \ConstantTok{TRUE}\NormalTok{)}
+    \FunctionTok{colnames}\NormalTok{(temp\_data)[}\DecValTok{2}\NormalTok{] }\OtherTok{\textless{}{-}} \FunctionTok{paste0}\NormalTok{(yr, }\StringTok{"\_bloom\_doy"}\NormalTok{)}
+\NormalTok{    cherry\_pca }\OtherTok{\textless{}{-}}\NormalTok{ cherry\_pca }\SpecialCharTok{\%\textgreater{}\%} 
+        \FunctionTok{merge}\NormalTok{(}\AttributeTok{y =}\NormalTok{ temp\_data, }\AttributeTok{by =} \StringTok{"city"}\NormalTok{, }\AttributeTok{all.x =} \ConstantTok{TRUE}\NormalTok{)}
+\NormalTok{\}}
+\FunctionTok{rownames}\NormalTok{(cherry\_pca) }\OtherTok{\textless{}{-}}\NormalTok{ cherry\_pca}\SpecialCharTok{$}\NormalTok{city}
+\NormalTok{cherry\_pca }\OtherTok{\textless{}{-}}\NormalTok{ cherry\_pca }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{select}\NormalTok{(}\SpecialCharTok{{-}}\NormalTok{city) }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{drop\_na}\NormalTok{()}
+\CommentTok{\# head(cherry\_pca)}
+
+\CommentTok{\# perform pca}
+\NormalTok{pca\_result }\OtherTok{\textless{}{-}} \FunctionTok{prcomp}\NormalTok{(cherry\_pca, }\AttributeTok{scale =} \ConstantTok{TRUE}\NormalTok{)}
+\NormalTok{pca\_out }\OtherTok{\textless{}{-}} \FunctionTok{data.frame}\NormalTok{(}\SpecialCharTok{{-}}\DecValTok{1} \SpecialCharTok{*}\NormalTok{ pca\_result}\SpecialCharTok{$}\NormalTok{x)}
+
+\CommentTok{\# Get (Euclidean) distance matrix}
+\NormalTok{kyoto\_dist }\OtherTok{\textless{}{-}} \FunctionTok{data.frame}\NormalTok{(}\FunctionTok{as.matrix}\NormalTok{(}\FunctionTok{dist}\NormalTok{(pca\_out))) }\SpecialCharTok{\%\textgreater{}\%}
+\NormalTok{    dplyr}\SpecialCharTok{::}\FunctionTok{select}\NormalTok{(Kyoto) }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{arrange}\NormalTok{(Kyoto)}
+\CommentTok{\# head(kyoto\_dist, 11) \# Show the top 11 cities (including Kyoto itself) with the smallest distance to Kyoto.}
+
+\CommentTok{\# Get city names}
+\NormalTok{kyoto\_group }\OtherTok{\textless{}{-}} \FunctionTok{rownames}\NormalTok{(kyoto\_dist)[}\DecValTok{1}\SpecialCharTok{:}\DecValTok{11}\NormalTok{]}
+\end{Highlighting}
+\end{Shaded}
+
+The top 10 closest cities to Kyoto in terms of their geographical
+locations (lat, long, alt) and 5 most recent bloom\_doy are: Nagoya,
+Osaka, Wakayama, Gifu, Fukui, Tsu, Kobe, Tottori, Okayama, Takamatsu
+
+\newpage
+
+\hypertarget{compute-the-accumulated-chill-days-and-anti-chill-days-cd_cumsum-ca_cumsum}{%
+\paragraph{2. Compute the accumulated chill days and anti-chill days
+(Cd\_cumsum,
+Ca\_cumsum)}\label{compute-the-accumulated-chill-days-and-anti-chill-days-cd_cumsum-ca_cumsum}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(rnoaa)}
+
+\CommentTok{\# Pull weather stations ids for the stations in Japan.}
+\NormalTok{weather\_stations }\OtherTok{\textless{}{-}} \FunctionTok{ghcnd\_stations}\NormalTok{() }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{filter}\NormalTok{(last\_year }\SpecialCharTok{\textgreater{}} \DecValTok{2021}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{filter}\NormalTok{(first\_year }\SpecialCharTok{\textless{}} \DecValTok{1954}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{distinct}\NormalTok{(id, }\AttributeTok{.keep\_all =} \ConstantTok{TRUE}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{filter}\NormalTok{(}\FunctionTok{str\_sub}\NormalTok{(id, }\DecValTok{1}\NormalTok{, }\DecValTok{2}\NormalTok{) }\SpecialCharTok{\%in\%} \FunctionTok{c}\NormalTok{(}\StringTok{"JA"}\NormalTok{)) }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{filter}\NormalTok{(name }\SpecialCharTok{\%in\%} \FunctionTok{toupper}\NormalTok{(kyoto\_group))}
+\CommentTok{\# write.csv(weather\_stations, "./code/kyoto/data/A11\_weather\_stations\_kyoto.csv", row.names = FALSE)}
+\CommentTok{\# weather\_stations \textless{}{-} read.csv("./code/kyoto/data/A11\_weather\_stations\_kyoto.csv")}
+
+\CommentTok{\# Get the weather station ids for the target cities.}
+\NormalTok{city\_station\_pair }\OtherTok{\textless{}{-}}\NormalTok{ weather\_stations }\SpecialCharTok{\%\textgreater{}\%} 
+    \FunctionTok{mutate}\NormalTok{(}\AttributeTok{city =} \FunctionTok{str\_to\_title}\NormalTok{(name)) }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{select}\NormalTok{(}\SpecialCharTok{{-}}\FunctionTok{c}\NormalTok{(name, state, gsn\_flag, wmo\_id, element, first\_year, last\_year)) }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{rename\_with}\NormalTok{(}\SpecialCharTok{\textasciitilde{}}\StringTok{"lat"}\NormalTok{, latitude) }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{rename\_with}\NormalTok{(}\SpecialCharTok{\textasciitilde{}}\StringTok{"long"}\NormalTok{, longitude) }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{rename\_with}\NormalTok{(}\SpecialCharTok{\textasciitilde{}}\StringTok{"alt"}\NormalTok{, elevation)}
+\CommentTok{\# write.csv(city\_station\_pair, "./code/kyoto/data/A11\_city\_station\_pairs.csv", row.names = FALSE)}
+\CommentTok{\# city\_station\_pair \textless{}{-} read.csv("/workspaces/peak{-}bloom{-}prediction/code/kyoto/data/A11\_city\_station\_pairs.csv")}
+
+\CommentTok{\# Get temperature data for the target cities.}
+\CommentTok{\# {-} get\_imp\_temperature() is a function downloads the temperature data, and impute any missing values using the predictive mean matching method.}
+\NormalTok{kyoto\_weather }\OtherTok{\textless{}{-}} \FunctionTok{F01\_get\_imp\_temperature}\NormalTok{(}
+    \AttributeTok{city\_station\_pair =}\NormalTok{ city\_station\_pair}
+\NormalTok{    )}
+\CommentTok{\# write.csv(kyoto\_weather, "./code/kyoto/data/A12\_kyoto\_temperature.csv", row.names = FALSE)}
+\CommentTok{\# kyoto\_weather \textless{}{-} read.csv("/workspaces/peak{-}bloom{-}prediction/code/kyoto/data/A12\_kyoto\_temperature.csv")}
+
+\CommentTok{\# Find optimal Rc\_thresh and Tc using the chill{-}day model}
+\CommentTok{\# {-} }\AlertTok{CAUTION}\CommentTok{: running the code below may require a high computational power.}
+\FunctionTok{source}\NormalTok{(}\StringTok{"/workspaces/peak{-}bloom{-}prediction/code/kyoto/M1\_gdd\_cv\_kyoto.r"}\NormalTok{)}
+\CommentTok{\# best\_gdd\_params \textless{}{-} read.csv("/workspaces/peak{-}bloom{-}prediction/code/kyoto/data/M12\_Kyoto\_gdd\_best.csv")[1, ]}
+
+\CommentTok{\# Compute daily\_Ca, daily\_Cd, Ca\_cumsum(=AGDD), Cd\_cumsum }
+\CommentTok{\# {-} compute\_gdd computes daily\_Cd, daily\_Ca, Cd\_cumsum, and Ca\_cumsum based on Cesaraccio et al., 2014}
+\NormalTok{kyoto\_gdd }\OtherTok{\textless{}{-}} \FunctionTok{F01\_compute\_gdd}\NormalTok{(}
+    \AttributeTok{weather\_df =}\NormalTok{ kyoto\_weather}
+\NormalTok{    , }\AttributeTok{noaa\_station\_ids =} \FunctionTok{unique}\NormalTok{(kyoto\_weather}\SpecialCharTok{$}\NormalTok{id)}
+\NormalTok{    , }\AttributeTok{Rc\_thresh =}\NormalTok{ best\_gdd\_params[[}\StringTok{"Rc\_thresholds"}\NormalTok{]]}
+\NormalTok{    , }\AttributeTok{Tc =}\NormalTok{ best\_gdd\_params[[}\StringTok{"Tcs"}\NormalTok{]])}
+
+\CommentTok{\# Merge the data with city names and their lat, long, alt}
+\NormalTok{kyoto\_group }\OtherTok{\textless{}{-}}\NormalTok{ city\_station\_pair}\SpecialCharTok{$}\NormalTok{city}
+\NormalTok{cherry\_city\_blooms }\OtherTok{\textless{}{-}}\NormalTok{ cherry\_sub }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{filter}\NormalTok{(city }\SpecialCharTok{\%in\%}\NormalTok{ kyoto\_group) }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{select}\NormalTok{(city, bloom\_doy, bloom\_date)}
+
+\CommentTok{\# We use kyoto\_gdd2 for the final model fitting and prediction}
+\NormalTok{kyoto\_gdd2 }\OtherTok{\textless{}{-}}\NormalTok{ kyoto\_gdd }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{merge}\NormalTok{(}\AttributeTok{y =}\NormalTok{ city\_station\_pair, }\AttributeTok{by =} \StringTok{"id"}\NormalTok{, }\AttributeTok{all.x =} \ConstantTok{TRUE}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{merge}\NormalTok{(}\AttributeTok{y =}\NormalTok{ cherry\_city\_blooms}
+\NormalTok{    , }\AttributeTok{by.x =} \FunctionTok{c}\NormalTok{(}\StringTok{"city"}\NormalTok{, }\StringTok{"date"}\NormalTok{)}
+\NormalTok{    , }\AttributeTok{by.y =} \FunctionTok{c}\NormalTok{(}\StringTok{"city"}\NormalTok{, }\StringTok{"bloom\_date"}\NormalTok{), }\AttributeTok{all.x =} \ConstantTok{TRUE}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{mutate}\NormalTok{(}\AttributeTok{doy =} \FunctionTok{as.integer}\NormalTok{(}\FunctionTok{strftime}\NormalTok{(date, }\AttributeTok{format =} \StringTok{"\%j"}\NormalTok{))) }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{mutate}\NormalTok{(}\AttributeTok{is\_bloom =} \FunctionTok{ifelse}\NormalTok{(}\SpecialCharTok{!}\FunctionTok{is.na}\NormalTok{(bloom\_doy), }\DecValTok{1}\NormalTok{, }\DecValTok{0}\NormalTok{))}
+\CommentTok{\# write.csv(kyoto\_gdd2, "/workspaces/peak{-}bloom{-}prediction/code/kyoto/data/A14\_kyoto\_gdd.csv", row.names = FALSE)}
+\CommentTok{\# kyoto\_gdd2 \textless{}{-} read.csv("/workspaces/peak{-}bloom{-}prediction/code/kyoto/data/A14\_kyoto\_gdd.csv")}
+\CommentTok{\# head(kyoto\_gdd2)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{best\_gdd\_params }\OtherTok{\textless{}{-}} \FunctionTok{read.csv}\NormalTok{(}\StringTok{"/workspaces/peak{-}bloom{-}prediction/code/kyoto/data/M12\_Kyoto\_gdd\_best.csv"}\NormalTok{)[}\DecValTok{1}\NormalTok{, ]}
+\NormalTok{kyoto\_gdd2 }\OtherTok{\textless{}{-}} \FunctionTok{read.csv}\NormalTok{(}\StringTok{"/workspaces/peak{-}bloom{-}prediction/code/kyoto/data/A14\_kyoto\_gdd.csv"}\NormalTok{)}
+
+\CommentTok{\# Check the distribution of Ca\_cumsum of those is\_bloom = 1}
+\CommentTok{\# hist(kyoto\_gdd2 \%\textgreater{}\% filter(is\_bloom == 1) \%\textgreater{}\% pull(Ca\_cumsum), breaks = 30)  \# for all target cities}
+\CommentTok{\# hist(kyoto\_gdd2 \%\textgreater{}\% filter(is\_bloom == 1) \%\textgreater{}\% filter(city =="Kyoto") \%\textgreater{}\% pull(Ca\_cumsum), breaks =30) \# for Kyoto}
+
+\CommentTok{\# Check Ca\_cumsum and bloom\_doy trends in Kyoto.}
+\NormalTok{kyoto\_blooms }\OtherTok{\textless{}{-}}\NormalTok{ kyoto\_gdd2 }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{filter}\NormalTok{(city }\SpecialCharTok{==} \StringTok{"Kyoto"}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}\FunctionTok{filter}\NormalTok{(is\_bloom }\SpecialCharTok{==} \DecValTok{1}\NormalTok{)}
+\CommentTok{\# plot(kyoto\_blooms$year, kyoto\_blooms$Ca\_cumsum, type = "l")}
+\CommentTok{\# plot(kyoto\_blooms$year, kyoto\_blooms$bloom\_doy, type = "l")}
+\CommentTok{\# plot(kyoto\_blooms$Cd\_cumsum, kyoto\_blooms$bloom\_doy, type = "p")}
+\FunctionTok{ggplot}\NormalTok{(}\AttributeTok{data =}\NormalTok{ kyoto\_blooms, }\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ Ca\_cumsum, }\AttributeTok{y =}\NormalTok{ bloom\_doy)) }\SpecialCharTok{+}
+    \FunctionTok{geom\_point}\NormalTok{(}\AttributeTok{size =} \DecValTok{2}\NormalTok{)}\SpecialCharTok{+}
+    \FunctionTok{theme\_bw}\NormalTok{() }\SpecialCharTok{+} 
+    \FunctionTok{ylim}\NormalTok{(}\FunctionTok{c}\NormalTok{(}\DecValTok{70}\NormalTok{, }\DecValTok{130}\NormalTok{))}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{A1_kyoto_lgb_files/figure-latex/task22-1.pdf} Here we
+can see that Ca\_cumsum alone may not be sufficient to explain the
+bloom\_doy trend as they are not in a completely linear relationship.
+
+\newpage
+
+\hypertarget{train-a-classification-model-using-lightgbm}{%
+\paragraph{3. Train a classification model using
+LightGBM}\label{train-a-classification-model-using-lightgbm}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Perform 8{-}fold cross{-}validation to find the best set of parameters.}
+\CommentTok{\# * }\AlertTok{CAUTION}\CommentTok{: running the code below may require a high computational power.}
+\CommentTok{\# source(./code/kyoto/M2\_lgb\_cv\_kyoto.r)}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{model-evaluation-and-interpretation}{%
+\paragraph{4. Model evaluation and
+interpretation}\label{model-evaluation-and-interpretation}}
+
+\hypertarget{final-model-training}{%
+\subparagraph{4.1 Final Model training}\label{final-model-training}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(lightgbm)}
+
+\CommentTok{\# Load the best parameter set}
+\NormalTok{best\_params }\OtherTok{\textless{}{-}} \FunctionTok{read.csv}\NormalTok{(}\StringTok{"/workspaces/peak{-}bloom{-}prediction/code/kyoto/data/M23\_lgb\_best\_score\_kyoto3.csv"}\NormalTok{)}
+\CommentTok{\# best\_params}
+
+\CommentTok{\# Load data}
+\NormalTok{cherry\_gdd }\OtherTok{\textless{}{-}} \FunctionTok{read.csv}\NormalTok{(}\StringTok{"/workspaces/peak{-}bloom{-}prediction/code/kyoto/data/A14\_kyoto\_gdd.csv"}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{filter}\NormalTok{(month }\SpecialCharTok{\%in\%} \FunctionTok{c}\NormalTok{(}\DecValTok{3}\NormalTok{, }\DecValTok{4}\NormalTok{))  }
+
+\NormalTok{feature\_names }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(}\StringTok{"tmax"}\NormalTok{, }\StringTok{"tmin"}\NormalTok{, }\StringTok{"daily\_Ca"}\NormalTok{, }\StringTok{"daily\_Cd"}\NormalTok{, }\StringTok{"Cd\_cumsum"}\NormalTok{, }\StringTok{"Ca\_cumsum"}\NormalTok{, }\StringTok{"lat"}\NormalTok{, }\StringTok{"long"}\NormalTok{, }\StringTok{"alt"}\NormalTok{, }\StringTok{"month"}\NormalTok{, }\StringTok{"day"}\NormalTok{)}
+\NormalTok{target\_col }\OtherTok{\textless{}{-}} \StringTok{"is\_bloom"}
+
+\CommentTok{\# Make prediction on the last 10 years}
+\NormalTok{target\_years }\OtherTok{\textless{}{-}} \DecValTok{2015}\SpecialCharTok{:}\DecValTok{2022}
+
+\NormalTok{train\_set }\OtherTok{\textless{}{-}}\NormalTok{ cherry\_gdd }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{filter}\NormalTok{(}\SpecialCharTok{!}\NormalTok{(year }\SpecialCharTok{\%in\%}\NormalTok{ target\_years))}
+
+\CommentTok{\# Perform stratified under{-}sampling from train\_set to balance the number of is\_bloom = 1 and 0}
+\FunctionTok{set.seed}\NormalTok{(}\DecValTok{42}\NormalTok{)}
+\NormalTok{train\_isbloom }\OtherTok{\textless{}{-}}\NormalTok{ train\_set }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{filter}\NormalTok{(is\_bloom }\SpecialCharTok{==} \DecValTok{1}\NormalTok{)}
+\NormalTok{train\_nobloom }\OtherTok{\textless{}{-}}\NormalTok{ train\_set }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{filter}\NormalTok{(is\_bloom }\SpecialCharTok{==} \DecValTok{0}\NormalTok{)}
+\NormalTok{train\_sample }\OtherTok{\textless{}{-}}\NormalTok{ train\_nobloom[}\FunctionTok{sample}\NormalTok{(}\FunctionTok{nrow}\NormalTok{(train\_nobloom), }\FunctionTok{nrow}\NormalTok{(train\_isbloom) }\SpecialCharTok{*}\FloatTok{1.5}\NormalTok{), ] }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{bind\_rows}\NormalTok{(train\_isbloom)}
+
+\NormalTok{test\_set }\OtherTok{\textless{}{-}}\NormalTok{ cherry\_gdd }\SpecialCharTok{\%\textgreater{}\%}\FunctionTok{filter}\NormalTok{(year }\SpecialCharTok{\%in\%}\NormalTok{ target\_years)}
+\NormalTok{test\_isbloom }\OtherTok{\textless{}{-}}\NormalTok{ test\_set }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{filter}\NormalTok{(is\_bloom }\SpecialCharTok{==} \DecValTok{1}\NormalTok{)}
+\NormalTok{test\_nobloom }\OtherTok{\textless{}{-}}\NormalTok{ test\_set }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{filter}\NormalTok{(is\_bloom }\SpecialCharTok{==} \DecValTok{0}\NormalTok{)}
+\NormalTok{test\_sample }\OtherTok{\textless{}{-}}\NormalTok{ test\_nobloom[}\FunctionTok{sample}\NormalTok{(}\FunctionTok{nrow}\NormalTok{(test\_nobloom), }\FunctionTok{nrow}\NormalTok{(test\_isbloom) }\SpecialCharTok{*}\FloatTok{1.5}\NormalTok{), ] }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{bind\_rows}\NormalTok{(test\_isbloom)}
+\CommentTok{\# table(test\_sample$is\_bloom)}
+
+\CommentTok{\# Train the final model using the best parameter set and the training set.}
+\NormalTok{dtrain }\OtherTok{\textless{}{-}} \FunctionTok{lgb.Dataset}\NormalTok{(}
+    \AttributeTok{data =} \FunctionTok{data.matrix}\NormalTok{(train\_sample[, feature\_names])}
+\NormalTok{    , }\AttributeTok{label =}\NormalTok{ train\_sample[, target\_col]}
+\NormalTok{    , }\AttributeTok{params =} \FunctionTok{list}\NormalTok{(}
+        \AttributeTok{max\_bin =}\NormalTok{ best\_params}\SpecialCharTok{$}\NormalTok{max\_bins}
+\NormalTok{    )}
+\NormalTok{)}
+
+\NormalTok{dtest }\OtherTok{\textless{}{-}} \FunctionTok{lgb.Dataset}\NormalTok{(}
+    \AttributeTok{data =} \FunctionTok{data.matrix}\NormalTok{(test\_set[, feature\_names])}
+\NormalTok{    , }\AttributeTok{label =}\NormalTok{ test\_set[, target\_col]}
+\NormalTok{)}
+
+\NormalTok{valids }\OtherTok{\textless{}{-}} \FunctionTok{list}\NormalTok{(}\AttributeTok{test =}\NormalTok{ dtest)}
+
+\NormalTok{n\_boosting\_rounds }\OtherTok{\textless{}{-}} \DecValTok{1000}
+
+\NormalTok{params }\OtherTok{\textless{}{-}} \FunctionTok{list}\NormalTok{(}
+    \AttributeTok{objective =} \StringTok{"binary"}
+\NormalTok{    , }\AttributeTok{metric =} \FunctionTok{c}\NormalTok{(}\StringTok{"AUC"}\NormalTok{)  }
+\NormalTok{    , }\AttributeTok{is\_enable\_sparse =} \ConstantTok{TRUE}
+\NormalTok{    , }\AttributeTok{boosting =} \FunctionTok{as.character}\NormalTok{(best\_params[[}\StringTok{"boostings"}\NormalTok{]])}
+\NormalTok{    , }\AttributeTok{learning\_rate =} \FunctionTok{as.numeric}\NormalTok{(best\_params[[}\StringTok{"learning\_rates"}\NormalTok{]])}
+\NormalTok{    , }\AttributeTok{min\_data\_in\_leaf =} \FunctionTok{as.numeric}\NormalTok{(best\_params[[}\StringTok{"min\_data\_in\_leaf"}\NormalTok{]])}
+\NormalTok{    , }\AttributeTok{max\_depth =} \FunctionTok{as.numeric}\NormalTok{(best\_params[[}\StringTok{"max\_depth"}\NormalTok{]])}
+\NormalTok{    , }\AttributeTok{feature\_fraction =} \FunctionTok{as.numeric}\NormalTok{(best\_params[[}\StringTok{"feature\_fractions"}\NormalTok{]])}
+\NormalTok{    , }\AttributeTok{bagging\_fraction =} \FunctionTok{as.numeric}\NormalTok{(best\_params[[}\StringTok{"bagging\_fractions"}\NormalTok{]])}
+\NormalTok{    , }\AttributeTok{bagging\_freq =} \FunctionTok{as.numeric}\NormalTok{(best\_params[[}\StringTok{"bagging\_freqs"}\NormalTok{]])}
+\NormalTok{    , }\AttributeTok{lambda\_l2 =} \FunctionTok{as.numeric}\NormalTok{(best\_params[[}\StringTok{"lambda\_l2s"}\NormalTok{]])}
+\NormalTok{    , }\AttributeTok{early\_stopping\_rounds =} \FunctionTok{as.integer}\NormalTok{(n\_boosting\_rounds }\SpecialCharTok{*} \FloatTok{0.1}\NormalTok{)}
+\NormalTok{    , }\AttributeTok{seed =}\NormalTok{ 42L}
+\NormalTok{)}
+
+\NormalTok{lgb\_final }\OtherTok{\textless{}{-}} \FunctionTok{lgb.train}\NormalTok{(}
+    \AttributeTok{data =}\NormalTok{ dtrain}
+\NormalTok{    , }\AttributeTok{params =}\NormalTok{ params}
+\NormalTok{    , }\AttributeTok{valids =}\NormalTok{ valids}
+\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [LightGBM] [Warning] Accuracy may be bad since you didn't explicitly set num_leaves OR 2^max_depth > num_leaves. (num_leaves=31).
+## [LightGBM] [Warning] Accuracy may be bad since you didn't explicitly set num_leaves OR 2^max_depth > num_leaves. (num_leaves=31).
+## [LightGBM] [Warning] Accuracy may be bad since you didn't explicitly set num_leaves OR 2^max_depth > num_leaves. (num_leaves=31).
+## [LightGBM] [Warning] Accuracy may be bad since you didn't explicitly set num_leaves OR 2^max_depth > num_leaves. (num_leaves=31).
+## [LightGBM] [Info] Number of positive: 569, number of negative: 853
+## [LightGBM] [Warning] Auto-choosing col-wise multi-threading, the overhead of testing was 0.000187 seconds.
+## You can set `force_col_wise=true` to remove the overhead.
+## [LightGBM] [Info] Total Bins 1691
+## [LightGBM] [Info] Number of data points in the train set: 1422, number of used features: 11
+## [LightGBM] [Warning] Accuracy may be bad since you didn't explicitly set num_leaves OR 2^max_depth > num_leaves. (num_leaves=31).
+## [LightGBM] [Info] [binary:BoostFromScore]: pavg=0.400141 -> initscore=-0.404879
+## [LightGBM] [Info] Start training from score -0.404879
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[1]:  test's auc:0.856056"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[2]:  test's auc:0.854995"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[3]:  test's auc:0.875793"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[4]:  test's auc:0.880787"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[5]:  test's auc:0.878335"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[6]:  test's auc:0.879214"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[7]:  test's auc:0.884272"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[8]:  test's auc:0.885218"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[9]:  test's auc:0.883163"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[10]:  test's auc:0.881521"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[11]:  test's auc:0.88331"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[12]:  test's auc:0.885273"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[13]:  test's auc:0.887902"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[14]:  test's auc:0.891327"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[15]:  test's auc:0.891812"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[16]:  test's auc:0.893106"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[17]:  test's auc:0.896011"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[18]:  test's auc:0.896626"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[19]:  test's auc:0.89709"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[20]:  test's auc:0.896268"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[21]:  test's auc:0.89731"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[22]:  test's auc:0.898968"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[23]:  test's auc:0.89919"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[24]:  test's auc:0.900534"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[25]:  test's auc:0.900332"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[26]:  test's auc:0.90474"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[27]:  test's auc:0.906788"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[28]:  test's auc:0.907364"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[29]:  test's auc:0.908181"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[30]:  test's auc:0.907437"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[31]:  test's auc:0.907426"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[32]:  test's auc:0.907164"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[33]:  test's auc:0.906886"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[34]:  test's auc:0.906455"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[35]:  test's auc:0.906964"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[36]:  test's auc:0.909299"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[37]:  test's auc:0.91013"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[38]:  test's auc:0.911581"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[39]:  test's auc:0.911692"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[40]:  test's auc:0.912344"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[41]:  test's auc:0.910378"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[42]:  test's auc:0.911113"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[43]:  test's auc:0.911981"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[44]:  test's auc:0.91154"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[45]:  test's auc:0.908317"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[46]:  test's auc:0.907935"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[47]:  test's auc:0.906103"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[48]:  test's auc:0.906034"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[49]:  test's auc:0.906126"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[50]:  test's auc:0.906866"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[51]:  test's auc:0.907449"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[52]:  test's auc:0.907407"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[53]:  test's auc:0.907444"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[54]:  test's auc:0.907798"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[55]:  test's auc:0.907058"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[56]:  test's auc:0.90805"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[57]:  test's auc:0.906742"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[58]:  test's auc:0.906034"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[59]:  test's auc:0.90636"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[60]:  test's auc:0.906411"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[61]:  test's auc:0.906218"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[62]:  test's auc:0.906553"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[63]:  test's auc:0.907045"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[64]:  test's auc:0.907834"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[65]:  test's auc:0.90682"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[66]:  test's auc:0.907178"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[67]:  test's auc:0.907375"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[68]:  test's auc:0.907692"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[69]:  test's auc:0.9071"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[70]:  test's auc:0.906962"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[71]:  test's auc:0.906434"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[72]:  test's auc:0.906709"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[73]:  test's auc:0.906677"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[74]:  test's auc:0.90681"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[75]:  test's auc:0.907109"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[76]:  test's auc:0.907178"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[77]:  test's auc:0.907554"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[78]:  test's auc:0.907651"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[79]:  test's auc:0.908032"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[80]:  test's auc:0.907834"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[81]:  test's auc:0.907701"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[82]:  test's auc:0.907361"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[83]:  test's auc:0.907251"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[84]:  test's auc:0.907013"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[85]:  test's auc:0.907238"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[86]:  test's auc:0.906691"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[87]:  test's auc:0.905777"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[88]:  test's auc:0.905277"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[89]:  test's auc:0.9053"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[90]:  test's auc:0.904781"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[91]:  test's auc:0.9053"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[92]:  test's auc:0.905708"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[93]:  test's auc:0.906071"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[94]:  test's auc:0.905539"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[95]:  test's auc:0.906618"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[96]:  test's auc:0.906797"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[97]:  test's auc:0.906631"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[98]:  test's auc:0.906227"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[99]:  test's auc:0.906466"
+## [LightGBM] [Warning] No further splits with positive gain, best gain: -inf
+## [1] "[100]:  test's auc:0.906282"
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{best\_score }\OtherTok{\textless{}{-}}\NormalTok{ lgb\_final}\SpecialCharTok{$}\NormalTok{best\_score}
+\end{Highlighting}
+\end{Shaded}
+
+The final model's test AUC is 0.9123435
+
+\hypertarget{model-evaluation}{%
+\subparagraph{4.2 Model evaluation}\label{model-evaluation}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(tidyverse)}
+\CommentTok{\# Here we try different values of p\_thresh and choose the one that returns the best MAE over the last 8 years.}
+\NormalTok{MAE\_p }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{()}
+\NormalTok{MAE\_table }\OtherTok{\textless{}{-}} \FunctionTok{data.frame}\NormalTok{(}
+    \AttributeTok{year =} \DecValTok{2015}\SpecialCharTok{:}\DecValTok{2022}
+\NormalTok{    , }\AttributeTok{actual\_bloom\_date =} \ConstantTok{NA}
+\NormalTok{    , }\AttributeTok{predicted\_bloom\_date =} \ConstantTok{NA}
+\NormalTok{    , }\AttributeTok{diff =} \DecValTok{0}
+\NormalTok{)}
+
+\NormalTok{target\_p\_thresh }\OtherTok{\textless{}{-}} \FunctionTok{seq}\NormalTok{(}\FloatTok{0.4}\NormalTok{, }\FloatTok{0.7}\NormalTok{, }\AttributeTok{by =} \FloatTok{0.05}\NormalTok{)}
+\ControlFlowTok{for}\NormalTok{ (p\_thresh }\ControlFlowTok{in}\NormalTok{ target\_p\_thresh) \{}
+    
+    \ControlFlowTok{for}\NormalTok{ (yr }\ControlFlowTok{in}\NormalTok{ MAE\_table}\SpecialCharTok{$}\NormalTok{year) \{}
+        
+\NormalTok{        actual\_bloom\_date }\OtherTok{\textless{}{-}} \FunctionTok{read.csv}\NormalTok{(}\StringTok{"/workspaces/peak{-}bloom{-}prediction/competition\_rules/data/kyoto.csv"}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}\FunctionTok{filter}\NormalTok{(year }\SpecialCharTok{==}\NormalTok{ yr) }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{pull}\NormalTok{(bloom\_date)}
+\NormalTok{        mae\_set }\OtherTok{\textless{}{-}} \FunctionTok{read.csv}\NormalTok{(}\StringTok{"/workspaces/peak{-}bloom{-}prediction/code/kyoto/data/A14\_kyoto\_gdd.csv"}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{filter}\NormalTok{(year }\SpecialCharTok{==}\NormalTok{ yr)}
+
+\NormalTok{        mae\_pred }\OtherTok{\textless{}{-}} \FunctionTok{predict}\NormalTok{(lgb\_final, }\FunctionTok{data.matrix}\NormalTok{(mae\_set[, feature\_names]))}
+\NormalTok{        mae\_set}\SpecialCharTok{$}\NormalTok{pred\_prob }\OtherTok{\textless{}{-}}\NormalTok{ mae\_pred}
+\NormalTok{        mae\_set}\SpecialCharTok{$}\NormalTok{pred\_bin }\OtherTok{\textless{}{-}} \FunctionTok{ifelse}\NormalTok{(mae\_pred }\SpecialCharTok{\textgreater{}} \FloatTok{0.5}\NormalTok{, }\DecValTok{1}\NormalTok{, }\DecValTok{0}\NormalTok{)}
+
+        \CommentTok{\# Prediction based on diff probability thresholds}
+\NormalTok{        predicted\_bloom\_date\_p\_thresh\_idx }\OtherTok{\textless{}{-}} \FunctionTok{which}\NormalTok{(mae\_set}\SpecialCharTok{$}\NormalTok{pred\_prob }\SpecialCharTok{\textgreater{}}\NormalTok{ p\_thresh)[}\DecValTok{1}\NormalTok{]}
+\NormalTok{        predicted\_bloom\_date\_p\_thresh }\OtherTok{\textless{}{-}}\NormalTok{ mae\_set[predicted\_bloom\_date\_p\_thresh\_idx, }\StringTok{"date"}\NormalTok{]}
+        
+\NormalTok{        diff }\OtherTok{\textless{}{-}} \FunctionTok{abs}\NormalTok{(}\FunctionTok{as.numeric}\NormalTok{(}\FunctionTok{as.Date}\NormalTok{(actual\_bloom\_date, }\AttributeTok{format =} \StringTok{"\%Y{-}\%m{-}\%d"}\NormalTok{))}\SpecialCharTok{{-}} \FunctionTok{as.numeric}\NormalTok{(}\FunctionTok{as.Date}\NormalTok{(predicted\_bloom\_date\_p\_thresh, }\AttributeTok{format =} \StringTok{"\%Y{-}\%m{-}\%d"}\NormalTok{)))}
+        
+\NormalTok{        MAE\_table[MAE\_table}\SpecialCharTok{$}\NormalTok{year }\SpecialCharTok{==}\NormalTok{yr, ]}\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(yr}
+\NormalTok{        , actual\_bloom\_date, predicted\_bloom\_date\_p\_thresh}
+\NormalTok{        , }\FunctionTok{as.numeric}\NormalTok{(diff))}
+
+\NormalTok{    \}}
+\NormalTok{    MAE\_p }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(MAE\_p, }\FunctionTok{mean}\NormalTok{(}\FunctionTok{as.numeric}\NormalTok{(MAE\_table}\SpecialCharTok{$}\NormalTok{diff), }\AttributeTok{na.rm =} \ConstantTok{TRUE}\NormalTok{))}
+\NormalTok{\}}
+\CommentTok{\# write.csv(data.frame(MAE\_p = MAE\_p, target\_p\_thresh = target\_p\_thresh), file = "/workspaces/peak{-}bloom{-}prediction/code/kyoto/data/A15\_kyoto\_MAE\_p.csv", row.names = FALSE)}
+\end{Highlighting}
+\end{Shaded}
+
+It seems that the best p\_thresh is 0.6, which gives the lowest MAE of
+3.625.
+
+\hypertarget{model-interpretation}{%
+\subparagraph{4.3 Model interpretation}\label{model-interpretation}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Interpret the model using the feature importance plot}
+\NormalTok{lgb\_imp }\OtherTok{\textless{}{-}} \FunctionTok{lgb.importance}\NormalTok{(lgb\_final)}
+\FunctionTok{lgb.plot.importance}\NormalTok{(lgb\_imp, }\AttributeTok{top\_n =}\NormalTok{ 5L, }\AttributeTok{measure =} \StringTok{"Gain"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{A1_kyoto_lgb_files/figure-latex/task43-1.pdf}
+
+\newpage
+
+\hypertarget{final-prediction-for-the-year-2023}{%
+\paragraph{5. Final prediction for the year
+2023}\label{final-prediction-for-the-year-2023}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Weather data for Oct 2022 to Feb 2023 downloaded from NOAA, 2023 March and April obtained from AccuWeather}
+\CommentTok{\# https://www.accuweather.com/en/jp/kyoto{-}shi/224436/weather{-}forecast/224436}
+
+\NormalTok{city\_station\_pair }\OtherTok{\textless{}{-}} \FunctionTok{read.csv}\NormalTok{(}\StringTok{"/workspaces/peak{-}bloom{-}prediction/code/kyoto/data/A11\_city\_station\_pairs.csv"}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{filter}\NormalTok{(city }\SpecialCharTok{==} \StringTok{"Kyoto"}\NormalTok{)}
+
+\CommentTok{\# temp\_2223 \textless{}{-} F01\_get\_imp\_temperature(}
+\CommentTok{\#     city\_station\_pair = city\_station\_pair}
+\CommentTok{\#     , date\_min = "2022{-}10{-}01", date\_max = "2023{-}04{-}30") \%\textgreater{}\% }
+\CommentTok{\#     mutate(year = as.integer(strftime(date, format = "\%Y"))) \%\textgreater{}\%}
+\CommentTok{\#     filter(year \%in\% c(2022, 2023)) \%\textgreater{}\%}
+\CommentTok{\#     select(id, date, year, month, day, tmin, tmax) \%\textgreater{}\% "rownames\textless{}{-}"(NULL)}
+
+\CommentTok{\# data\_2023 \textless{}{-} read.csv("/workspaces/peak{-}bloom{-}prediction/code/\_shared/data/city\_weather\_2023.csv") \%\textgreater{}\%}
+\CommentTok{\#     filter(city == "Kyoto") \%\textgreater{}\%}
+\CommentTok{\#     mutate(year = 2023) \%\textgreater{}\%}
+\CommentTok{\#     mutate(month = as.integer(strftime(date, "\%m"))) \%\textgreater{}\%}
+\CommentTok{\#     mutate(day = as.integer(strftime(date, "\%d"))) \%\textgreater{}\%}
+\CommentTok{\#     select(id, date, year, month, day, tmin, tmax)}
+
+\CommentTok{\# merged\_2223 \textless{}{-} rbind(temp\_2223, data\_2023) \%\textgreater{}\% "rownames\textless{}{-}"(NULL)}
+\CommentTok{\# write.csv(merged\_2223, "./code/kyoto/data/A16\_kyoto\_weather\_2023.csv", row.names = FALSE)}
+\NormalTok{merged\_2223 }\OtherTok{\textless{}{-}} \FunctionTok{read.csv}\NormalTok{(}\StringTok{"/workspaces/peak{-}bloom{-}prediction/code/kyoto/data/A16\_kyoto\_weather\_2023.csv"}\NormalTok{)}
+
+\CommentTok{\# Compute the chill days and anti{-}chill days}
+\NormalTok{best\_gdd\_params }\OtherTok{\textless{}{-}} \FunctionTok{read.csv}\NormalTok{(}\StringTok{"/workspaces/peak{-}bloom{-}prediction/code/kyoto/data/M12\_Kyoto\_gdd\_best.csv"}\NormalTok{)[}\DecValTok{1}\NormalTok{, ]}
+\NormalTok{gdd\_2223 }\OtherTok{\textless{}{-}} \FunctionTok{F01\_compute\_gdd}\NormalTok{(merged\_2223}
+\NormalTok{        , }\AttributeTok{noaa\_station\_ids =} \FunctionTok{unique}\NormalTok{(merged\_2223}\SpecialCharTok{$}\NormalTok{id)}
+\NormalTok{        , }\AttributeTok{Rc\_thresh =}\NormalTok{ best\_gdd\_params[[}\StringTok{"Rc\_thresholds"}\NormalTok{]]}
+\NormalTok{        , }\AttributeTok{Tc =}\NormalTok{ best\_gdd\_params[[}\StringTok{"Tcs"}\NormalTok{]]) }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{mutate}\NormalTok{(}\AttributeTok{doy =} \FunctionTok{as.integer}\NormalTok{(}\FunctionTok{strftime}\NormalTok{(date, }\StringTok{"\%j"}\NormalTok{))) }\SpecialCharTok{\%\textgreater{}\%} 
+    \FunctionTok{merge}\NormalTok{(}\AttributeTok{y =}\NormalTok{ city\_station\_pair, }\AttributeTok{by =} \StringTok{"id"}
+\NormalTok{        , }\AttributeTok{all.x =} \ConstantTok{TRUE}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%} \StringTok{"rownames\textless{}{-}"}\NormalTok{(}\ConstantTok{NULL}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{filter}\NormalTok{(month }\SpecialCharTok{\%in\%} \FunctionTok{c}\NormalTok{(}\DecValTok{3}\NormalTok{, }\DecValTok{4}\NormalTok{))}
+\CommentTok{\# write.csv(gdd\_2223, "./code/kyoto/data/A17\_kyoto\_gdd\_2023.csv", row.names = FALSE)}
+\NormalTok{gdd\_2223 }\OtherTok{\textless{}{-}} \FunctionTok{read.csv}\NormalTok{(}\StringTok{"/workspaces/peak{-}bloom{-}prediction/code/kyoto/data/A17\_kyoto\_gdd\_2023.csv"}\NormalTok{)}
+
+\CommentTok{\# Make final prediction for 2023 Kyoto}
+\NormalTok{final\_pred }\OtherTok{\textless{}{-}} \FunctionTok{predict}\NormalTok{(lgb\_final, }\FunctionTok{as.matrix}\NormalTok{(gdd\_2223[, feature\_names]))}
+\NormalTok{final\_pred\_date }\OtherTok{\textless{}{-}}\NormalTok{ gdd\_2223[}\FunctionTok{which}\NormalTok{(final\_pred }\SpecialCharTok{\textgreater{}}\NormalTok{ best\_p\_thresh)[}\DecValTok{1}\NormalTok{], }\StringTok{"date"}\NormalTok{]}
+\CommentTok{\# Compute doy}
+\NormalTok{final\_doy }\OtherTok{\textless{}{-}} \FunctionTok{as.integer}\NormalTok{(}\FunctionTok{strftime}\NormalTok{(final\_pred\_date, }\StringTok{"\%j"}\NormalTok{))}
+
+
+\NormalTok{p\_final\_pred }\OtherTok{\textless{}{-}} \FunctionTok{F01\_pred\_plot\_final}\NormalTok{(}\AttributeTok{target\_city =} \StringTok{"Kyoto"}
+\NormalTok{    , }\AttributeTok{year\_data =}\NormalTok{ gdd\_2223}
+\NormalTok{    , }\AttributeTok{feature\_names =}\NormalTok{ feature\_names}
+\NormalTok{    , }\AttributeTok{lgb\_final =}\NormalTok{ lgb\_final}
+\NormalTok{    , }\AttributeTok{p\_thresh =}\NormalTok{ best\_p\_thresh}
+\NormalTok{    , }\AttributeTok{peak =} \ConstantTok{FALSE}\NormalTok{)}
+\NormalTok{p\_final\_pred}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{A1_kyoto_lgb_files/figure-latex/task5-1.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# ggsave("./code/kyoto/outputs/kyoto\_2023\_prediction\_plot.png", p\_final\_pred}
+\CommentTok{\#     , width = 10, height = 6, units = "in", dpi = 80)}
+\end{Highlighting}
+\end{Shaded}
+
+The final predicted cherry blossom date for Kyoto 2023 is 2023-03-31,
+which corresponds to doy = 90.
+
+\end{document}
