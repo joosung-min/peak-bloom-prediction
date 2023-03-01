@@ -221,7 +221,7 @@ Here we can see that Ca_cumsum alone may not be sufficient to explain the bloom_
 
 #### 4. Model evaluation and interpretation
 
-##### 4.1 Final Model training
+##### 4.1 Final model training
 ```{r task41, warning=FALSE, message=FALSE}
 library(lightgbm)
 

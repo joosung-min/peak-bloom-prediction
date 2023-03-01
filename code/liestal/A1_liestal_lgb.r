@@ -64,12 +64,11 @@ cherry_complete <- read.csv("./code/_shared/data/A11_cherry_complete.csv") %>%
 length(unique(cherry_complete$city))
 dim(cherry_complete)
 table(cherry_complete$is_bloom)
-
 # - Only pulls 12 cities out of all the Swiss cities 
 # - This means that only 6 cities have NOAA stations nearby, and the other cities do not have any nearby stations or very far away.
 
 # Perform under-sampling to balance the data.
-test_years <- 2013:2022
+test_years <- 2015:2022
 
 train_val_df <- cherry_complete %>%
     filter(!(year %in% test_years))

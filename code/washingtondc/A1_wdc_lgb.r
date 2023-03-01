@@ -234,19 +234,6 @@ for (p_thresh in seq(0.1, 0.9, by = 0.05)) {
         , actual_bloom_date, predicted_bloom_date_p_thresh
         , as.numeric(diff))
 
-
-        # Prediction based on the peak probability
-        # predicted_bloom_date_peak_idx <- which(mae_set$pred_prob == max(mae_set$pred_prob))
-        # predicted_bloom_date_peak <- mae_set[predicted_bloom_date_peak_idx, "date"]
-
-        # diff <- abs(as.numeric(as.Date(actual_bloom_date, format = "%Y-%m-%d")) - as.numeric(as.Date(predicted_bloom_date_peak, format = "%Y-%m-%d")))
-
-        # MAE_table[MAE_table$year ==yr, ]<- c(yr
-        # , actual_bloom_date, predicted_bloom_date_peak
-        # , as.numeric(diff))
-
-        # mean(as.numeric(MAE_table$diff))
-
     }
     MAE_p <- c(MAE_p, mean(as.numeric(MAE_table$diff), na.rm = TRUE))
 }
@@ -315,7 +302,6 @@ final_pred_plot2 <- F01_pred_plot_final(
 )
 final_pred_plot2 # produces a much later predicted date
 # ggsave("./code/washingtondc/outputs/wdc_prediction_plot_2023_peakP.png", final_pred_plot2, width = 10, height = 5)
-
 
 # Although it is hard to decide which one is better, we will use the result from p_thresh = 0.85 since we get the best MAE from our test set with this threshold.
 # - Therefore, our final prediction for 2023 cherry blossom in Washington DC is: 85 (March 26)
