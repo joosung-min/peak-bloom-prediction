@@ -1,2 +1,2 @@
-"city","method","bloom_doy"
-"Vancouver","ML",88
+"city","method","bloom_doy","p_thresh"
+"Vancouver","ML",88,"max"

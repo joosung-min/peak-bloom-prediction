@@ -246,7 +246,16 @@ final_weather$AGDD <- cumsum(final_weather$daily_GDD)
 final_weather <- final_weather %>%filter(month %in% c(3,4))
 final_pred <- predict(lgb_final, data.matrix(final_weather[, feature_names]))
 final_pred_date <- final_weather[which(final_pred > best_p_thresh)[1], "date"]
-final_pred
+final_bloom_doy <- as.numeric(as.Date(final_pred_date, format = "%Y-%m-%d")) - as.numeric(as.Date("2023-01-01", format = "%Y-%m-%d"))
+
 final_pred_date
+final_bloom_doy
+
+# final_pred_df <- data.frame(city = "washingtondc", method = "ML", bloom_doy = final_bloom_doy, p_thresh = best_p_thresh)
+# final_pred_probs <- data.frame(city = "washingtondc", date = final_weather[, "date"], pred_probs = final_pred)
+# write.csv(final_pred_df, "./code/washingtondc/data/A19_final_lgb_predDay_wdc.csv", row.names = FALSE)
+# write.csv(final_pred_probs, "./code/washingtondc/data/A19_final_predProbs_wdc.csv", row.names = FALSE)
+
+# Since the model may be weak, we fit a non-temperature-based model and then average the predictions to make our final prediction for washingtondc.
 
 # END

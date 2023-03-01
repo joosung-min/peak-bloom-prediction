@@ -185,7 +185,8 @@ library(rnoaa)
 # merged_2023$AGDD <- cumsum(merged_2023$daily_GDD)
 # write.csv(merged_2023, "./code/vancouver/data/A19_merged_2023_van.csv", row.names = FALSE)
 
-merged_2023 <- read.csv("./code/vancouver/data/A18_merged_2023_van.csv")
+merged_2023 <- read.csv("./code/vancouver/data/A18_merged_2023_van.csv") %>%
+    filter(month %in% c(3,4))
 
 final_pred <- predict(lgb_final, as.matrix(merged_2023[, feature_names]))
 merged_2023$pred_prob <- final_pred
@@ -195,14 +196,13 @@ final_pred_day # 2023-03-31
 
 final_bloom_doy <- as.numeric(as.Date(final_pred_day) - as.Date("2023-01-01")) + 1
 final_bloom_doy
-
-final_pred_df <- data.frame(city = "Vancouver", method = "ML", bloom_doy = final_bloom_doy)
-final_pred_probs <- data.frame(city = "Vancouver", date = merged_2023[, "date"], pred_probs = final_pred)
 # - However, this model's performance is very week because it does not have Vancouver's data. 
 # - We fit another model that do not depend on the temperatures and then average the predictions to make our final prediction for Vancouver.
 
-write.csv(final_pred_df, "./code/vancouver/data/A19_final_lgb_predDay_van.csv", row.names = FALSE)
-write.csv(final_pred_probs, "./code/vancouver/data/A19_final_predProbs_van.csv", row.names = FALSE)
+# final_pred_df <- data.frame(city = "Vancouver", method = "ML", bloom_doy = final_bloom_doy, p_thresh = "max")
+# final_pred_probs <- data.frame(city = "Vancouver", date = merged_2023[, "date"], pred_probs = final_pred)
+# write.csv(final_pred_df, "./code/vancouver/data/A19_final_lgb_predDay_van.csv", row.names = FALSE)
+# write.csv(final_pred_probs, "./code/vancouver/data/A19_final_predProbs_van.csv", row.names = FALSE)
 
 
 # END

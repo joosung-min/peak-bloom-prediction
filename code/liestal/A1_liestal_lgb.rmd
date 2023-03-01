@@ -235,13 +235,14 @@ MAE_table <- data.frame(
     , predicted_bloom_date = NA
     , diff = 0
 )
-MAE_table
+# MAE_table
+actual_bloom_dates <- read.csv("/workspaces/peak-bloom-prediction/competition_rules/data/liestal.csv")
 target_p_thresh <- seq(0.1, 0.7, by = 0.05)
 for (p_thresh in target_p_thresh) {
     
     for (yr in MAE_table$year) {
         
-        actual_bloom_date <- read.csv("/workspaces/peak-bloom-prediction/competition_rules/data/liestal.csv") %>%filter(year == yr) %>% pull(bloom_date)
+        actual_bloom_date <- actual_bloom_dates %>%filter(year == yr) %>% pull(bloom_date)
         mae_set <- cherry_complete %>% filter(year == yr)
 
         mae_pred <- predict(lgb_final, data.matrix(mae_set[, feature_names]))
@@ -324,6 +325,9 @@ final_bloom_doy <- as.numeric(as.Date(final_pred_day1) - as.Date("2023-01-01")) 
 ```
 
 ```{r eval=FALSE, echo=FALSE}
+
+final_pred_df <- data.frame(city = "liestal", method = "ML", bloom_doy = final_bloom_doy, p_thresh = best_p_thresh)
+final_pred_probs <- data.frame(city = "liestal", date = weather_2023[, "date"], pred_probs = weather_2023[, "pred_prob"])
 write.csv(final_pred_df, "/workspaces/peak-bloom-prediction/code/liestal/data/A19_final_lgb_predDay_liestal.csv", row.names = FALSE)
 write.csv(final_pred_probs, "/workspaces/peak-bloom-prediction/code/liestal/data/A19_final_predProbs_liestal.csv", row.names = FALSE)
 ```

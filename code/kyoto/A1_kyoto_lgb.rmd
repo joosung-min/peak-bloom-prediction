@@ -300,7 +300,7 @@ The final model's test AUC is `r {best_score}`
 
 ##### 4.2 Model evaluation
 
-```{r task42, message=FALSE, warning=FALSE, eval=FALSE}
+```{r task42, message=FALSE, warning=FALSE}
 library(tidyverse)
 # Here we try different values of p_thresh and choose the one that returns the best MAE over the last 8 years.
 MAE_p <- c()
@@ -428,8 +428,8 @@ final_doy <- as.integer(strftime(final_pred_date, "%j"))
 * Since this model looks weak, we train a non-temperature-based model and average the final results from the two models to get the final prediction.
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
-final_pred_df <- data.frame(city = "Kyoto", method = "ML", bloom_doy = final_doy - ceiling(min(MAE_p)))
-final_pred_probs <- data.frame(city = "Kyoto", date = gdd2223[, "date"], pred_probs = final_pred)
+final_pred_df <- data.frame(city = "Kyoto", method = "ML", bloom_doy = final_doy - ceiling(min(MAE_p)), p_thresh = best_p_thresh)
+final_pred_probs <- data.frame(city = "Kyoto", date = gdd_2223[, "date"], pred_probs = final_pred)
 
 # write.csv(final_pred_df, "/workspaces/peak-bloom-prediction/code/kyoto/data/A19_final_lgb_predDay_kyoto.csv", row.names = FALSE)
 # write.csv(final_pred_probs, "/workspaces/peak-bloom-prediction/code/kyoto/data/A19_final_predProbs_kyoto.csv", row.names = FALSE)
