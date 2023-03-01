@@ -52,6 +52,7 @@ p <- p + theme_bw()
 p <- p + ggtitle("Kyoto bloom_doy vs year (last 200 years)")
 p <- p + geom_vline(xintercept = psi, linetype = "dashed", color = "dark green")
 p
+ggsave("./code/kyoto/outputs/kyoto_seglm.png", p, width = 10, height = 6)
 # - We can see that the slope of the line changes dramatically after 1928, and 2012.
 
 # Make final prediction for the next 10 years
@@ -59,4 +60,7 @@ pred <- round(predict(kyoto_seg2, newdata = data.frame(year = 2023:2032)))
 
 pred # 89 89 88 88 87 86 86 85 85 84
 
+
+final_pred_df <- data.frame(city = "Kyoto", method = "lm", bloom_doy = pred[1], p_thresh = "na")
+write.csv(final_pred_df, "./code/kyoto/data/A19_final_lm_predDay_kyoto.csv", row.names = FALSE)
 # END

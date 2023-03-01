@@ -78,7 +78,8 @@ pred # 93
 final_pred <- pred - ceiling(MAE/2)
 final_pred # 89 88 88 87 87 87 86 86 86 85
 
-final_pred_df <- data.frame(city = "Vancouver", method = "lm", year = 2023, bloom_doy = final_pred)
+final_pred_df <- data.frame(city = "vancouver", method = "lm", bloom_doy = final_pred[1], p_thresh = "na")
+write.csv(final_pred_df, "./code/vancouver/data/A19_final_lm_predDay_van.csv", row.names = FALSE)
 # write.csv(final_pred_df, "./code/vancouver/data/A29_final_lm_predDay_van.csv", row.names = FALSE)
 # END
 

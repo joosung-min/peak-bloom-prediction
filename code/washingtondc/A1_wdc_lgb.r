@@ -216,7 +216,7 @@ for (p_thresh in seq(0.4, 0.9, by = 0.05)) {
     MAE_p <- c(MAE_p, mean(as.numeric(MAE_table$diff), na.rm = TRUE))
 }
 
-best_p_thresh <- seq(0.4, 0.9, by = 0.05)[which.min(MAE_p)]
+best_p_thresh <- seq(0.4, 0.9, by = 0.05)[which.min(MAE_p)] #0.75
 best_p_thresh
 
 #######################################

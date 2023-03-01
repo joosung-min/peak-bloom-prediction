@@ -32,4 +32,7 @@ preds
 
 preds # 90  90  90  90  90  90  89  89  89  89
 
+final_pred_df <- data.frame(city = "washingtondc", method = "lm", bloom_doy = final_pred[1], p_thresh = "na")
+write.csv(final_pred_df, "./code/washingtondc/data/A19_final_lm_predDay_wdc.csv", row.names = FALSE)
+
 # END
