@@ -1,0 +1,336 @@
+---
+title: "Peak Cherry Blossom Prediction in Liestal 2023"
+author: "Joosung (Sonny) Min"
+output: html_document
+---
+
+In this document, we perform LightGBM using the weather data from the closest cities to Liestal, Switzerland. 
+
+1. Select closest cities to Liestal to increase the sample size.
+
+    - We use 5 most recent bloom_doy along with the geographical location (lat, long, alt) of all cities listed in Switzerland on data/meteoswiss.csv.
+
+    - Perform PCA and compute the Euclidean distances between the cities, and select top 12 cities with the smallest distance to Liestal.
+
+        - Could pull more cities but only those 12 have NOAA weather stations nearby.
+
+2. Compute the growing degree days (GDD) and accumulated GDD (AGDD) according to the USA-NPN description.
+    
+    - The weather data is obtained from NOAA GHCN-Daily dataset. 
+    
+    - Daily GDD = (tmax + tmin)/2 if it's greater than 0, otherwise 0.
+
+3. Train a classification model using LightGBM (*Ke et al., 2017*)
+
+    - The tree-based gradient-boosted classification model is suitable in this case.
+        
+        - Can model non-linear relationships between the predictors and presponse
+        
+        - Innately handles possible interactions between the predictors.
+
+        - LightGBM is a fast and efficient implementation of gradient-boosted decision trees.
+    
+    - Response: is_bloom (1: bloom, 0: no bloom)
+
+    - Predictors: daily_GDD, GDD, tmax, tmin, lat, long, alt, month, day
+
+    - Split the data into training and test set.
+
+        - Training set: All data before the year 2015.
+
+        - Test set: All data including and after the year 2015.
+
+    - Performed a 7-fold cross-validation using the training set to fine-tune the hyperparameters. (**M2_lgb_cv_Liestal.r**)
+
+        - *boosting*: boosting methods.
+        - *learning_rate*: learning rate used at each boosting early_stopping_rounds.
+        - *max_bin*: maximum number of bins used. Maximum number of bins used for LightGBM. Larger number of bins may cause overfitting.
+        - *min_data_in_leaf*: Number of minimum samples in leaves. Smaller numbers may cause overfitting.
+        - *max_depth*: Maximum depth of trees. Deeper trees may cause overfitting.
+        - *feature_fraction*: Fraction of features used for each split. Higher fractions may cause slower learning speed.
+        - *bagging_fraction*: Sample fraction used for every n stage determined by bagging_freq.  May help mitigate overfitting.
+        - *bagging_freq*: Sample bagging frequency.
+        - *lambda_l2*: Regularization term for L2 regularization.
+
+4. Model evaluation and interpretation
+
+    - Evaluate the model using MAE on the past blooming dates on the test set (year 2015 to 2022)
+
+    - Interprete the importance of the predictors using the feature importance plot.
+
+5. Final prediction for the year 2023
+
+    - Use the final LightGBM model to make the final prediction for the year 2023 in Liestal.
+
+* Many code lines are commented out to reduce the runtime of the document. Uncomment the lines to run the code.
+
+#### 1. Select closest cities to Liestal to increase the sample size.
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+source("/workspaces/peak-bloom-prediction/code/_shared/F01_functions.r")
+```
+```{r}
+cherry_sub <- read.csv("/workspaces/peak-bloom-prediction/code/_shared/data/A11_cherry_sub.csv") %>%
+    distinct(city, bloom_date, .keep_all = TRUE)
+
+# Perform PCA to find close cities using the latest 5-year blossom dates.
+cherry_pca <- cherry_sub %>%
+    filter(country == "Switzerland") %>%
+    filter(year == 2021) %>%
+    dplyr::select(city, lat, long, alt, bloom_doy) %>%
+    distinct(city, .keep_all = TRUE)
+rownames(cherry_pca) <- cherry_pca$city
+colnames(cherry_pca)[5] <- "2021_bloom_doy"
+
+years <- 2017:2020
+
+for (yr in years) {
+    # yr = 2012
+    temp_data <- cherry_sub %>%
+        filter(country == "Switzerland") %>%
+        filter(year == yr) %>%
+        dplyr::select(city, bloom_doy) %>%
+        distinct(city, .keep_all = TRUE)
+    colnames(temp_data)[2] <- paste0(yr, "_bloom_doy")
+    cherry_pca <- cherry_pca %>% 
+        merge(y = temp_data, by = "city", all.x = TRUE)
+}
+
+rownames(cherry_pca) <- cherry_pca$city
+cherry_pca <- cherry_pca %>% select(-city) %>% drop_na()
+# head(cherry_pca)
+
+# perform pca
+pca_result <- prcomp(cherry_pca, scale = TRUE)
+pca_out <- data.frame(-1 * pca_result$x)
+# head(pca_out)
+
+# Get (Euclidean) distance matrix
+liestal_dist <- data.frame(as.matrix(dist(pca_out))) %>%
+    dplyr::select(Liestal) %>%
+    arrange(Liestal)
+# head(liestal_dist, 30)
+
+# Get city names
+liestal_group <- rownames(liestal_dist)
+# liestal_group
+
+```
+
+#### 2. Compute the growing degree days (GDD) and accumulated GDD (AGDD) according to the USA-NPN description.
+```{r task2, eval=FALSE, warning=FALSE, message=FALSE}
+# The below code computes GDD and AGDD for all cities in liestal_group.
+source("/workspaces/peak-bloom-prediction/code/_shared/A11_data_processing.r")
+
+# cherry_complete contains temperature data for all cities that have NOAA stations nearby, and their AGDD.
+cherry_complete <- read.csv("/workspaces/peak-bloom-prediction/code/_shared/data/A11_cherry_complete.csv") %>% 
+    filter(city %in% liestal_group) %>%
+    filter(month %in% 3:4) %>%
+    mutate(is_bloom = ifelse(is_bloom == "yes", 1, 0))
+# - Only pulls 12 cities out of all the Swiss cities 
+# - This means that only 12 Swiss cities among the candiates have NOAA stations nearby, and the other cities do not have any nearby stations or very far away.
+```
+
+#### 3. Train a classification model using LightGBM
+```{r task3, eval=FALSE}
+# Perform cross-validation to find the best parameter set for LightGBM.
+source("/workspaces/peak-bloom-prediction/code/liestal/M2_lgb_cv_liestal.r")
+```
+
+
+#### 4. Model evaluation and interpretation
+##### 4.1 Final model training
+```{r task41, warning=FALSE, message=FALSE}
+library(tidyverse)
+library(lightgbm)
+source("/workspaces/peak-bloom-prediction/code/_shared/F01_functions.r")
+
+# Perform under-sampling to balance the data.
+# - Load dat
+cherry_complete <- read.csv("/workspaces/peak-bloom-prediction/code/_shared/data/A11_cherry_complete.csv") %>% 
+    filter(city %in% liestal_group) %>%
+    filter(month %in% 3:4) %>%
+    mutate(is_bloom = ifelse(is_bloom == "yes", 1, 0))
+
+test_years <- 2015:2022
+
+train_val_df <- cherry_complete %>%
+    filter(!(year %in% test_years))
+train_val_isbloom <- train_val_df %>% filter(is_bloom == 1)
+train_val_nobloom <- train_val_df %>% filter(is_bloom == 0)
+
+set.seed(42)
+train_val_set <- train_val_nobloom[sample(nrow(train_val_nobloom), nrow(train_val_isbloom) * 1.2), ] %>%
+    bind_rows(train_val_isbloom)
+# table(train_val_set$is_bloom)
+
+test_df <- cherry_complete %>%
+    filter(year %in% test_years)
+test_isbloom <- test_df %>% filter(is_bloom == 1)
+test_nobloom <- test_df %>% filter(is_bloom == 0)
+
+test_set <- test_nobloom[sample(nrow(test_nobloom), nrow(test_isbloom) * 1.2), ] %>%
+    bind_rows(test_isbloom)
+# table(test_set$is_bloom)
+
+feature_names <- c("AGDD", "tmin", "tmax", "long", "lat", "alt", "month", "day")
+target_col <- "is_bloom"
+
+# Load the best params from lightgbm grid search.
+best_params <- read.csv("/workspaces/peak-bloom-prediction/code/liestal/data/M23_lgb_best_params_Liestal3.csv")
+# best_params
+
+# Train the final model.
+dtrain <- lgb.Dataset(
+    data = as.matrix(train_val_set[, feature_names])
+    , label = train_val_set[, target_col]
+    , params <- list(
+        max_bin = best_params$max_bins
+    )
+)
+
+dtest <- lgb.Dataset(
+    data = as.matrix(test_set[, feature_names])
+    , label = test_set[, target_col]
+ 
+)
+
+valids <- list(
+    test = dtest
+)
+
+params <- list(
+    objective = "binary"
+    , metric = "auc"
+    , learning_rate = best_params$learning_rates
+    , feature_fraction = best_params$feature_fractions
+    , bagging_fraction = best_params$bagging_fractions
+    , bagging_freq = best_params$bagging_freqs
+    , lambda_l2 = best_params$lambda_l2
+    , min_data_in_leaf = best_params$min_data_in_leaf
+)
+
+lgb_final <- lgb.train(
+    params = params
+    , data = dtrain
+    , nrounds = 1000
+    , valids = valids
+    , early_stopping_rounds = 20
+    , verbose = -1
+)
+
+best_score <- lgb_final$best_score # best test auc
+```
+The final model's test AUC is `r {best_score}`
+
+##### 4.2 Model evaluation
+```{r eval=FALSE, warning=FALSE, message=FALSE}
+library(tidyverse)
+# Here we try different values of p_thresh and choose the one that returns the best MAE over the last 8 years.
+
+MAE_p <- c()
+MAE_table <- data.frame(
+    year = 2015:2022
+    , actual_bloom_date = NA
+    , predicted_bloom_date = NA
+    , diff = 0
+)
+# MAE_table
+actual_bloom_dates <- read.csv("/workspaces/peak-bloom-prediction/competition_rules/data/liestal.csv")
+target_p_thresh <- seq(0.1, 0.7, by = 0.05)
+for (p_thresh in target_p_thresh) {
+    
+    for (yr in MAE_table$year) {
+        
+        actual_bloom_date <- actual_bloom_dates %>%filter(year == yr) %>% pull(bloom_date)
+        mae_set <- cherry_complete %>% filter(year == yr)
+
+        mae_pred <- predict(lgb_final, data.matrix(mae_set[, feature_names]))
+        mae_set$pred_prob <- mae_pred
+        mae_set$pred_bin <- ifelse(mae_pred > 0.5, 1, 0)
+
+        # Prediction based on diff probability thresholds
+        predicted_bloom_date_p_thresh_idx <- which(mae_set$pred_prob > p_thresh)[1]
+        predicted_bloom_date_p_thresh <- mae_set[predicted_bloom_date_p_thresh_idx, "date"]
+        
+        diff <- abs(as.numeric(as.Date(actual_bloom_date, format = "%Y-%m-%d"))- as.numeric(as.Date(predicted_bloom_date_p_thresh, format = "%Y-%m-%d")))
+        
+        MAE_table[MAE_table$year ==yr, ]<- c(yr
+        , actual_bloom_date, predicted_bloom_date_p_thresh
+        , as.numeric(diff))
+
+    }
+    MAE_p <- c(MAE_p, mean(as.numeric(MAE_table$diff), na.rm = TRUE))
+}
+# MAE_p 
+write.csv(data.frame(MAE_p = MAE_p, target_p_thresh = target_p_thresh), file = "/workspaces/peak-bloom-prediction/code/liestal/data/A15_liestal_MAE_p.csv", row.names = FALSE)
+
+```
+
+```{r task422, echo=FALSE}
+MAE_p_df <- read.csv("/workspaces/peak-bloom-prediction/code/kyoto/data/A15_kyoto_MAE_p.csv")
+target_p_thresh <- MAE_p_df[["target_p_thresh"]]
+best_p_thresh <- target_p_thresh[which.min(MAE_p_df[["MAE_p"]])]
+MAE_p <- MAE_p_df[["MAE_p"]]
+```
+It seems that the best p_thresh is `r {best_p_thresh}`, which gives the lowest MAE of `r {min(MAE_p)}`.
+
+##### 4.3 Model interpretation
+```{r}
+# Interpret the model using the feature importance plot
+lgb_imp <- lgb.importance(lgb_final)
+lgb.plot.importance(lgb_imp, top_n = 5L, measure = "Gain")
+```
+It shows that AGDD is the most important variable for predicting AGDD, but there are also other variables that are important.
+
+#### 5. Final prediction for the year 2023
+```{r}
+# Get weather data from 1 Mar to 30 Apr 2023
+# - Obtained from AccuWeather.
+weather_2023 <- read.csv("/workspaces/peak-bloom-prediction/code/_shared/data/city_weather_2023.csv") %>%
+    filter(city == "Liestal") %>%
+    mutate(date = as.Date(date, format = "%Y-%m-%d")) %>%
+    mutate(year = 2023) %>%
+    mutate(month = as.integer(strftime(date, format = "%m"))) %>%
+    mutate(day = as.integer(strftime(date, format = "%d"))) %>%
+    filter(month %in% c(3, 4))
+# dim(weather_2023)
+
+# # Compute GDD.
+weather_2023$daily_GDD <- apply(weather_2023, MARGIN = 1
+    , FUN = function(x){
+        meanTemp <- as.numeric(x[["tmax"]]) + as.numeric(x[["tmin"]]) / 2
+        if (meanTemp < 0) {
+            return(0)
+        } else {
+            return(meanTemp)
+        }
+    })
+
+weather_2023$AGDD <- cumsum(weather_2023$daily_GDD)
+write.csv(weather_2023, "/workspaces/peak-bloom-prediction/code/liestal/data/A18_merged_2023_liestal.csv", row.names = FALSE)
+
+weather_2023 <- read.csv("/workspaces/peak-bloom-prediction/code/liestal/data/A18_merged_2023_liestal.csv")
+
+final_pred <- predict(lgb_final, as.matrix(weather_2023[, feature_names]))
+weather_2023$pred_prob <- final_pred
+
+# Compute the final prediction day based on the probability threshold p_thresh = 0.1
+weather_2023$pred_bin <- ifelse(final_pred > best_p_thresh, 1, 0)
+final_pred_day1 <- weather_2023[which(weather_2023$pred_prob > best_p_thresh)[1], "date"] 
+# final_pred_day1
+# final_pred_day2 <- weather_2023[which(weather_2023$pred_prob == max(weather_2023$pred_prob))[1], "date"] 
+
+final_bloom_doy <- as.numeric(as.Date(final_pred_day1) - as.Date("2023-01-01")) + 1
+```
+
+```{r eval=FALSE, echo=FALSE}
+
+final_pred_df <- data.frame(city = "liestal", method = "ML", bloom_doy = final_bloom_doy, p_thresh = best_p_thresh)
+final_pred_probs <- data.frame(city = "liestal", date = weather_2023[, "date"], pred_probs = weather_2023[, "pred_prob"])
+write.csv(final_pred_df, "/workspaces/peak-bloom-prediction/code/liestal/data/A19_final_lgb_predDay_liestal.csv", row.names = FALSE)
+write.csv(final_pred_probs, "/workspaces/peak-bloom-prediction/code/liestal/data/A19_final_predProbs_liestal.csv", row.names = FALSE)
+```
+* Final prediction for Liestal 2023 is `r {final_pred_day1}`, However, since the MAE from above is `r min(MAE_p)` days, we take away `r ceiling(min(MAE_p)/2)` (ceilling(MAE/2)) from the predicted date. 
+* Therefore, the final prediction date for 2023 from this model is `r {as.Date(final_pred_day1) - ceiling(min(MAE_p)/2)}`, which 
+* Since this model's performance is very weak, we fit another model and then average the predictions to make our final prediction for Liestal.

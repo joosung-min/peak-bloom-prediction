@@ -116,7 +116,8 @@ final_pred1 #93
 final_pred2 <- final_pred1 - 5
 final_pred2 # 88 87 87 87 86 86 86 85 85 85
 
-
+# final_pred_df <- data.frame(city = "liestal", method = "lm", bloom_doy = final_pred2[1], p_thresh = "na")
+# write.csv(final_pred_df, "./code/liestal/data/A19_final_lm_predDay_liestal.csv", row.names = FALSE)
 
 
 # P.S. We also tried a segmented regression model for Liestal.
@@ -127,5 +128,9 @@ liestal_df <- cherry_sub %>% filter(city == "Liestal")
 liestal_lm <- lm(bloom_doy ~ year, data = liestal_df)
 liestal_seg <- segmented(liestal_lm, npsi = 1)
 summary(liestal_seg) # a large p-value, and low R-squared.
+
+
+
+
 
 # END
