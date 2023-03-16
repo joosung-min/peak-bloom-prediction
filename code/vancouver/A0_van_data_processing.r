@@ -17,13 +17,13 @@ cherry_sub$city = str_split(cherry_sub$location, pattern = "/", simplify = TRUE)
 head(cherry_sub)
 dim(cherry_sub)
 
-Pull the list of weather stations.
+# Pull the list of weather stations.
 weather_stations <- ghcnd_stations() %>%
     filter(last_year %in% c(2022,2023)) %>%
     distinct(id, .keep_all = TRUE) %>%
     filter(str_sub(id, 1, 2) %in% c("SZ", "GM", "KS", "JA"))
 
-Find the nearest weather station to each city.
+# Find the nearest weather station to each city.
 temp_df <- cherry_sub %>%
     select(city, lat, long, alt) %>%
     distinct(city, .keep_all = TRUE)
