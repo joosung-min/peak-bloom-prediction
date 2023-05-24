@@ -1,6 +1,6 @@
 # 2023 Peak Cherry Blossom Prediction
 
- Author: Unknown, Affiliation: Unknown
+![](./2023_cb_pred.png)
 
 ## 1. Introduction
 
@@ -26,11 +26,11 @@ It is important to acknowledge the limitations of temperature-based methods. The
 
 Nevertheless, our methods offer a flexible approach to estimating the probabilities of peak cherry blossoms on chosen days in March and April. By leveraging weather data encompassing a minimum of 4 months (AGDD) and a maximum of 7 months (chill-days), our approach enables rapid responsiveness to global climate changes, surpassing the limitations of traditional linear methods.
 
-## 4. Predictions
+## 4. Results
 
 The predictions from our models are as follows:
 
-![](./_shared/figs/final_predictions.png)
+![](./2023_cb_pred_table.png)
 
 ## 5. Conclusion
 
