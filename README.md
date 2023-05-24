@@ -16,7 +16,7 @@ To address severe class imbalance, we employed under-sampling of the majority la
 
 In addition to the comprehensive machine learning algorithms, we trained linear models that were not based on temperature. These models employed bloom_doy and year as the response variable and predictor, respectively. We utilized these models to obtain ensemble means of the model outputs for the year 2023, as well as to make non-temperature-based forecasts for subsequent years. For Kyoto and Washington D.C., we conducted piecewise regressions to identify potential changes in the bloom_doy trend over the past 200 and 100 years, respectively, utilizing their extensive observation data. Furthermore, we fitted a mixed-effects model for Liestal, using data from various locations across Switzerland, given the limited historical observation data. This model incorporated random slopes and intercepts, with altitude and year as fixed effects, while city was included as a random effect to account for the variation in bloom_doy. Lastly, we performed a linear regression using proxy cities selected from South Korea, Japan, and Switzerland. These proxy cities were chosen based on their similarities to Vancouver in terms of bloom_doy for the year 2022.
 
-## 3. Findings
+## 3. Results
 
 Based on the feature importances derived from our LightGBM model, the phenology-based features Ca_cumsum and AGDD exhibited the most significant contributions to the model's accuracy, followed by the geographical information. This observation indicates that integrating phenology-based features with machine learning algorithms constitutes an effective approach for predicting peak cherry blossom occurrences.
 
@@ -26,12 +26,10 @@ It is important to acknowledge the limitations of temperature-based methods. The
 
 Nevertheless, our methods offer a flexible approach to estimating the probabilities of peak cherry blossoms on chosen days in March and April. By leveraging weather data encompassing a minimum of 4 months (AGDD) and a maximum of 7 months (chill-days), our approach enables rapid responsiveness to global climate changes, surpassing the limitations of traditional linear methods.
 
-## 4. Results
-
 The predictions from our models are as follows:
 
 ![](./2023_cb_pred_table.png)
 
-## 5. Conclusion
+## 4. Conclusion
 
 This narrative elucidates the integration of gradient boosting methods and phenology-based feature engineering for cherry blossom prediction. Despite encountering various challenges, such as the availability of historical bloom observations and class imbalance, our test results substantiate that our method offers an accurate, reproducible, and interpretable approach to predicting peak cherry blossoms. Furthermore, our method demonstrates the capability to respond to climate changes. Additionally, we outline the steps involved in training non-temperature-based linear algorithms, which effectively capture changes in bloom day trends and leverage data from other cities while considering their inherent variability.
