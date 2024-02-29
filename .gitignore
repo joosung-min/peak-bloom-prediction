@@ -1,4 +1,15 @@
+*archive/
+*models/*
+*/2023/
+*.py
+*__pycache__
+*data/A*
+*data/B*
+*/dump/
+*/models/*
+*_optuna_*
 code/
+*_config.yaml
 final_result.csv
 .Rproj.user
 .Rhistory
