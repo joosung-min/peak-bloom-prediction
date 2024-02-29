@@ -1,0 +1,376 @@
+---
+title: 'Fit lightGBM: Washington D.C. and New York City'
+jupyter: python3
+---
+
+
+* Response: is_bloom 
+
+* Predictors: 
+    * Ca_cumsum: Cumulative chill day-based growing degree days. 
+    * Cd_cumsum: Cumulative chill day-based anti-growing degree days. 
+    * prcp_cumsum: Cumulated precipitation.
+    * AGDD: Accumulated growing degree days, as instructed in the usa-npn datafield description file.
+    * lat: latitude
+    * long: longitude
+    * alt: altitude
+    * month, year
+
+
+```{python}
+# Load necessary packages
+import lightgbm as lgb
+import numpy as np
+import pandas as pd
+pd.options.mode.chained_assignment = None  # default='warn'
+import yaml
+import os
+from datetime import datetime
+import sys
+from sklearn.model_selection import train_test_split
+import sklearn.metrics
+import pickle
+
+import optuna
+
+import multiprocessing as mp
+from multiprocessing import Pool
+# import s3fs
+from datetime import datetime
+
+with open("./_config.yaml", "r") as file:
+    cherry_config = yaml.safe_load(file)
+comp_data_dir = cherry_config['competition_data']
+data_dir = cherry_config['data_dir']     # data generated from A__dataPrep.ipynb
+model_dir = cherry_config['model_dir']   # output dir for the best trained lgb models
+```
+
+## 2a. Define functions
+
+```{python}
+# Define functions for computing Ca_cumsum and Cd_cumsum
+
+def compute_gdd(r):
+    gdd = (r[['tmax']].item() + r[['tmin']].item())/2
+    return gdd if gdd > 0 else 0
+
+
+def chill_days(r, Tc):
+    '''
+    Following Cesaraccio
+    '''
+    Tmin = r[['tmin']].item()
+    Tmax = r[['tmax']].item()
+    Tmean = (Tmin + Tmax)/2
+
+    if (0 <= Tc) & (Tc <= Tmin) & (Tmin <= Tmax):
+        Cd = 0
+        Ca = Tmean - Tc
+
+    elif (0 <= Tmin) & (Tmin <= Tc) & (Tc <= Tmax):
+        Cd = -1 * ((Tmean - Tmin) - ((Tmax - Tc)/2))
+        Ca = (Tmax - Tc)/2
+    
+    elif (0 <= Tmin) & (Tmin <= Tmax) & (Tmax <= Tc):
+        Cd = -1 * (Tmean - Tmin)
+        Ca = 0
+    
+    elif (Tmin <= 0) & (0 <= Tmax) & (Tmax <= Tc):
+        Cd = -1 * (Tmax / (Tmax - Tmin)) * (Tmax/2)
+        Ca = 0
+    
+    elif (Tmin <= 0) & (0 <= Tc) & (Tc <= Tmax):
+        Cd = -1 * ((Tmax / (Tmax - Tmin)) * (Tmax/2) - ((Tmax - Tc)/2))
+        Ca = (Tmax - Tc) / 2
+    
+    elif (Tmax < 0):
+        Cd = 0
+        Ca = 0
+    
+    else:
+        Cd = 0
+        Ca = 0
+
+    # r['Cd'] = Cd
+    # r['Ca'] = Ca
+
+    return Cd, Ca
+
+def compute_cgdd(station_df, station_id, Rc_thresh, Tc):
+
+    # Computes daily_Ca, daily_Cd, Ca_cumsum, Cd_cumsum.
+    # weather_df should have at least: tmax, tmin
+    
+    # Rc_thresh and Tc are learnt from gdd_model
+    # Rc_thresh accumulated Cd threshold to start accumulating GDD.
+    # Tc: Threshold temperature for computing Ca and Cd.
+
+    output_list = {}
+    
+    Ca_Cd_df = station_df.copy()
+    
+    Ca_Cd_df['date'] = Ca_Cd_df.apply(lambda x : "-".join([str(x["year"]), str(x["month"]), str(x["day"])]), axis = 1)
+    Ca_Cd_df['date'] = pd.to_datetime(Ca_Cd_df['date'])
+    
+    Ca_Cd_df['daily_Cd'], Ca_Cd_df['daily_Ca'] = zip(*Ca_Cd_df.apply(lambda row: chill_days(row, Tc = Tc), axis = 1))
+    
+    ## Compute Ca_cumsum (a.k.a AGDD) and Cd_cumsum
+    years = Ca_Cd_df['year'].unique()
+    # years = [1992, 1993, 1994]
+    for yr in years:
+        # yr = years[1]
+        # print(yr)
+        Rc_start = datetime.strptime(str(int(yr) - 1) + "-09-30", "%Y-%m-%d")
+        
+        sub_df = Ca_Cd_df.loc[(Rc_start < Ca_Cd_df["date"]) & (Ca_Cd_df["date"] < datetime.strptime(str(yr)+"-06-01", "%Y-%m-%d")), :].reset_index(drop = True)
+    
+        list_id = station_id + "-" + str(yr)
+
+        if len(sub_df['month'].unique()) != 8:
+            # print("next")
+            continue            
+
+        sub_df['Cd_cumsum'] = sub_df['daily_Cd'].cumsum()
+
+        if (np.isin("prcp", sub_df.columns)):
+            sub_df["prcp_cumsum"] = sub_df["prcp"].cumsum()
+        
+        sub_df['Ca_cumsum'] = 0
+
+        if sub_df[sub_df['Cd_cumsum'] < Rc_thresh].shape[0] == 0:
+            continue
+        
+        Rc_thresh_loc = sub_df[sub_df['Cd_cumsum'] < Rc_thresh].index[0]
+
+        if pd.isna(Rc_thresh_loc):
+            Rc_thresh_loc = sub_df[sub_df['Cd_cumsum'] < Rc_thresh].index[0]
+            if pd.isna(Rc_thresh_loc):
+                continue
+
+        Rc_thresh_day = sub_df.iloc[Rc_thresh_loc]['date']
+        # print(paste0("reaches the Rc threshold on ", Rc_thresh_day)) # 저온요구도 달성일 i.e., 내생휴면 해제일. 
+
+        if int(Rc_thresh_day.timetuple().tm_yday) > 31:
+            first_Tc_reach_day = datetime.strptime(str(yr) + "-01-31", "%Y-%m-%d")
+        else:
+            sub_df_afterRc = sub_df.iloc[range(Rc_thresh_loc, sub_df.shape[0]), :].reset_index(drop = True)
+            first_Tc_reach_loc = sub_df_afterRc[sub_df_afterRc['tmax'] > Tc].index[0]
+            first_Tc_reach_day = sub_df_afterRc.iloc[first_Tc_reach_loc]['date']
+
+        if pd.isna(first_Tc_reach_day):
+            # print("is na first tc reach day")
+            continue
+        
+        first_Tc_reach_loc2 = sub_df[sub_df["date"] == first_Tc_reach_day].index[0] # Ca accumulates starting this day.
+        sub_df.loc[first_Tc_reach_loc2:sub_df.shape[0], "Ca_cumsum"] = sub_df.loc[first_Tc_reach_loc2:sub_df.shape[0], "daily_Ca"].cumsum()
+        
+        # sub_df["diff_Ca_Cd"] = sub_df['daily_Ca'].abs() - sub_df['daily_Cd'].abs()
+        # sub_df["diff_Ca_Cd_cumsum"] = sub_df['diff_Ca_Cd'].cumsum()
+        
+        sub_df = sub_df[sub_df['month'].isin([1,2,3,4,5])].reset_index(drop=True)
+
+        sub_df['daily_gdd'] = sub_df.apply(lambda row: compute_gdd(row), axis = 1)
+        sub_df['AGDD'] = sub_df['daily_gdd'].cumsum()
+        
+        output_list[list_id] = sub_df
+
+    if len(output_list) == 0:
+        return pd.DataFrame(columns = sub_df.columns)
+    elif len(output_list) == 1:
+        out_df = output_list[list(output_list.keys())[0]].dropna().reset_index(drop = True)
+    elif len(output_list) > 1:
+        out_df = pd.concat(output_list, axis = 0).dropna().reset_index(drop = True)
+    
+
+    # return(out_df)
+    
+    return out_df
+
+
+def generate_cgdds(temperature_df, st, Tc, Rc_thresh):
+    
+    # st = target_ids[3]
+    station_temp = temperature_df[temperature_df["id"] == st]
+    city_name = station_temp.iloc[1]["city"]
+    # city_name
+    station_bloom_years = station_temp['year'].unique()
+     
+    sub_cds = compute_cgdd(station_df = station_temp, station_id = st, Rc_thresh = Rc_thresh, Tc=Tc)
+    
+    return sub_cds
+
+
+def generate_data(temperature_df, target_ids, Tc, Rc_thresh, pooling = False):
+    
+    args = [(temperature_df, id, Tc, Rc_thresh) for id in target_ids]
+        
+    if pooling == True:
+        n_cpus = 7
+        pool = Pool(processes = n_cpus)
+        
+        df = pd.concat(pool.starmap(generate_cgdds, args), axis = 0)
+        pool.close()
+        pool.join()
+    else:
+        df = pd.concat([generate_gdds(*arg) for arg in args], axis = 0)
+
+    return df
+```
+
+```{python}
+# Define function for hyperparameter tuning with Optuna
+
+def callback(study, trial):
+    if study.best_trial.number == trial.number:
+        study.set_user_attr(key="best_booster", value=trial.user_attrs["best_booster"])
+
+
+def train_cherry_blossom(trial):
+    
+    # target_vars = ['Ca_cumsum', "Cd_cumsum", "prcp_cumsum", "AGDD", "lat", "long", "alt", "is_bloom", "month", "year"]
+    target_set = cherry_complete.reset_index(drop = True)
+    
+    # Train-val-test split
+    test_years = list(range(2020, 2024))
+    test_set = target_set.query("year in @test_years")
+
+    # dc_test = test_set.loc[test_set['State'] == "DC", :]
+    # dc_test['Phenophase_Status'].value_counts()
+
+
+    target_set.loc[target_set['State'] == "DC", :]
+    train_set = target_set.query("year not in @test_years").drop(columns = ['year', 'month', 'day', 'date', "Species"])
+    
+    # Perform under-sampling
+    train_false = train_set[train_set['Phenophase_Status'] == 0]
+    train_true = train_set[train_set['Phenophase_Status'] == 1]
+    # train_true.head()
+    sample_idx = np.random.choice(range(len(train_false)), size = 2*len(train_true), replace = False)
+    train_df = pd.concat([train_false.iloc[sample_idx], train_true], axis = 0).reset_index(drop = True)
+    # train_df.head()
+    
+    # train_df = train_set.copy()
+    X_train, X_val, y_train, y_val = train_test_split(train_df.drop(columns = ["Phenophase_Status"]), train_df["Phenophase_Status"], test_size = 0.2, shuffle = True, stratify=train_df["Phenophase_Status"])
+
+    dtrain = lgb.Dataset(X_train, label = y_train)
+    dval = lgb.Dataset(X_val, label = y_val, reference=dtrain)
+
+    param = {
+        "objective": "binary",
+        "metric": ["binary_logloss", "focal_loss", 'mape'],
+        "verbosity": -1,
+        "boosting_type": "gbdt",
+        # "num_boost_round": 2000,
+        # "early_stopping_round": 400,
+        "learning_rate": trial.suggest_float("learning_rate", 1e-8, 0.1, log = True),
+        "lambda_l1": trial.suggest_float("lambda_l1", 1e-8, 10.0, log=True),
+        "lambda_l2": trial.suggest_float("lambda_l2", 1e-8, 10.0, log=True),
+        "num_leaves": trial.suggest_int("num_leaves", 2, 256),
+        "feature_fraction": trial.suggest_float("feature_fraction", 0.4, 1.0),
+        "bagging_fraction": trial.suggest_float("bagging_fraction", 0.4, 1.0),
+        "bagging_freq": trial.suggest_int("bagging_freq", 1, 7),
+        "min_child_samples": trial.suggest_int("min_child_samples", 5, 100),
+    }
+
+    lgb_fit = lgb.train(
+        params = param,
+        train_set = dtrain,
+        valid_sets = [dval, dtrain],
+        verbose_eval=False,
+        num_boost_round = 2000,
+        callbacks = [lgb.early_stopping(stopping_rounds=400)]
+    )
+
+    trial.set_user_attr(key="best_booster", value=lgb_fit)
+
+
+    def compute_mae(cities, test_years):
+        # cities = ["DC", "NY", "BC"]
+        # test_set.columns
+
+        errors = []
+
+        for city in cities:
+            # city = "DC"
+            mae_set = test_set.query("State == @city").reset_index(drop = True)
+            mae_years = mae_set.loc[mae_set['Phenophase_Status'] ==1, "year"].unique()
+            # test_years = [t_year for t_year in test_years if t_year in mae_years]
+            
+            for year in mae_years:
+                
+                # year = test_years[0]
+                pred_df = mae_set.loc[mae_set['year'] == year, :]
+                
+                pred_X = pred_df.drop(columns = ['year', 'month', 'day', 'date', "Phenophase_Status", "Species"])
+            
+                pred = lgb_fit.predict(pred_X)
+                
+                pred_df['doy'] = pred_df.loc[:, "date"].apply(lambda row: pd.Period(row, freq = "D").day_of_year)
+                max_prob = np.where(pred == np.max(pred))[0][0]
+                
+                pred_doy = pred_df.iloc[max_prob]["doy"]
+                
+                actual_doy = pred_df.loc[pred_df['Phenophase_Status'] == 1, "doy"].item()
+                
+                absolute_error = abs(pred_doy - actual_doy)
+                # print(absolute_error)
+                errors.append(absolute_error)
+        
+        # print(np.round(np.mean(errors), 3))
+        return np.round(np.mean(errors), 3)
+
+    mae = compute_mae(cities = ["DC", "NY"], test_years = test_years)
+    
+    return mae
+```
+
+## 2b. Load data
+
+* For the American cities, we do not compute chill day-based cumulative gdd. Only use AGDD
+
+```{python}
+with open(data_dir + "/A31_america_temperatures2.csv", "r") as file:
+    cherry_complete = pd.read_csv(file)
+
+for c in cherry_complete.columns:
+    col_type = cherry_complete[c].dtype
+    if col_type == "object" or col_type.name == 'category':
+        cherry_complete[c] = cherry_complete[c].astype('category')
+
+cherry_complete.head()
+```
+
+## 2c. Run hyperparameter optimization using Optuna
+
+```{python}
+study = optuna.create_study(direction="minimize")
+study.optimize(
+    train_cherry_blossom, 
+    n_trials=10000,
+    callbacks=[callback]
+    )
+# best_model=study.user_attrs["best_booster"]
+best_model=study.best_trial.user_attrs["best_booster"]
+
+# save the best model
+with open(model_dir + "/B31_lgb_america.pkl", 'wb') as model:
+    pickle.dump(best_model, model)
+
+# save the study
+with open(model_dir + "/B31_study_america.pkl", 'wb') as st:
+    pickle.dump(study, st)
+
+print("america: \n")
+
+print("Number of finished trials: {} \n".format(len(study.trials)))
+
+print("Best trial: ")
+trial = study.best_trial
+
+print("  Value: {} \n".format(trial.value))
+
+print("  Params: ")
+for key, value in trial.params.items():
+    print("    {}: {}".format(key, value))
+```
+

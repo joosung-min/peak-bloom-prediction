@@ -1,0 +1,744 @@
+---
+title: 1. Data preprocessing
+jupyter:
+  kernelspec:
+    display_name: R 4.1
+    language: R
+    name: ir41
+---
+
+
+In this notebook, we preprocess the data, the procedure of which includes the following:
+
+* Remove duplicate entries.
+
+* Check data size -> Data size is too small.
+    * Use other cities' data as proxy cities.
+    * Proxy cities: Have high correlation in bloom_doy to Kyoto.
+
+* Identify the nearest NOAA weather stations for the proxy cities.
+
+* Download the weather data.
+
+
+```{r}
+#| vscode: {languageId: r}
+# Load necessary packages 
+library(tidyverse)
+library(yaml)
+library(rnoaa)
+library(mice)
+
+configs <- read_yaml("./_config.yaml") 
+comp_data_dir <- configs$competition_data   # competition data
+data_dir <- configs$data_dir                # output data
+```
+
+## 1a. Is the data large enough?
+
+To apply ML methods, we must have enough data size. 
+
+Here, we check whether we have enough data for Kyoto.
+
+```{r}
+#| vscode: {languageId: r}
+kyoto <- read.csv(paste0(comp_data_dir, "/kyoto.csv")) %>%
+    rename(c("city" = location)) %>%
+    mutate(bloom_date = as.Date(bloom_date, format = "%Y-%m-%d")) %>%
+    mutate(city = "Kyoto")
+head(kyoto)
+print(nrow(kyoto))
+```
+
+For temperature-based analyses, we need historical temperature data, and to obtain them we need to find out where the closest NOAA weather station is to Kyoto.
+
+```{r}
+#| vscode: {languageId: r}
+# Pull the list of weather stations.
+weather_stations <- ghcnd_stations() %>%
+    filter(last_year %in% c(2022,2023)) %>%
+    distinct(id, .keep_all = TRUE) %>%
+    filter(str_sub(id, 1, 2) %in% c("JA"))
+head(weather_stations)
+```
+
+```{r}
+#| vscode: {languageId: r}
+temp_station <- weather_stations %>%
+    mutate(lat = latitude) %>%
+    mutate(long = longitude) %>%
+    mutate(alt = elevation) %>%
+    rename_with(~"city", id) %>%
+    dplyr::select(city, lat, long, alt) %>%
+    data.frame()
+
+kyoto_stations <- rbind(kyoto[1, c("city", "lat", "long", "alt")], temp_station)
+head(kyoto_stations)
+```
+
+```{r}
+#| vscode: {languageId: r}
+# Compute the Euclidean distances between Kyoto and the stations.
+kyoto_stations$dist <- apply(kyoto_stations, MARGIN = 1, FUN = function(row){
+    geo = c("lat", "long")
+    x = kyoto_stations[kyoto_stations$city == "Kyoto", geo]
+    y = row[geo]
+    dist = as.numeric(dist(rbind(x, y)))
+    return(dist)
+    })
+
+kyoto_stations %>% arrange(dist) %>% head()
+```
+
+The station id that is closest to Kyoto is "JA000047759".
+
+Now, pull the weather data from NOAA.
+
+```{r}
+#| vscode: {languageId: r}
+kyoto_id <- kyoto_stations[2, "city"]    # JA000047759
+
+kyoto_temp <- ghcnd_search(stationid = kyoto_id, var = c("TMAX", "TMIN", "PRCP"), date_min = "1900-01-01", date_max = "2024-05-30") %>%
+    purrr::reduce(left_join, by = "date") %>%
+    dplyr::select(id.x, date, tmax, tmin, prcp) %>%
+    dplyr::rename_with(~ "id", id.x) %>%
+    mutate(tmax = tmax/10) %>%      # in C
+    mutate(tmin = tmin/10) %>%      # in C
+    mutate(prcp = prcp/10) %>%      # in mm
+    mutate(year = format(date, "%Y")) %>%
+    mutate(month = as.integer(strftime(date, '%m'))) %>%
+    mutate(day = as.integer(strftime(date, '%d')))
+head(kyoto_temp)
+```
+
+The earliest possible year for analyses is 1951. Hence, trim the bloom data accordingly.
+
+```{r}
+#| vscode: {languageId: r}
+kyoto <- kyoto %>%
+    filter(year >= 1951) %>%
+    mutate(bloom_date = as.Date(bloom_date, format = "%Y-%m-%d"))
+print(dim(kyoto))
+head(kyoto)
+```
+
+Now we have only 73 observed cherry blossom bloom days to work with, which is too small to train ML models.
+
+One way to increase data size is to bring data from other cities that are similar to Kyoto, namely the 'proxy' cities.
+
+Here, we define the proxies as the cities with high correlations to Kyoto in bloom_doy.
+
+```{r}
+#| vscode: {languageId: r}
+# Load data
+japan <- read.csv(paste0(comp_data_dir, "/japan.csv")) %>%
+    mutate(city = str_split(location, pattern = "/", simplify = TRUE)[, 2]) %>%
+    filter(city != "Kyoto") %>%
+    dplyr::select(-location) %>%
+    relocate(city) %>%
+    mutate(bloom_date = as.Date(bloom_date, format = "%Y-%m-%d")) %>%
+    rbind(., kyoto)
+```
+
+## 1b. Remove duplicated entries
+
+We noticed that some entries in the competition data are duplicated.
+
+Here, we identify them and eliminate them.
+
+```{r}
+#| vscode: {languageId: r}
+# Find cities with duplicate entries
+japan_dups <- japan %>% group_by(city, year) %>%
+    summarise(n = n()) %>%
+    filter(n >= 2) %>%
+    distinct(city, n)
+japan_dups
+```
+
+```{r}
+#| vscode: {languageId: r}
+# Remove the duplicated entries from the japan data.
+
+# - Assign identifiers
+japan$identifier <- paste0(as.character(japan$city), as.character(japan$lat), as.character(japan$long), as.character(japan$alt))
+
+# - Create a unique list of cities, along with their identifiers.
+japan_cities <- japan %>%
+    dplyr::select(city, lat, long, alt) %>%
+    group_by(city, .drop = FALSE) %>%
+    filter(row_number(lat) == 1)
+japan_cities$identifier <- paste0(as.character(japan_cities$city), as.character(japan_cities$lat), as.character(japan_cities$long), as.character(japan_cities$alt))
+
+# - Extract distinct rows using the identifiers
+japan <- japan %>%
+    filter(identifier %in% japan_cities$identifier) %>%
+    dplyr::select(-identifier) %>%
+    distinct()
+
+# - Check dups again
+japan %>% group_by(city, year) %>%
+    summarise(n = n()) %>%
+    filter(n >= 2) %>%
+    distinct(city, n)
+head(japan)
+```
+
+## 1c. Find proxy cities
+
+One way to increase data size is by incorporating data from other cities that are similar to Kyoto.
+
+Here, we define the proxy cities as where their bloom_doy are highly correlated ($R^2$) with Kyoto's.
+
+```{r}
+#| vscode: {languageId: r}
+japan_cities$corr <- apply(
+    japan_cities, MARGIN = 1
+    , FUN = function(row) {
+        if (row["city"] == "Kyoto") {
+            return(1)
+        }
+
+        row_df <- japan[japan$city %in% c("Kyoto", as.character(row["city"])), c("year", "city", "bloom_doy")] %>% 
+            pivot_wider(names_from = "city", values_from = "bloom_doy") %>%
+            drop_na()
+        
+        x = row_df[, "Kyoto"]
+        y = row_df[, as.character(row["city"])]
+        
+        city_cor = as.numeric(cor(x, y))
+        return(city_cor)
+    })
+
+# Pull those with R^2 > 0.8 to Kyoto.
+japan_tops <- japan_cities %>%
+    arrange(desc(corr)) %>%
+    dplyr::select(-identifier) %>%
+    filter(corr > 0.80) %>%
+    as.data.frame()
+
+# display(japan_tops)
+print(nrow(japan_tops))
+head(japan_tops)
+```
+
+bloom_doy of 42 cities are highly correlated with that of Kyoto.
+
+Next, we find their closest weather stations, and pull their historical weather data.
+
+```{r}
+#| vscode: {languageId: r}
+cherry_sub = japan %>%
+    filter(city %in% japan_tops$city) %>%
+    mutate(bloom_date = as.Date(bloom_date, format = "%Y-%m-%d"))
+
+temp_df <- cherry_sub %>%
+    dplyr::select(city, lat, long, alt) %>%
+    data.frame()
+
+temp_station <- weather_stations %>%
+    mutate(lat = latitude) %>%
+    mutate(long = longitude) %>%
+    mutate(alt = elevation) %>%
+    rename_with(~"city", id) %>%
+    dplyr::select(city, lat, long, alt) %>%
+    data.frame()
+
+# Placeholder for the resulting pairs
+city_station_pair <- data.frame(
+    matrix(NA, nrow = 0, ncol = 3
+        , dimnames = list(NULL, c("city", "id", "dist"))))
+
+target_cities <- unique(cherry_sub$city)
+
+for (c in seq_len(length(target_cities))) {
+    
+    skip_to_next <- 0
+    ct <- target_cities[c]
+    
+    # Replace any special characters in the city names
+    ct_converted <- str_replace(str_replace(str_replace(str_replace(ct, "-", "."), " ", "."), ",", "."), "'",".")
+    tryCatch(
+        {
+            # rbind the city's geographical features and the weather stations'.
+            temp_merged <- temp_df %>% 
+                filter(city == ct) %>%
+                dplyr::select(city, lat, long, alt) %>%
+                distinct() %>%
+                rbind(., temp_station) %>%
+                data.frame(.)
+        
+            # Compute the Euclidean distance between the city and the stations.
+            temp_merged$dist <- apply(temp_merged, MARGIN = 1, FUN = function(row){
+                geo = c("lat", "long")
+                x = temp_merged[temp_merged$city == ct, geo]
+                y = row[geo]
+                dist = as.numeric(dist(rbind(x, y)))
+                return(dist)
+                })
+            
+            # Sort the rows by ascending dist.
+            temp_merged <- temp_merged %>%
+                arrange(dist)
+
+            # The first row is the city itself. Select the second row as the closest weather station.        
+            station_id <- temp_merged[2, "city"]
+            station_dist <- temp_merged[2, "dist"]
+        }
+        
+        , error = function(e) skip_to_next <<-1
+    )
+    if (skip_to_next == 1) {
+        # If error, skip to the next city.
+        next
+    }
+
+    city_station_pair[nrow(city_station_pair) + 1, ] <- c(ct, station_id, station_dist)
+}
+city_station_pairs <- city_station_pair %>% 
+    mutate(dist = as.numeric(dist)) %>%
+    filter(dist < 2) %>%   # Only include the pairs that are close enough.
+    arrange(dist) %>%
+    group_by(id) %>%
+    filter(row_number(id) == 1) %>%  # Remove any duplicated rows.
+    as.data.frame(.)
+
+head(city_station_pairs)
+```
+
+```{r}
+#| vscode: {languageId: r}
+print(length(unique(city_station_pairs$city)))
+print(length(unique(city_station_pairs$id)))
+```
+
+In the weather data, there could some missing values.
+
+We impute the missing values using the 'pmm' method, provided in the mice package.
+
+```{r}
+#| vscode: {languageId: r}
+# Define functions to pull (imputed if missing) temperature data
+F01_get_temperature <- function(stationid, date_min = "1950-01-01", date_max = "2023-05-31") {
+
+    dat <- ghcnd_search(stationid = stationid, var = c("TMAX", "TMIN", "PRCP"), 
+               date_min = date_min, date_max = date_max) %>%
+               purrr::reduce(left_join, by = "date") %>%
+               dplyr::select(id.x, date, tmax, tmin, prcp) %>%
+               dplyr::rename_with(~ "id", id.x) %>%
+               mutate(tmax = tmax/10) %>%      # in C
+               mutate(tmin = tmin/10) %>%      # in C
+               mutate(prcp = prcp/10) %>%      # in mm
+               mutate(year = format(date, "%Y")) %>%
+               mutate(month = as.integer(strftime(date, '%m'))) %>%
+               mutate(day = as.integer(strftime(date, '%d')))
+    
+    return(dat)
+}
+
+F01_get_imp_temperature <- function(city_station_pair, date_min = "1950-01-01", date_max = "2023-05-31", imp_method = "pmm") {
+
+    station_ids <- city_station_pair$id
+    city_temp_list <- list()
+
+    for (c in seq_len(length(station_ids))) {
+
+        skip_to_next <- 0
+        
+        temp_df <- tryCatch(
+            {F01_get_temperature(station_ids[c]
+            , date_min = date_min
+            , date_max = date_max)
+            }
+        , error = function(x) skip_to_next <<-1 )
+        
+        if (skip_to_next == 1 ){
+            next
+        }
+        # Impute missing data
+        # - check missing data
+        n_missing <- sum(is.na(temp_df[, c("tmax", "tmin", "prcp")]))
+
+        if (n_missing > 0) {
+            tempData <- mice(temp_df, m = 3, method = imp_method)
+
+            # complete set
+            imputed_temp <- complete(tempData, 3)
+        
+        } else {
+            imputed_temp <- temp_df
+        }
+        city_temp_list[[c]] <- imputed_temp
+    }
+    out <- city_temp_list %>% bind_rows()
+    return(out)
+}
+```
+
+```{r}
+#| vscode: {languageId: r}
+japan_temp_file = paste0(data_dir, "/A11_japan_temperatures.csv")
+
+if (file.exists(japan_temp_file)) {
+    cherry_temp_raw <- data.frame(data.table::fread(japan_temp_file))
+} else {
+    cherry_temp_raw <- F01_get_imp_temperature(
+    # pull weather data for the cities listed in city_station_pairs. Impute missing tmax, tmin, prcp
+    city_station_pairs
+    , date_max = "2024-05-31"
+    )
+    write.csv(cherry_temp_raw, paste0(data_dir, "/A11_japan_temperatures.csv"), row.names=FALSE)
+}
+
+head(cherry_temp_raw)
+```
+
+```{r}
+#| vscode: {languageId: r}
+# Exclude years which do not have temperature data for the entire year.
+cherry_temp_n <- cherry_temp_raw %>%
+    group_by(id, year) %>%
+    summarise(n = n()) %>%
+    filter(n >=365) %>%
+    merge(y = city_station_pairs[, c("id", "city")], by = "id", how = "inner") %>%
+    merge(y = cherry_sub[, c("city", "year", "bloom_doy", "bloom_date", "lat", "long", "alt")], by = c("city", "year"), how = "inner") %>%
+    mutate(bloom_date = as.Date(bloom_date, format = "%Y-%m-%d"))
+
+head(cherry_temp_n)
+```
+
+```{r}
+#| vscode: {languageId: r}
+# Extract id and year pairs from cherry_temp_raw that are included in cherry_temp_n
+cherry_temp <- cherry_temp_raw %>%
+    merge(y = cherry_temp_n[, c("id", "year", "city", "bloom_doy", "bloom_date", "lat", "long", "alt")], by = c("id", "year"), all.x = TRUE) %>%
+    drop_na(city) %>%
+    mutate(date = as.Date(date, format = "%Y-%m-%d")) %>%
+    mutate(bloom_date = as.Date(bloom_date, format = "%Y-%m-%d")) %>%
+    arrange(id, date)
+    
+head(cherry_temp)
+```
+
+```{r}
+#| vscode: {languageId: r}
+# Save the japan temperature data
+write.csv(cherry_temp, paste0(data_dir, "/A11_japan_temperatures2.csv"), row.names = FALSE)
+```
+
+## 1d. Repeat the procedure for Liestal
+
+```{r}
+#| vscode: {languageId: r}
+Liestal <- read.csv(paste0(comp_data_dir, "/liestal.csv")) %>%
+    rename(c("city" = location)) %>%
+    mutate(bloom_date = as.Date(bloom_date, format = "%Y-%m-%d")) %>%
+    mutate(city = "Liestal")
+min_year <- min(Liestal$year)
+# head(liestal)
+# print(nrow(liestal))
+
+# Pull the list of weather stations.
+# - Switzerland is close to Germany, so pull both SZ, GM, and FR data
+weather_stations <- ghcnd_stations() %>%
+    filter(last_year %in% c(2022,2023, 2024)) %>%
+    distinct(id, .keep_all = TRUE) %>%
+    filter(str_sub(id, 1, 2) %in% c("SZ", "GM", "FR"))
+# head(weather_stations)
+
+temp_station <- weather_stations %>%
+    mutate(lat = latitude) %>%
+    mutate(long = longitude) %>%
+    mutate(alt = elevation) %>%
+    rename_with(~"city", id) %>%
+    dplyr::select(city, lat, long, alt) %>%
+    data.frame()
+
+Liestal_stations <- rbind(Liestal[1, c("city", "lat", "long", "alt")], temp_station)
+# head(Liestal_stations)
+
+# Compute the Euclidean distances between Liestal and the stations.
+Liestal_stations$dist <- apply(Liestal_stations, MARGIN = 1, FUN = function(row){
+    geo = c("lat", "long", "alt")
+    x = Liestal_stations[Liestal_stations$city == "Liestal", geo]
+    y = row[geo]
+    dist = as.numeric(dist(rbind(x, y)))
+    return(dist)
+    })
+```
+
+```{r}
+#| vscode: {languageId: r}
+# Liestal_stations %>% arrange(dist) %>% head()
+Liestal_id <- "GME00127786"
+Liestal_stations[Liestal_stations$city == "Liestal", "id"] <- Liestal_id
+Liestal_temp <- ghcnd_search(stationid = Liestal_id, var = c("TMAX", "TMIN", "PRCP"), date_min = min_year, date_max = "2024-05-30") %>%
+    purrr::reduce(left_join, by = "date") %>%
+    dplyr::select(id.x, date, tmax, tmin, prcp) %>%
+    dplyr::rename_with(~ "id", id.x) %>%
+    mutate(tmax = tmax/10) %>%      # in C
+    mutate(tmin = tmin/10) %>%      # in C
+    mutate(prcp = prcp/10) %>%      # in mm
+    mutate(year = format(date, "%Y")) %>%
+    mutate(month = as.integer(strftime(date, '%m'))) %>%
+    mutate(day = as.integer(strftime(date, '%d')))
+
+# head(Liestal_temp)
+Liestal <- Liestal %>%
+    filter(year >= min_year)
+# print(dim(Liestal))
+```
+
+```{r}
+#| vscode: {languageId: r}
+# Load data
+meteoswiss <- read.csv(paste0(comp_data_dir, "/meteoswiss.csv")) %>%
+    mutate(city = str_split(location, pattern = "/", simplify = TRUE)[, 2]) %>%
+    filter(city != "Liestal") %>%
+    dplyr::select(-location) %>%
+    relocate(city) %>%
+    mutate(bloom_date = as.Date(bloom_date, format = "%Y-%m-%d")) %>%
+    rbind(., Liestal)
+tail(meteoswiss)
+```
+
+```{r}
+#| vscode: {languageId: r}
+# Find cities with duplicate entries
+meteoswiss_dups <- meteoswiss %>% group_by(city, year) %>%
+    summarise(n = n()) %>%
+    filter(n >= 2) %>%
+    distinct(city, n)
+# meteoswiss_dups
+
+
+# Remove the duplicated entries from the meteoswiss data.
+# - Assign identifiers
+meteoswiss$identifier <- paste0(as.character(meteoswiss$city), as.character(meteoswiss$lat), as.character(meteoswiss$long), as.character(meteoswiss$alt))
+
+# - Create a unique list of cities, along with their identifiers.
+meteoswiss_cities <- meteoswiss %>%
+    dplyr::select(city, lat, long, alt) %>%
+    group_by(city, .drop = FALSE) %>%
+    filter(row_number(lat) == 1)
+meteoswiss_cities$identifier <- paste0(as.character(meteoswiss_cities$city), as.character(meteoswiss_cities$lat), as.character(meteoswiss_cities$long), as.character(meteoswiss_cities$alt))
+
+# - Extract distinct rows using the identifiers
+meteoswiss <- meteoswiss %>%
+    filter(identifier %in% meteoswiss_cities$identifier) %>%
+    dplyr::select(-identifier) %>%
+    distinct()
+
+# - Check dups again
+meteoswiss %>% group_by(city, year) %>%
+    summarise(n = n()) %>%
+    filter(n >= 2) %>%
+    distinct(city, n)
+```
+
+```{r}
+#| vscode: {languageId: r}
+tail(meteoswiss)
+```
+
+```{r}
+#| vscode: {languageId: r}
+# Compute correlations
+meteoswiss_cities$corr <- apply(
+    meteoswiss_cities, MARGIN = 1
+    , FUN = function(row) {
+        if (row["city"] == "Liestal") {
+            return(1)
+        }
+
+        row_df <- meteoswiss[meteoswiss$city %in% c("Liestal", as.character(row["city"])), c("year", "city", "bloom_doy")] %>% 
+            pivot_wider(names_from = "city", values_from = "bloom_doy") %>%
+            drop_na()
+        
+        x = row_df[, "Liestal"]
+        y = row_df[, as.character(row["city"])]
+        
+        city_cor = as.numeric(cor(x, y))
+        return(city_cor)
+    })
+```
+
+```{r}
+#| vscode: {languageId: r}
+# Pull those with R^2 > 0.6 to Liestal.
+meteoswiss_tops <- meteoswiss_cities %>%
+    arrange(desc(corr)) %>%
+    dplyr::select(-identifier) %>%
+    filter(corr > 0.6) %>%
+    as.data.frame()
+dim(meteoswiss_tops)
+
+row_liestal <- which(meteoswiss_tops$city == "Liestal")
+if (row_liestal != 1){
+    temp_row <- meteoswiss_tops[1, ]
+    meteoswiss_tops[1, ] <- meteoswiss_tops[row_liestal, ]
+    meteoswiss_tops[row_liestal, ] <- temp_row
+}
+head(meteoswiss_tops)
+```
+
+```{r}
+#| vscode: {languageId: r}
+# Download temperature data for the proxy cities.
+cherry_sub = meteoswiss %>%
+    filter(city %in% meteoswiss_tops$city) %>%
+    mutate(bloom_date = as.Date(bloom_date, format = "%Y-%m-%d"))
+
+temp_df <- cherry_sub %>%
+    dplyr::select(city, lat, long, alt) %>%
+    data.frame()
+
+temp_station <- weather_stations %>%
+    mutate(lat = latitude) %>%
+    mutate(long = longitude) %>%
+    mutate(alt = elevation) %>%
+    rename_with(~"city", id) %>%
+    dplyr::select(city, lat, long, alt) %>%
+    data.frame()
+
+
+# Placeholder for the resulting pairs
+city_station_pair <- data.frame(
+    matrix(NA, nrow = 0, ncol = 3
+        , dimnames = list(NULL, c("city", "id", "dist"))))
+
+target_cities <- unique(cherry_sub$city)
+
+c_liestal <- which(target_cities == "Liestal")
+if (c_liestal != 1){
+    temp_city <- target_cities[1]
+    target_cities[1] <- target_cities[c_liestal]
+    target_cities[c_liestal] <- temp_city
+}
+target_cities
+```
+
+```{r}
+#| vscode: {languageId: r}
+for (c in seq_len(length(target_cities))) {
+    
+    skip_to_next <- 0
+    ct <- target_cities[c]
+    
+    # Replace any special characters in the city names
+    ct_converted <- str_replace(str_replace(str_replace(str_replace(ct, "-", "."), " ", "."), ",", "."), "'",".")
+    tryCatch(
+        {
+            # rbind the city's geographical features and the weather stations'.
+            temp_merged <- temp_df %>% 
+                filter(city == ct) %>%
+                dplyr::select(city, lat, long, alt) %>%
+                distinct() %>%
+                rbind(., temp_station) %>%
+                data.frame(.)
+        
+            # Compute the Euclidean distance between the city and the stations.
+            temp_merged$dist <- apply(temp_merged, MARGIN = 1, FUN = function(row){
+                geo = c("lat", "long")
+                x = temp_merged[temp_merged$city == ct, geo]
+                y = row[geo]
+                dist = as.numeric(dist(rbind(x, y)))
+                return(dist)
+                })
+            
+            # Sort the rows by ascending dist.
+            temp_merged <- temp_merged %>%
+                arrange(dist)
+
+            # The first row is the city itself. Select the second row as the closest weather station.        
+            
+            station_id <- temp_merged[2, "city"]
+            station_dist <- temp_merged[2, "dist"]
+            idx = 2
+            while (station_id %in% city_station_pair$id) {
+                
+                idx = idx + 1
+                station_id <- temp_merged[idx, "city"]
+                station_dist <- temp_merged[idx, "dist"]
+
+            }
+        }
+        
+        , error = function(e) skip_to_next <<-1
+    )
+    if (skip_to_next == 1) {
+        # If error, skip to the next city.
+        next
+    }
+
+    city_station_pair[nrow(city_station_pair) + 1, ] <- c(ct, station_id, station_dist)
+}
+```
+
+```{r}
+#| vscode: {languageId: r}
+city_station_pairs <- city_station_pair %>% 
+    mutate(dist = as.numeric(dist)) %>%
+    filter(dist < 1) %>%   # Only include the pairs that are close enough.
+    arrange(dist) %>%
+    group_by(id) %>%
+    as.data.frame(.)
+
+row_liestal = which(city_station_pairs$city == "Liestal")
+if (row_liestal != 1){
+    temp_row <- city_station_pairs[1, ]
+    city_station_pairs[1, ] <- city_station_pairs[row_liestal, ]
+    city_station_pairs[row_liestal, ] <- temp_row
+}
+dim(city_station_pairs)
+```
+
+```{r}
+#| vscode: {languageId: r}
+meteoswiss_temp_file = paste0(data_dir, "/A21_meteoswiss_temperatures.csv")
+
+if (file.exists(meteoswiss_temp_file)) {
+    cherry_temp_raw <- data.frame(data.table::fread(meteoswiss_temp_file))
+} else {
+    cherry_temp_raw <- F01_get_imp_temperature(
+    # pull weather data for the cities listed in city_station_pairs. Impute missing tmax, tmin, prcp
+    city_station_pairs
+    , date_max = "2024-05-31"
+    )
+    write.csv(cherry_temp_raw, paste0(data_dir, "/A21_meteoswiss_temperatures.csv"), row.names=FALSE)
+}
+# head(cherry_temp_raw)
+```
+
+```{r}
+#| vscode: {languageId: r}
+# Exclude years which do not have temperature data for the entire year.
+cherry_temp_n <- cherry_temp_raw %>%
+    group_by(id, year) %>%
+    summarise(n = n()) %>%
+    filter(n >=365) %>%
+    merge(y = city_station_pairs[, c("id", "city")], by = "id", how = "inner") %>%
+    merge(y = cherry_sub[, c("city", "year", "bloom_doy", "bloom_date", "lat", "long", "alt")], by = c("city", "year"), how = "inner")
+head(cherry_temp_n)
+```
+
+```{r}
+#| vscode: {languageId: r}
+# Extract id and year pairs from cherry_temp_raw that are included in cherry_temp_n
+cherry_temp <- cherry_temp_raw %>%
+    merge(y = cherry_temp_n[, c("id", "year", "city", "bloom_doy", "bloom_date", "lat", "long", "alt")], by = c("id", "year"), all.x = TRUE) %>%
+    drop_na(city) %>%
+    mutate(date = as.Date(date, format = "%Y-%m-%d")) %>%
+    mutate(bloom_date = as.Date(bloom_date, format = "%Y-%m-%d")) %>%
+    arrange(id, date)
+
+# Remove non-UTF8 characters
+cherry_temp <- cherry_temp %>% mutate(city = iconv(city, to = "UTF-8", sub = ""))
+
+# Save the japan temperature data
+write.csv(cherry_temp, paste0(data_dir, "/A21_meteoswiss_temperatures2.csv"), row.names = FALSE)
+
+tail(cherry_temp)
+```
+
+

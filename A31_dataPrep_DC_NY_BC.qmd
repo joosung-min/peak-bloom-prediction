@@ -1,0 +1,277 @@
+---
+title: 1. Data preprocessing - DC and NY
+jupyter:
+  kernelspec:
+    display_name: R 4.1
+    language: R
+    name: ir41
+---
+
+
+In this notebook, we preprocess the data for washingtondc and newyorkcity, the procedure of which includes the following:
+
+
+```{r}
+#| vscode: {languageId: r}
+# Load necessary packages 
+library(tidyverse)
+library(yaml)
+library(rnoaa)
+library(mice)
+
+configs <- read_yaml("./_config.yaml") 
+comp_data_dir <- configs$competition_data   # competition data
+data_dir <- configs$data_dir                # output data
+```
+
+## 1a. Clean the data
+
+Remove rows with:
+
+* Phenophase_Status unknown (-1)
+
+* AGDD == 0
+
+```{r}
+#| vscode: {languageId: r}
+usa_npn <- read.csv(paste0(comp_data_dir, "/USA-NPN_status_intensity_observations_data.csv")) %>%
+    dplyr::select(Longitude, Latitude, Elevation_in_Meters, State, Species, Observation_Date, Day_of_Year, Phenophase_Status, AGDD, Accum_Prcp, Species_ID) %>%
+    filter(Phenophase_Status != -1) %>%
+    filter(AGDD > 0) %>%
+    mutate(date = as.Date(Observation_Date, format = "%m/%d/%y")) %>%
+    mutate(year = year(date)) %>%
+    mutate(month = month(date)) %>%
+    mutate(day = day(date)) %>%
+    # dplyr::select(-Observation_Date) %>%
+    filter(month %in% c(3,4,5))
+head(usa_npn)
+```
+
+## 1b. Process DC data
+
+* Pull weather data upto the most recent available date from NOAA
+
+* Compute the accumulated growing degree days as instructed in the datafield descriptions.
+
+```{r}
+#| vscode: {languageId: r}
+# Define functions to pull (imputed if missing) temperature data
+F01_get_temperature <- function(stationid, date_min = "1950-01-01", date_max = "2023-05-31") {
+
+    dat <- ghcnd_search(stationid = stationid, var = c("TMAX", "TMIN", "PRCP"), 
+               date_min = date_min, date_max = date_max) %>%
+               purrr::reduce(left_join, by = "date") %>%
+               dplyr::select(id.x, date, tmax, tmin, prcp) %>%
+               dplyr::rename_with(~ "id", id.x) %>%
+               mutate(tmax = tmax/10) %>%      # in C
+               mutate(tmin = tmin/10) %>%      # in C
+               mutate(prcp = prcp/10) %>%      # in mm
+               mutate(year = format(date, "%Y")) %>%
+               mutate(month = as.integer(strftime(date, '%m'))) %>%
+               mutate(day = as.integer(strftime(date, '%d')))
+    
+    return(dat)
+}
+
+F01_get_imp_temperature <- function(city_station_pair, date_min = "1950-01-01", date_max = "2023-05-31", imp_method = "pmm") {
+
+    station_ids <- city_station_pair$id
+    city_temp_list <- list()
+
+    for (c in seq_len(length(station_ids))) {
+
+        skip_to_next <- 0
+        
+        temp_df <- tryCatch(
+            {F01_get_temperature(station_ids[c]
+            , date_min = date_min
+            , date_max = date_max)
+            }
+        , error = function(x) skip_to_next <<-1 )
+        
+        if (skip_to_next == 1 ){
+            next
+        }
+        # Impute missing data
+        # - check missing data
+        n_missing <- sum(is.na(temp_df[, c("tmax", "tmin", "prcp")]))
+
+        if (n_missing > 0) {
+            tempData <- mice(temp_df, m = 3, method = imp_method)
+
+            # complete set
+            imputed_temp <- complete(tempData, 3)
+        
+        } else {
+            imputed_temp <- temp_df
+        }
+        city_temp_list[[c]] <- imputed_temp
+    }
+    out <- city_temp_list %>% bind_rows()
+    return(out)
+}
+```
+
+```{r}
+#| vscode: {languageId: r}
+# Pull weather data
+# - washington dc
+dc_temp_raw <- F01_get_imp_temperature(
+    data.frame(city = "washingtondc", id = "USC00186350")
+    , date_min = "1950-01-01"
+    , date_max = "2024-05-01"
+    )
+# head(dc_temp_raw)
+dc_min_year <- min(dc_temp_raw$year)
+
+dc_blooms <- read.csv(paste0(comp_data_dir, "/washingtondc.csv")) %>%
+    filter(year >= dc_min_year) %>%
+    mutate(bloom_date = as.Date(bloom_date, format = "%Y-%m-%d"))
+head(dc_blooms)
+```
+
+```{r}
+#| vscode: {languageId: r}
+dc_lat <- usa_npn[usa_npn$State == "DC", "Latitude"][1]
+dc_long <- usa_npn[usa_npn$State == "DC", "Longitude"][1]
+dc_alt <- usa_npn[usa_npn$State == "DC", "Elevation_in_Meters"][1]
+
+# Compute AGDD and process
+dc_gdd <- dc_temp_raw %>%
+    mutate(gdd = ifelse((tmax+tmin)/2 > 0, (tmax+tmin)/2, 0)) %>%
+    group_by(year) %>%
+    mutate(AGDD = cumsum(gdd)) %>%
+    mutate(Accum_Prcp = cumsum(prcp)) %>%
+    ungroup() %>%
+    filter(month %in% c(3,4,5)) %>%
+    data.frame(.) %>%
+    mutate(State = "DC") %>%
+    mutate(Species = "yedoensis") %>%
+    mutate(Latitude = dc_lat) %>%
+    mutate(Longitude = dc_long) %>%
+    mutate(Elevation_in_Meters = dc_alt) %>%
+    mutate(Day_of_Year = as.numeric(format(date, "%j"))) %>%
+    mutate(date = as.Date(date, format = "%Y-%m-%d")) %>%
+    merge(y = dc_blooms[,c("bloom_date", "bloom_doy")], by.x = "date", by.y = "bloom_date", how = "left", all.x = TRUE) %>%
+    mutate(Phenophase_Status = ifelse(is.na(bloom_doy), 0, 1)) %>%
+    dplyr::select(Longitude, Latitude, Elevation_in_Meters, State, Species, Day_of_Year, Phenophase_Status, AGDD, Accum_Prcp, date, year, month, day)
+head(dc_gdd)
+```
+
+## 1c. Process NY data
+
+* Following the same procedure as the above.
+
+```{r}
+#| vscode: {languageId: r}
+ny_blooms <- usa_npn %>%
+    filter(State == "NY") %>%
+    filter(Species_ID == 228) %>% 
+    arrange(Observation_Date) %>% 
+    # mutate(year = year(Observation_Date)) %>% 
+    group_by(year) %>% 
+    summarize(first_flower_index = min(which(Phenophase_Status == 1)),
+                bloom_date = strftime(date[first_flower_index], format = '%Y-%m-%d'),
+                bloom_doy = Day_of_Year[first_flower_index],
+                .groups = 'drop') %>% 
+    filter(!is.na(bloom_doy)) %>% 
+    select(-first_flower_index) %>% 
+    mutate(location = 'newyorkcity') %>%
+    data.frame(.) %>%
+    mutate(bloom_date = as.Date(bloom_date, format = "%Y-%m-%d")) %>%
+    mutate(bloom_doy = as.numeric(format(bloom_date, "%j")))
+
+ny_blooms[(nrow(ny_blooms)+1), ] <- c(2023, "2023-04-30", as.numeric(format(as.Date("2023-04-30"), "%j")), "newyorkcity")
+
+ny_min_year <- min(ny_blooms$year)
+
+ny_temp_raw <- F01_get_imp_temperature(
+    data.frame(city = "newyorkcity", id = "USW00094728")
+    , date_min = paste0(ny_min_year, "-01-01")
+    , date_max = "2024-05-01"
+    )
+head(ny_temp_raw)
+```
+
+```{r}
+#| vscode: {languageId: r}
+ny_lat <- usa_npn[usa_npn$State == "NY", "Latitude"][1]
+ny_long <- usa_npn[usa_npn$State == "NY", "Longitude"][1]
+ny_alt <- usa_npn[usa_npn$State == "NY", "Elevation_in_Meters"][1]
+
+ny_gdd <- ny_temp_raw %>% 
+    # filter(year == 2023) %>%
+    mutate(gdd = ifelse((tmax+tmin)/2 > 0, (tmax+tmin)/2, 0)) %>%
+    group_by(year) %>%
+    mutate(AGDD = cumsum(gdd)) %>%
+    mutate(Accum_Prcp = cumsum(prcp)) %>%
+    ungroup() %>%
+    filter(month %in% c(3,4,5)) %>%
+    data.frame(.) %>%
+    mutate(State = "NY") %>%
+    mutate(Species = "yedoensis") %>%
+    mutate(Latitude = ny_lat) %>%
+    mutate(Longitude = ny_long) %>%
+    mutate(Elevation_in_Meters = ny_alt) %>%
+    mutate(Day_of_Year = as.numeric(format(date, "%j"))) %>%
+    mutate(date = as.Date(date, format = "%Y-%m-%d")) %>%
+    merge(y = ny_blooms[,c("bloom_date", "bloom_doy")], by.x = "date", by.y = "bloom_date", how = "left", all.x = TRUE) %>%
+    mutate(Phenophase_Status = ifelse(is.na(bloom_doy), 0, 1)) %>%
+    dplyr::select(Longitude, Latitude, Elevation_in_Meters, State, Species, Day_of_Year, Phenophase_Status, AGDD, Accum_Prcp, date, year, month, day)
+head(ny_gdd)
+```
+
+## 1e. Process BC data
+
+```{r}
+#| vscode: {languageId: r}
+bc_blooms <- read.csv(paste0(comp_data_dir, "/vancouver.csv")) %>%
+    mutate(bloom_date = as.Date(bloom_date, format = "%Y-%m-%d"))
+bc_lat <- bc_blooms[1, "lat"]
+bc_long <- bc_blooms[1, "long"]
+bc_alt <- bc_blooms[1, "alt"]
+
+bc_temp_raw <- F01_get_imp_temperature(
+    data.frame(city = "vancouver", id = "CA001108395")
+    , date_min = "2022-01-01"
+    , date_max = "2024-05-01"
+    )
+
+bc_gdd <- bc_temp_raw %>%
+    mutate(gdd = ifelse((tmax+tmin)/2 > 0, (tmax+tmin)/2, 0)) %>%
+    group_by(year) %>%
+    mutate(AGDD = cumsum(gdd)) %>%
+    mutate(Accum_Prcp = cumsum(prcp)) %>%
+    ungroup() %>%
+    filter(month %in% c(3,4,5)) %>%
+    data.frame(.) %>%
+    mutate(State = "BC") %>%
+    mutate(Species = "yedoensis") %>%
+    mutate(Latitude = bc_lat) %>%
+    mutate(Longitude = bc_long) %>%
+    mutate(Elevation_in_Meters = bc_alt) %>%
+    mutate(Day_of_Year = as.numeric(format(date, "%j"))) %>%
+    mutate(date = as.Date(date, format = "%Y-%m-%d")) %>%
+    merge(y = bc_blooms[,c("bloom_date", "bloom_doy")], by.x = "date", by.y = "bloom_date", how = "left", all.x = TRUE) %>%
+    mutate(Phenophase_Status = ifelse(is.na(bloom_doy), 0, 1)) %>%
+    dplyr::select(Longitude, Latitude, Elevation_in_Meters, State, Species, Day_of_Year, Phenophase_Status, AGDD, Accum_Prcp, date, year, month, day)
+```
+
+## 1d. Merge and save the data
+
+```{r}
+#| vscode: {languageId: r}
+## Merge all data
+usa_npn_out <- usa_npn %>%
+    dplyr::select(Longitude, Latitude, Elevation_in_Meters, State, Species, Day_of_Year, Phenophase_Status, AGDD, Accum_Prcp, date, year, month, day) %>%
+    filter(!(State %in% c("DC", "NY", "BC"))) %>%
+    rbind(., dc_gdd) %>%
+    rbind(., ny_gdd) %>%
+    rbind(., bc_gdd)
+tail(usa_npn_out)
+
+write.csv(usa_npn_out, paste0(data_dir, "/A31_america_temperatures2.csv"), row.names = FALSE)
+print("done")
+```
+
+
